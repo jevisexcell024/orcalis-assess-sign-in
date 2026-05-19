@@ -1,8 +1,4 @@
 import { useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
-import { toast } from "sonner";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "motion/react";
@@ -36,14 +32,9 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-type Mode = "signin" | "signup";
-
-export function SignInForm({ mode = "signin" }: { mode?: Mode }) {
+export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [oauthLoading, setOauthLoading] = useState<null | "google" | "microsoft">(null);
-  const navigate = useNavigate();
-  const isSignup = mode === "signup";
 
   const {
     register,
@@ -58,48 +49,10 @@ export function SignInForm({ mode = "signin" }: { mode?: Mode }) {
   const onSubmit = async (values: SignInValues) => {
     setSubmitError(null);
     try {
-      if (isSignup) {
-        const { error } = await supabase.auth.signUp({
-          email: values.email,
-          password: values.password,
-          options: { emailRedirectTo: `${window.location.origin}/dashboard` },
-        });
-        if (error) throw error;
-        toast.success("Account created. Check your email to confirm.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: values.email,
-          password: values.password,
-        });
-        if (error) throw error;
-        toast.success("Signed in successfully");
-        navigate({ to: "/dashboard" });
-      }
-    } catch (e) {
-      const message =
-        e instanceof Error ? e.message : "Unable to sign in. Please try again.";
-      setSubmitError(message);
-    }
-  };
-
-  const handleOAuth = async (provider: "google" | "microsoft") => {
-    setSubmitError(null);
-    setOauthLoading(provider);
-    try {
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: `${window.location.origin}/dashboard`,
-      });
-      if (result.error) {
-        setSubmitError(result.error.message ?? "Sign in failed");
-        setOauthLoading(null);
-        return;
-      }
-      if (result.redirected) return;
-      navigate({ to: "/dashboard" });
-    } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : "Sign in failed");
-    } finally {
-      setOauthLoading(null);
+      await new Promise((r) => setTimeout(r, 1100));
+      console.log("signin", values);
+    } catch {
+      setSubmitError("Unable to sign in. Please try again.");
     }
   };
 
@@ -136,12 +89,10 @@ export function SignInForm({ mode = "signin" }: { mode?: Mode }) {
       >
         <div className="mb-8">
           <h2 className="text-3xl font-bold tracking-tight text-foreground">
-            {isSignup ? "Create your account" : "Welcome back"}
+            Welcome back
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            {isSignup
-              ? "Set up access to your Orcalis Assess institutional workspace."
-              : "Please enter your details to sign in to your Orcalis Assess account."}
+            Please enter your details to sign in to your Orcalis Assess account.
           </p>
         </div>
 
@@ -238,12 +189,11 @@ export function SignInForm({ mode = "signin" }: { mode?: Mode }) {
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {isSignup ? "Creating account…" : "Signing in…"}
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in…
               </>
             ) : (
               <>
-                {isSignup ? "Create account" : "Sign in to dashboard"}
+                Sign in to dashboard
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </>
             )}
@@ -265,55 +215,24 @@ export function SignInForm({ mode = "signin" }: { mode?: Mode }) {
           <Button
             type="button"
             variant="outline"
-            disabled={oauthLoading !== null}
-            onClick={() => handleOAuth("microsoft")}
             className="h-11 rounded-xl border-border bg-background text-sm font-medium hover:bg-muted"
           >
-            {oauthLoading === "microsoft" ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <MicrosoftIcon className="mr-2 h-4 w-4" />
-            )}
-            Microsoft 365
+            <MicrosoftIcon className="mr-2 h-4 w-4" /> Microsoft 365
           </Button>
           <Button
             type="button"
             variant="outline"
-            disabled={oauthLoading !== null}
-            onClick={() => handleOAuth("google")}
             className="h-11 rounded-xl border-border bg-background text-sm font-medium hover:bg-muted"
           >
-            {oauthLoading === "google" ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <GoogleIcon className="mr-2 h-4 w-4" />
-            )}
-            Google Workspace
+            <GoogleIcon className="mr-2 h-4 w-4" /> Google Workspace
           </Button>
         </div>
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          {isSignup ? (
-            <>
-              Already have an account?{" "}
-              <Link
-                to="/"
-                className="font-medium text-[color:var(--brand-blue)] hover:underline"
-              >
-                Sign in
-              </Link>
-            </>
-          ) : (
-            <>
-              Institution not registered yet?{" "}
-              <Link
-                to="/signup"
-                className="font-medium text-[color:var(--brand-blue)] hover:underline"
-              >
-                Request a demo
-              </Link>
-            </>
-          )}
+          Institution not registered yet?{" "}
+          <a href="#" className="font-medium text-[color:var(--brand-blue)] hover:underline">
+            Request a demo
+          </a>
         </p>
       </motion.div>
 
