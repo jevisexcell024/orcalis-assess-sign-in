@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "motion/react";
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, Maximize2 } from "lucide-react";
@@ -38,6 +38,7 @@ export function SignInForm() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<SignInValues>({
@@ -160,19 +161,19 @@ export function SignInForm() {
             )}
           </div>
 
-          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-foreground">
-            <Checkbox
-              defaultChecked
-              onCheckedChange={(checked) => {
-                const ev = new Event("input", { bubbles: true });
-                const input = document.createElement("input");
-                input.value = String(!!checked);
-                input.dispatchEvent(ev);
-              }}
-              {...register("remember")}
-            />
-            <span className="text-muted-foreground">Remember this device</span>
-          </label>
+          <Controller
+            control={control}
+            name="remember"
+            render={({ field }) => (
+              <label className="flex cursor-pointer items-center gap-2.5 text-sm">
+                <Checkbox
+                  checked={!!field.value}
+                  onCheckedChange={(c) => field.onChange(!!c)}
+                />
+                <span className="text-muted-foreground">Remember this device</span>
+              </label>
+            )}
+          />
 
           {submitError && (
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
