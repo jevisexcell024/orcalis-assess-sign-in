@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { signInSchema, type SignInValues } from "@/lib/auth-schema";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 function MicrosoftIcon({ className }: { className?: string }) {
   return (
@@ -36,6 +37,8 @@ function GoogleIcon({ className }: { className?: string }) {
 export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [oauthError, setOauthError] = useState<string | null>(null);
+  const [isOauthSubmitting, setIsOauthSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -56,6 +59,28 @@ export function SignInForm() {
       navigate({ to: "/dashboard" });
     } catch {
       setSubmitError("Unable to sign in. Please try again.");
+    }
+  };
+
+  const onOAuthSignIn = async (provider: "azure" | "google") => {
+    setSubmitError(null);
+    setOauthError(null);
+    setIsOauthSubmitting(true);
+
+    try {
+      const redirectTo = `${window.location.origin}/dashboard`;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo },
+      });
+
+      if (error) {
+        setOauthError(error.message);
+      }
+    } catch {
+      setOauthError("Unable to redirect to the authentication provider. Please try again.");
+    } finally {
+      setIsOauthSubmitting(false);
     }
   };
 
@@ -184,6 +209,12 @@ export function SignInForm() {
             </div>
           )}
 
+          {oauthError && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+              {oauthError}
+            </div>
+          )}
+
           <Button
             type="submit"
             disabled={isSubmitting}
@@ -218,6 +249,8 @@ export function SignInForm() {
           <Button
             type="button"
             variant="outline"
+            disabled={isSubmitting || isOauthSubmitting}
+            onClick={() => onOAuthSignIn("azure")}
             className="h-11 rounded-xl border-border bg-background text-sm font-medium hover:bg-muted"
           >
             <MicrosoftIcon className="mr-2 h-4 w-4" /> Microsoft 365
@@ -225,6 +258,8 @@ export function SignInForm() {
           <Button
             type="button"
             variant="outline"
+            disabled={isSubmitting || isOauthSubmitting}
+            onClick={() => onOAuthSignIn("google")}
             className="h-11 rounded-xl border-border bg-background text-sm font-medium hover:bg-muted"
           >
             <GoogleIcon className="mr-2 h-4 w-4" /> Google Workspace
