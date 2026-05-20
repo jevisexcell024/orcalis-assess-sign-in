@@ -3,6 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "motion/react";
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, Maximize2 } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +36,7 @@ function GoogleIcon({ className }: { className?: string }) {
 export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const {
     register,
@@ -51,6 +53,7 @@ export function SignInForm() {
     try {
       await new Promise((r) => setTimeout(r, 1100));
       console.log("signin", values);
+      navigate({ to: "/dashboard" });
     } catch {
       setSubmitError("Unable to sign in. Please try again.");
     }
