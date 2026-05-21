@@ -1,5 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { motion } from "motion/react";
+import { getSession } from "@/lib/auth";
 import {
   Area,
   AreaChart,
@@ -51,6 +52,12 @@ export const Route = createFileRoute("/dashboard")({
       },
     ],
   }),
+  beforeLoad: async () => {
+    const session = await getSession();
+    if (!session) {
+      return redirect({ to: "/" });
+    }
+  },
 });
 
 const navOverview = [

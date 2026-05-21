@@ -1,5 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { motion } from "motion/react";
+import { getSession, isAdminUser } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 import {
   Area,
   AreaChart,
@@ -43,6 +45,16 @@ export const Route = createFileRoute("/admin")({
       },
     ],
   }),
+  beforeLoad: async () => {
+    const session = await getSession();
+    if (!session) {
+      return redirect({ to: "/" });
+    }
+
+    if (!isAdminUser(session.user)) {
+      return redirect({ to: "/dashboard" });
+    }
+  },
 });
 
 type NavItem = { label: string; icon: typeof LayoutDashboard; badge?: string; active?: boolean };
@@ -125,6 +137,7 @@ const interventions = [
 
 function SuperAdminPage() {
   const navigate = useNavigate();
+
   return (
     <div className="flex min-h-screen bg-[oklch(0.985_0.005_260)]">
       {/* Sidebar */}

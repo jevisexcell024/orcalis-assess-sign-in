@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { BrandingPanel } from "@/components/auth/BrandingPanel";
 import { SignInForm } from "@/components/auth/SignInForm";
+import { getSession } from "@/lib/auth";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -14,6 +15,12 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
+  beforeLoad: async () => {
+    const session = await getSession();
+    if (session) {
+      return redirect({ to: "/dashboard" });
+    }
+  },
 });
 
 function Index() {

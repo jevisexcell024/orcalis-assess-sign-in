@@ -3,10 +3,12 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
+  redirect,
   useRouter,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { getSession, isPublicPath } from "@/lib/auth";
 
 import appCss from "../styles.css?url";
 
@@ -92,6 +94,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
+  beforeLoad: async ({ location }) => {
+    if (isPublicPath(location.pathname)) {
+      return;
+    }
+
+    const session = await getSession();
+
+    if (!session) {
+      return redirect({ to: "/" });
+    }
+  },
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
