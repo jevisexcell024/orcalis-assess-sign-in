@@ -3,7 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "motion/react";
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight, Maximize2 } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -267,10 +267,10 @@ export function SignInForm() {
         </div>
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          Institution not registered yet?{" "}
-          <a href="#" className="font-medium text-[color:var(--brand-blue)] hover:underline">
-            Request a demo
-          </a>
+          Need an account?{" "}
+          <Link to="/signup" className="font-medium text-[color:var(--brand-blue)] hover:underline">
+            Sign up
+          </Link>
         </p>
       </motion.div>
 
