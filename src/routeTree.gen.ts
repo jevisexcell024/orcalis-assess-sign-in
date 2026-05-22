@@ -25,6 +25,7 @@ import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-b
 import { Route as AdminLiveMonitorRouteImport } from './routes/admin.live-monitor'
 import { Route as AdminExamsRouteImport } from './routes/admin.exams'
 import { Route as AdminCertificatesRouteImport } from './routes/admin.certificates'
+import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as StudentExamsIdCheckinRouteImport } from './routes/student.exams.$id.checkin'
 import { Route as AdminExamsExamIdBuilderRouteImport } from './routes/admin.exams.$examId.builder'
@@ -109,6 +110,11 @@ const AdminCertificatesRoute = AdminCertificatesRouteImport.update({
   path: '/certificates',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBillingRoute = AdminBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/student': typeof StudentRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/billing': typeof AdminBillingRoute
   '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/billing': typeof AdminBillingRoute
   '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/student': typeof StudentRouteWithChildren
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/billing': typeof AdminBillingRoute
   '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
@@ -200,6 +209,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/student'
     | '/admin/analytics'
+    | '/admin/billing'
     | '/admin/certificates'
     | '/admin/exams'
     | '/admin/live-monitor'
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/analytics'
+    | '/admin/billing'
     | '/admin/certificates'
     | '/admin/exams'
     | '/admin/live-monitor'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/student'
     | '/admin/analytics'
+    | '/admin/billing'
     | '/admin/certificates'
     | '/admin/exams'
     | '/admin/live-monitor'
@@ -377,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCertificatesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/billing': {
+      id: '/admin/billing'
+      path: '/billing'
+      fullPath: '/admin/billing'
+      preLoaderRoute: typeof AdminBillingRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/analytics': {
       id: '/admin/analytics'
       path: '/analytics'
@@ -415,6 +434,7 @@ const AdminExamsRouteWithChildren = AdminExamsRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminBillingRoute: typeof AdminBillingRoute
   AdminCertificatesRoute: typeof AdminCertificatesRoute
   AdminExamsRoute: typeof AdminExamsRouteWithChildren
   AdminLiveMonitorRoute: typeof AdminLiveMonitorRoute
@@ -425,6 +445,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminBillingRoute: AdminBillingRoute,
   AdminCertificatesRoute: AdminCertificatesRoute,
   AdminExamsRoute: AdminExamsRouteWithChildren,
   AdminLiveMonitorRoute: AdminLiveMonitorRoute,
