@@ -24,6 +24,7 @@ import { Route as AdminSchedulerRouteImport } from './routes/admin.scheduler'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as AdminLiveMonitorRouteImport } from './routes/admin.live-monitor'
 import { Route as AdminExamsRouteImport } from './routes/admin.exams'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as StudentExamsIdCheckinRouteImport } from './routes/student.exams.$id.checkin'
 import { Route as AdminExamsExamIdBuilderRouteImport } from './routes/admin.exams.$examId.builder'
 
@@ -102,6 +103,11 @@ const AdminExamsRoute = AdminExamsRouteImport.update({
   path: '/exams',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AdminRoute,
+} as any)
 const StudentExamsIdCheckinRoute = StudentExamsIdCheckinRouteImport.update({
   id: '/exams/$id/checkin',
   path: '/exams/$id/checkin',
@@ -123,6 +129,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/student': typeof StudentRouteWithChildren
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/student': typeof StudentRouteWithChildren
+  '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/student'
+    | '/admin/analytics'
     | '/admin/exams'
     | '/admin/live-monitor'
     | '/admin/question-bank'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/signup'
+    | '/admin/analytics'
     | '/admin/exams'
     | '/admin/live-monitor'
     | '/admin/question-bank'
@@ -217,6 +228,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/student'
+    | '/admin/analytics'
     | '/admin/exams'
     | '/admin/live-monitor'
     | '/admin/question-bank'
@@ -346,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminExamsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/analytics': {
+      id: '/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/student/exams/$id/checkin': {
       id: '/student/exams/$id/checkin'
       path: '/exams/$id/checkin'
@@ -376,6 +395,7 @@ const AdminExamsRouteWithChildren = AdminExamsRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminExamsRoute: typeof AdminExamsRouteWithChildren
   AdminLiveMonitorRoute: typeof AdminLiveMonitorRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
@@ -384,6 +404,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminExamsRoute: AdminExamsRouteWithChildren,
   AdminLiveMonitorRoute: AdminLiveMonitorRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
@@ -420,3 +441,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
