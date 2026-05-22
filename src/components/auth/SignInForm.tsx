@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { signInSchema, type SignInValues } from "@/lib/auth-schema";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdminUser } from "@/lib/auth";
 
 function MicrosoftIcon({ className }: { className?: string }) {
   return (
@@ -54,34 +55,27 @@ export function SignInForm() {
   const onSubmit = async (values: SignInValues) => {
     setSubmitError(null);
     try {
-      await new Promise((r) => setTimeout(r, 1100));
-      console.log("signin", values);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+      if (error) {
+        setSubmitError(error.message);
+        return;
+      }
+      if (await isAdminUser(data.user)) {
+        await supabase.auth.signOut();
+        setSubmitError("Administrator accounts must sign in via the admin portal.");
+        return;
+      }
       navigate({ to: "/dashboard" });
     } catch {
       setSubmitError("Unable to sign in. Please try again.");
     }
   };
 
-  const onOAuthSignIn = async (provider: "azure" | "google") => {
-    setSubmitError(null);
-    setOauthError(null);
-    setIsOauthSubmitting(true);
-
-    try {
-      const redirectTo = `${window.location.origin}/dashboard`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo },
-      });
-
-      if (error) {
-        setOauthError(error.message);
-      }
-    } catch {
-      setOauthError("Unable to redirect to the authentication provider. Please try again.");
-    } finally {
-      setIsOauthSubmitting(false);
-    }
+  const onOAuthSignIn = async (_provider: "azure" | "google") => {
+    setOauthError("SSO is not available yet. Please sign in with email and password.");
   };
 
   return (
