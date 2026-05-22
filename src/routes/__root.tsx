@@ -10,6 +10,8 @@ import {
 } from "@tanstack/react-router";
 import { getSession, isPublicPath } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 import appCss from "../styles.css?url";
 
@@ -75,14 +77,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Orcalis Assess · Secure online exams & AI proctoring" },
+      {
+        name: "description",
+        content:
+          "Orcalis Assess — enterprise online examination platform with AI-powered remote proctoring for universities, certification bodies, and corporations.",
+      },
+      { name: "author", content: "Orcalis Assess" },
+      { property: "og:title", content: "Orcalis Assess" },
+      {
+        property: "og:description",
+        content:
+          "Secure online examination and AI-powered remote proctoring for institutions.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -124,6 +133,17 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      router.invalidate();
+      queryClient.invalidateQueries();
+    });
+    return () => subscription.unsubscribe();
+  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
