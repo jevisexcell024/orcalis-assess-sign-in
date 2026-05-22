@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StudentRouteImport } from './routes/student'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -17,13 +18,20 @@ import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminSchedulerRouteImport } from './routes/admin.scheduler'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as AdminLiveMonitorRouteImport } from './routes/admin.live-monitor'
 import { Route as AdminExamsRouteImport } from './routes/admin.exams'
+import { Route as StudentExamsIdCheckinRouteImport } from './routes/student.exams.$id.checkin'
 import { Route as AdminExamsExamIdBuilderRouteImport } from './routes/admin.exams.$examId.builder'
 
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
@@ -64,6 +72,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentIndexRoute = StudentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -89,6 +102,11 @@ const AdminExamsRoute = AdminExamsRouteImport.update({
   path: '/exams',
   getParentRoute: () => AdminRoute,
 } as any)
+const StudentExamsIdCheckinRoute = StudentExamsIdCheckinRouteImport.update({
+  id: '/exams/$id/checkin',
+  path: '/exams/$id/checkin',
+  getParentRoute: () => StudentRoute,
+} as any)
 const AdminExamsExamIdBuilderRoute = AdminExamsExamIdBuilderRouteImport.update({
   id: '/$examId/builder',
   path: '/$examId/builder',
@@ -104,12 +122,15 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/student': typeof StudentRouteWithChildren
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/': typeof AdminIndexRoute
+  '/student/': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
+  '/student/exams/$id/checkin': typeof StudentExamsIdCheckinRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -124,7 +145,9 @@ export interface FileRoutesByTo {
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin': typeof AdminIndexRoute
+  '/student': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
+  '/student/exams/$id/checkin': typeof StudentExamsIdCheckinRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -136,12 +159,15 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
+  '/student': typeof StudentRouteWithChildren
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/': typeof AdminIndexRoute
+  '/student/': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
+  '/student/exams/$id/checkin': typeof StudentExamsIdCheckinRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -154,12 +180,15 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/signup'
+    | '/student'
     | '/admin/exams'
     | '/admin/live-monitor'
     | '/admin/question-bank'
     | '/admin/scheduler'
     | '/admin/'
+    | '/student/'
     | '/admin/exams/$examId/builder'
+    | '/student/exams/$id/checkin'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -174,7 +203,9 @@ export interface FileRouteTypes {
     | '/admin/question-bank'
     | '/admin/scheduler'
     | '/admin'
+    | '/student'
     | '/admin/exams/$examId/builder'
+    | '/student/exams/$id/checkin'
   id:
     | '__root__'
     | '/'
@@ -185,12 +216,15 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/reset-password'
     | '/signup'
+    | '/student'
     | '/admin/exams'
     | '/admin/live-monitor'
     | '/admin/question-bank'
     | '/admin/scheduler'
     | '/admin/'
+    | '/student/'
     | '/admin/exams/$examId/builder'
+    | '/student/exams/$id/checkin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -202,10 +236,18 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
+  StudentRoute: typeof StudentRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
@@ -262,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/': {
+      id: '/student/'
+      path: '/'
+      fullPath: '/student/'
+      preLoaderRoute: typeof StudentIndexRouteImport
+      parentRoute: typeof StudentRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
@@ -296,6 +345,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/exams'
       preLoaderRoute: typeof AdminExamsRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/student/exams/$id/checkin': {
+      id: '/student/exams/$id/checkin'
+      path: '/exams/$id/checkin'
+      fullPath: '/student/exams/$id/checkin'
+      preLoaderRoute: typeof StudentExamsIdCheckinRouteImport
+      parentRoute: typeof StudentRoute
     }
     '/admin/exams/$examId/builder': {
       id: '/admin/exams/$examId/builder'
@@ -337,6 +393,19 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface StudentRouteChildren {
+  StudentIndexRoute: typeof StudentIndexRoute
+  StudentExamsIdCheckinRoute: typeof StudentExamsIdCheckinRoute
+}
+
+const StudentRouteChildren: StudentRouteChildren = {
+  StudentIndexRoute: StudentIndexRoute,
+  StudentExamsIdCheckinRoute: StudentExamsIdCheckinRoute,
+}
+
+const StudentRouteWithChildren =
+  StudentRoute._addFileChildren(StudentRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
@@ -346,6 +415,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
+  StudentRoute: StudentRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
