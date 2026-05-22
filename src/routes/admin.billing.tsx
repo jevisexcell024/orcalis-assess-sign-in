@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Area,
   AreaChart,
@@ -22,6 +23,7 @@ import {
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getBillingSummary, listAuditLogs } from "@/lib/scheduling";
 
 export const Route = createFileRoute("/admin/billing")({
   component: BillingPage,
@@ -39,29 +41,22 @@ export const Route = createFileRoute("/admin/billing")({
 
 const tabs = ["Billing", "Security Logs", "Tickets"] as const;
 
-const usageData = Array.from({ length: 30 }, (_, i) => {
-  const day = i + 1;
-  const exams = 1200 + Math.round(Math.sin(i / 4) * 600) + i * 110;
-  const flags = Math.round(exams * 0.42 + Math.sin(i / 3) * 200);
-  return { day: `Oct ${day}`, exams, flags };
-});
-
-const candidatesSpark = Array.from({ length: 24 }, (_, i) => ({
-  i,
-  v: 60 + Math.sin(i / 3) * 8 + i * 0.6,
-}));
-
-const auditLogs = [
-  { ts: "Oct 24, 14:32:01", actor: "David Chen", initials: "DC", event: "Modified Exam Rules", resource: "Midterm Bio-101", status: "Success", ip: "192.168.1.184" },
-  { ts: "Oct 24, 14:18:47", actor: "Sarah Lee", initials: "SL", event: "Login", resource: "Admin Console", status: "Success", ip: "10.0.4.22" },
-  { ts: "Oct 24, 13:55:09", actor: "System", initials: "SY", event: "AI Flag Threshold Updated", resource: "Global Policy", status: "Success", ip: "—" },
-  { ts: "Oct 24, 13:22:30", actor: "Michael Park", initials: "MP", event: "Failed Login Attempt", resource: "Auth Service", status: "Failed", ip: "203.45.18.92" },
-  { ts: "Oct 24, 12:08:14", actor: "Sarah Lee", initials: "SL", event: "Exported Audit Logs", resource: "Reporting", status: "Success", ip: "10.0.4.22" },
-  { ts: "Oct 24, 11:41:55", actor: "David Chen", initials: "DC", event: "Created New Exam", resource: "CS-204 Final", status: "Success", ip: "192.168.1.184" },
-];
-
 function BillingPage() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("Billing");
+  const billingQ = useQuery({ queryKey: ["billing-summary"], queryFn: getBillingSummary });
+  const auditQ = useQuery({ queryKey: ["audit-logs"], queryFn: () => listAuditLogs(25) });
+
+  const summary = billingQ.data;
+  const usageData = summary?.usageByDay ?? [];
+  const candidatesSpark = summary?.candidatesSpark ?? [];
+  const auditLogs = auditQ.data ?? [];
+
+  const proctorPct = summary
+    ? Math.min(100, Math.round((summary.totalProctoringEvents / 5000) * 100))
+    : 0;
+  const storagePct = summary
+    ? Math.min(100, Math.round((summary.totalRegistrations / 2000) * 100))
+    : 0;
 
   return (
     <div className="min-h-screen bg-[oklch(0.13_0.025_265)] text-white">
@@ -89,26 +84,26 @@ function BillingPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <MeterCard
             icon={Video}
-            label="Proctoring Hours"
-            value="12,450"
-            limit="/ 15,000"
-            pct={83}
-            sub="83% utilized"
-            footer="Resets in 12 days"
+            label="Proctoring Events"
+            value={summary ? summary.totalProctoringEvents.toLocaleString() : "—"}
+            limit="/ 5,000"
+            pct={proctorPct}
+            sub={`${proctorPct}% utilized`}
+            footer={`${summary?.highSeverityEvents ?? 0} high severity`}
             color="from-indigo-400 to-violet-500"
           />
           <MeterCard
             icon={Database}
-            label="Video Storage"
-            value="4.2TB"
-            limit="/ 5TB"
-            pct={84}
-            sub="Approaching limit"
-            footer="Upgrade"
+            label="Registrations (30d)"
+            value={summary ? summary.totalRegistrations.toLocaleString() : "—"}
+            limit="/ 2,000"
+            pct={storagePct}
+            sub={storagePct >= 80 ? "Approaching limit" : `${storagePct}% utilized`}
+            footer={`${summary?.totalCompleted ?? 0} completed`}
             color="from-violet-400 to-fuchsia-500"
-            warn
+            warn={storagePct >= 80}
           />
-          <SparkCard data={candidatesSpark} />
+          <SparkCard data={candidatesSpark} active={summary?.activeCandidates ?? 0} />
         </div>
 
         <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -150,7 +145,7 @@ function BillingPage() {
                 />
                 <Legend wrapperStyle={{ fontSize: 11, color: "white" }} />
                 <Area type="monotone" dataKey="exams" name="Exams Conducted" stroke="#6366f1" strokeWidth={2.5} fill="url(#examFill)" />
-                <Line type="monotone" dataKey="flags" name="AI Flags" stroke="#a78bfa" strokeWidth={2} strokeDasharray="4 4" dot={false} />
+                <Line type="monotone" dataKey="flags" name="Proctoring Flags" stroke="#a78bfa" strokeWidth={2} strokeDasharray="4 4" dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -182,24 +177,28 @@ function BillingPage() {
               <thead className="bg-white/[0.02] text-[10px] uppercase tracking-[0.12em] text-white/50">
                 <tr>
                   <th className="px-4 py-3">Timestamp</th>
-                  <th className="px-4 py-3">Actor</th>
+                  <th className="px-4 py-3">Severity</th>
                   <th className="px-4 py-3">Event</th>
                   <th className="px-4 py-3">Resource</th>
                   <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3 text-right">IP Address</th>
+                  <th className="px-4 py-3 text-right">Registration</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {auditLogs.map((row, i) => (
-                  <tr key={i} className="hover:bg-white/[0.03]">
+                {auditLogs.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-10 text-center text-sm text-white/50">
+                      {auditQ.isLoading ? "Loading audit events…" : "No proctoring events recorded yet."}
+                    </td>
+                  </tr>
+                )}
+                {auditLogs.map((row) => (
+                  <tr key={row.id} className="hover:bg-white/[0.03]">
                     <td className="px-4 py-3 font-mono text-xs text-white/60">{row.ts}</td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-500/20 text-[10px] font-semibold text-indigo-300">
-                          {row.initials}
-                        </div>
-                        <span>{row.actor}</span>
-                      </div>
+                      <span className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/70">
+                        {row.severity}
+                      </span>
                     </td>
                     <td className="px-4 py-3 font-medium">{row.event}</td>
                     <td className="px-4 py-3 text-white/70">{row.resource}</td>
@@ -209,14 +208,18 @@ function BillingPage() {
                           "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
                           row.status === "Success"
                             ? "bg-emerald-500/15 text-emerald-300"
-                            : "bg-rose-500/15 text-rose-300",
+                            : row.status === "Warning"
+                              ? "bg-amber-500/15 text-amber-300"
+                              : "bg-rose-500/15 text-rose-300",
                         )}
                       >
                         <span className="h-1.5 w-1.5 rounded-full bg-current" />
                         {row.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-xs text-white/60">{row.ip}</td>
+                    <td className="px-4 py-3 text-right font-mono text-xs text-white/60">
+                      {row.registration_id.slice(0, 8)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -270,19 +273,19 @@ function MeterCard({
   );
 }
 
-function SparkCard({ data }: { data: { i: number; v: number }[] }) {
+function SparkCard({ data, active }: { data: { i: number; v: number }[]; active: number }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
       <div className="flex items-start justify-between">
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/50">
-          Active Candidates
+          Active Candidates (30d)
         </p>
         <UsersRound className="h-4 w-4 text-indigo-300" />
       </div>
       <div className="mt-3 flex items-baseline gap-2">
-        <span className="text-3xl font-bold">8,902</span>
+        <span className="text-3xl font-bold">{active.toLocaleString()}</span>
         <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-300">
-          <TrendingUp className="h-3 w-3" /> 12%
+          <TrendingUp className="h-3 w-3" /> live
         </span>
       </div>
       <div className="mt-3 h-12">
