@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      exam_sections: {
+        Row: {
+          created_at: string
+          exam_id: string
+          id: string
+          position: number
+          time_limit_minutes: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          exam_id: string
+          id?: string
+          position?: number
+          time_limit_minutes?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          exam_id?: string
+          id?: string
+          position?: number
+          time_limit_minutes?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_sections_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          status: Database["public"]["Enums"]["exam_status"]
+          term: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          status?: Database["public"]["Enums"]["exam_status"]
+          term?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          status?: Database["public"]["Enums"]["exam_status"]
+          term?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           contact_name: string | null
@@ -43,6 +111,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      questions: {
+        Row: {
+          created_at: string
+          created_by: string
+          difficulty: Database["public"]["Enums"]["question_difficulty"]
+          id: string
+          options: Json
+          points: number
+          position: number
+          prompt: string
+          section_id: string | null
+          shuffle_options: boolean
+          subject: string | null
+          tags: string[]
+          type: Database["public"]["Enums"]["question_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          difficulty?: Database["public"]["Enums"]["question_difficulty"]
+          id?: string
+          options?: Json
+          points?: number
+          position?: number
+          prompt?: string
+          section_id?: string | null
+          shuffle_options?: boolean
+          subject?: string | null
+          tags?: string[]
+          type?: Database["public"]["Enums"]["question_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          difficulty?: Database["public"]["Enums"]["question_difficulty"]
+          id?: string
+          options?: Json
+          points?: number
+          position?: number
+          prompt?: string
+          section_id?: string | null
+          shuffle_options?: boolean
+          subject?: string | null
+          tags?: string[]
+          type?: Database["public"]["Enums"]["question_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "exam_sections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -80,6 +207,9 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "institution"
+      exam_status: "draft" | "published" | "archived"
+      question_difficulty: "easy" | "medium" | "hard"
+      question_type: "mcq" | "descriptive" | "coding" | "true_false"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -208,6 +338,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "institution"],
+      exam_status: ["draft", "published", "archived"],
+      question_difficulty: ["easy", "medium", "hard"],
+      question_type: ["mcq", "descriptive", "coding", "true_false"],
     },
   },
 } as const
