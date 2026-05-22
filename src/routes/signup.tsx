@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { getSession } from "@/lib/auth";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { BrandingPanel } from "@/components/auth/BrandingPanel";
