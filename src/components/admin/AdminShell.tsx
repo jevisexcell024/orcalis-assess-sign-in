@@ -8,7 +8,7 @@ import {
   Layers,
   LayoutDashboard,
   Library,
-  Maximize2,
+  LogOut,
   Search,
   Settings,
   ShieldAlert,
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { signOut } from "@/lib/auth";
 import type { ReactNode } from "react";
 
 type NavLink = {
@@ -136,7 +137,12 @@ export function AdminShell({
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
             </button>
             <button
-              onClick={() => navigate({ to: "/" })}
+              onClick={async () => {
+                await signOut();
+                navigate({ to: "/" });
+              }}
+              aria-label="Sign out"
+              title="Sign out"
               className="flex items-center gap-2.5 rounded-lg border border-border bg-background py-1 pl-1 pr-3 transition hover:bg-muted"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-sky-400 to-indigo-500 text-[11px] font-semibold text-white">
@@ -146,7 +152,7 @@ export function AdminShell({
                 <p className="text-sm font-semibold leading-tight">Alex Carter</p>
                 <p className="text-[11px] text-muted-foreground">Super Admin</p>
               </div>
-              <Maximize2 className="ml-1 hidden h-3.5 w-3.5 text-muted-foreground sm:block" />
+              <LogOut className="ml-1 hidden h-3.5 w-3.5 text-muted-foreground sm:block" />
             </button>
           </div>
         </header>
