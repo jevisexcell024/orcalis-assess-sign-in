@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { isAdminUser } from "@/lib/auth";
 
 type AdminValues = { email: string; password: string; remember?: boolean };
 
@@ -34,8 +35,13 @@ export function AdminSignInForm() {
         return;
       }
 
-      // On success, redirect to dashboard. You can add admin role checks here.
-      navigate({ to: "/dashboard" });
+      if (!(await isAdminUser(data.user))) {
+        await supabase.auth.signOut();
+        setSubmitError("This account does not have administrator access.");
+        return;
+      }
+
+      navigate({ to: "/admin" });
     } catch (e) {
       setSubmitError("Unable to sign in. Please try again.");
     }
