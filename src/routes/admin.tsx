@@ -1,56 +1,13 @@
-import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
-import { motion } from "motion/react";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { getSession, isAdminUser } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import {
-  Area,
-  AreaChart,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
-import {
-  AlertTriangle,
-  Bell,
-  Building2,
-  CreditCard,
-  Filter,
-  Heart,
-  LayoutDashboard,
-  Maximize2,
-  Mic,
-  Scan,
-  Search,
-  Settings,
-  ShieldAlert,
-  ShieldCheck,
-  UsersRound,
-  Eye,
-  Activity,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin")({
-  component: SuperAdminPage,
-  head: () => ({
-    meta: [
-      { title: "Super Admin · Orcalis Assess" },
-      {
-        name: "description",
-        content:
-          "Cross-institution platform oversight — concurrent candidates, AI interventions, system health, and live proctoring alerts on Orcalis Assess.",
-      },
-    ],
-  }),
+  component: () => <Outlet />,
   beforeLoad: async () => {
     const session = await getSession();
     if (!session) {
       return redirect({ to: "/" });
     }
-
     if (!(await isAdminUser(session.user))) {
       return redirect({ to: "/dashboard" });
     }
