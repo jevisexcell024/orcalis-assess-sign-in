@@ -1,7 +1,8 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
-  Building2,
+  BarChart3,
+  Award,
   CreditCard,
   Heart,
   Layers,
@@ -15,6 +16,7 @@ import {
   UsersRound,
   CalendarClock,
   Video,
+  FileText,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -38,8 +40,9 @@ const examNav: NavLink[] = [
 ];
 
 const platformNav: NavLink[] = [
-  { label: "Institutions", to: "/admin", icon: Building2 },
   { label: "Live Monitor", to: "/admin/live-monitor", icon: Video, badge: "Live" },
+  { label: "Analytics", to: "/admin/analytics", icon: BarChart3 },
+  { label: "Certificates", to: "/admin/certificates", icon: Award },
   { label: "Candidates", to: "/admin", icon: UsersRound },
 ];
 
@@ -49,7 +52,8 @@ const monitoringNav: NavLink[] = [
 ];
 
 const adminNav: NavLink[] = [
-  { label: "Billing", to: "/admin", icon: CreditCard },
+  { label: "Billing & Plans", to: "/admin/billing", icon: CreditCard },
+  { label: "Audit Logs", to: "/admin/billing", icon: FileText },
   { label: "Settings", to: "/admin", icon: Settings },
 ];
 
