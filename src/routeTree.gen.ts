@@ -18,6 +18,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminSchedulerRouteImport } from './routes/admin.scheduler'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as AdminExamsRouteImport } from './routes/admin.exams'
 import { Route as AdminExamsExamIdBuilderRouteImport } from './routes/admin.exams.$examId.builder'
@@ -67,6 +68,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSchedulerRoute = AdminSchedulerRouteImport.update({
+  id: '/scheduler',
+  path: '/scheduler',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
   id: '/question-bank',
   path: '/question-bank',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
 }
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin': typeof AdminIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
 }
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
 }
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin/exams'
     | '/admin/question-bank'
+    | '/admin/scheduler'
     | '/admin/'
     | '/admin/exams/$examId/builder'
   fileRoutesByTo: FileRoutesByTo
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin/exams'
     | '/admin/question-bank'
+    | '/admin/scheduler'
     | '/admin'
     | '/admin/exams/$examId/builder'
   id:
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/admin/exams'
     | '/admin/question-bank'
+    | '/admin/scheduler'
     | '/admin/'
     | '/admin/exams/$examId/builder'
   fileRoutesById: FileRoutesById
@@ -245,6 +257,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/scheduler': {
+      id: '/admin/scheduler'
+      path: '/scheduler'
+      fullPath: '/admin/scheduler'
+      preLoaderRoute: typeof AdminSchedulerRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/question-bank': {
       id: '/admin/question-bank'
       path: '/question-bank'
@@ -284,12 +303,14 @@ const AdminExamsRouteWithChildren = AdminExamsRoute._addFileChildren(
 interface AdminRouteChildren {
   AdminExamsRoute: typeof AdminExamsRouteWithChildren
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
+  AdminSchedulerRoute: typeof AdminSchedulerRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminExamsRoute: AdminExamsRouteWithChildren,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
+  AdminSchedulerRoute: AdminSchedulerRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -308,3 +329,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
