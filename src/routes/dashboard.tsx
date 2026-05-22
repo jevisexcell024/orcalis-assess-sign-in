@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { motion } from "motion/react";
-import { getSession, resolveHomeRoute } from "@/lib/auth";
+import { getSession, resolveHomeRoute, signOut } from "@/lib/auth";
 import {
   Area,
   AreaChart,
@@ -236,7 +236,10 @@ function DashboardPage() {
               <p className="truncate text-xs text-muted-foreground">Institution Admin</p>
             </div>
             <button
-              onClick={() => navigate({ to: "/" })}
+              onClick={async () => {
+                await signOut();
+                navigate({ to: "/" });
+              }}
               aria-label="Sign out"
               className="rounded-md p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
             >
