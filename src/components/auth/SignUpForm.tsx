@@ -226,10 +226,10 @@ export function SignUpForm() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 lg:invisible">
           <div
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-white"
+            className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow"
             style={{ background: "var(--gradient-primary)" }}
           >
-            <Lock className="h-4 w-4" />
+            <ShieldCheck className="h-4 w-4" strokeWidth={2.5} />
           </div>
           <span className="text-sm font-semibold tracking-tight">Orcalis Assess</span>
         </div>
@@ -250,67 +250,75 @@ export function SignUpForm() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto flex w-full max-w-[440px] flex-1 flex-col justify-center py-10"
+        className="mx-auto flex w-full max-w-[480px] flex-1 flex-col justify-center py-10"
       >
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">Create your account</h2>
+        <div className="mb-7">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Free 14-day trial · No card required
+          </span>
+          <h2 className="mt-4 text-3xl font-bold tracking-tight text-foreground">
+            Create your account
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Register for Orcalis Assess to manage exams, candidates, and proctoring workflows.
+            Set up your institution workspace to run secure exams and AI proctoring.
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
-          <div className="space-y-2">
-            <Label htmlFor="institutionName" className="text-sm font-medium">
-              Institution name
-            </Label>
-            <div className="relative">
-              <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="institutionName"
-                type="text"
-                autoComplete="organization"
-                placeholder="State University"
-                aria-invalid={!!errors.institutionName}
-                className={cn(
-                  "h-12 rounded-xl border-input pl-10 text-sm",
-                  errors.institutionName && "border-destructive focus-visible:ring-destructive/40",
-                )}
-                {...register("institutionName")}
-              />
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="institutionName" className="text-sm font-medium">
+                Institution
+              </Label>
+              <div className="relative">
+                <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="institutionName"
+                  type="text"
+                  autoComplete="organization"
+                  placeholder="State University"
+                  aria-invalid={!!errors.institutionName}
+                  className={cn(
+                    "h-12 rounded-xl border-input pl-10 text-sm",
+                    errors.institutionName && "border-destructive focus-visible:ring-destructive/40",
+                  )}
+                  {...register("institutionName")}
+                />
+              </div>
+              {errors.institutionName && (
+                <p className="text-xs text-destructive">{errors.institutionName.message}</p>
+              )}
             </div>
-            {errors.institutionName && (
-              <p className="text-xs text-destructive">{errors.institutionName.message}</p>
-            )}
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="contactName" className="text-sm font-medium">
-              Contact name
-            </Label>
-            <div className="relative">
-              <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="contactName"
-                type="text"
-                autoComplete="name"
-                placeholder="Jane Doe"
-                aria-invalid={!!errors.contactName}
-                className={cn(
-                  "h-12 rounded-xl border-input pl-10 text-sm",
-                  errors.contactName && "border-destructive focus-visible:ring-destructive/40",
-                )}
-                {...register("contactName")}
-              />
+            <div className="space-y-2">
+              <Label htmlFor="contactName" className="text-sm font-medium">
+                Contact name
+              </Label>
+              <div className="relative">
+                <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="contactName"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Jane Doe"
+                  aria-invalid={!!errors.contactName}
+                  className={cn(
+                    "h-12 rounded-xl border-input pl-10 text-sm",
+                    errors.contactName && "border-destructive focus-visible:ring-destructive/40",
+                  )}
+                  {...register("contactName")}
+                />
+              </div>
+              {errors.contactName && (
+                <p className="text-xs text-destructive">{errors.contactName.message}</p>
+              )}
             </div>
-            {errors.contactName && (
-              <p className="text-xs text-destructive">{errors.contactName.message}</p>
-            )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">
-              Email address
+              Work email
             </Label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -357,6 +365,33 @@ export function SignUpForm() {
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
+            {passwordValue.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <div className="flex gap-1">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className={cn(
+                        "h-1 flex-1 rounded-full transition-colors",
+                        i < strength.score
+                          ? strength.score <= 1
+                            ? "bg-destructive"
+                            : strength.score === 2
+                              ? "bg-amber-500"
+                              : strength.score === 3
+                                ? "bg-sky-500"
+                                : "bg-emerald-500"
+                          : "bg-muted",
+                      )}
+                    />
+                  ))}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Password strength:{" "}
+                  <span className="font-medium text-foreground">{strength.label}</span>
+                </p>
+              </div>
+            )}
             {errors.password && (
               <p className="text-xs text-destructive">{errors.password.message}</p>
             )}
@@ -366,18 +401,21 @@ export function SignUpForm() {
             <Label htmlFor="confirmPassword" className="text-sm font-medium">
               Confirm password
             </Label>
-            <Input
-              id="confirmPassword"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              placeholder="••••••••••••"
-              aria-invalid={!!errors.confirmPassword}
-              className={cn(
-                "h-12 rounded-xl border-input text-sm",
-                errors.confirmPassword && "border-destructive focus-visible:ring-destructive/40",
-              )}
-              {...register("confirmPassword")}
-            />
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="confirmPassword"
+                type={showPassword ? "text" : "password"}
+                autoComplete="new-password"
+                placeholder="••••••••••••"
+                aria-invalid={!!errors.confirmPassword}
+                className={cn(
+                  "h-12 rounded-xl border-input pl-10 text-sm",
+                  errors.confirmPassword && "border-destructive focus-visible:ring-destructive/40",
+                )}
+                {...register("confirmPassword")}
+              />
+            </div>
             {errors.confirmPassword && (
               <p className="text-xs text-destructive">{errors.confirmPassword.message}</p>
             )}
@@ -419,9 +457,15 @@ export function SignUpForm() {
             </div>
           )}
 
+          {oauthError && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+              {oauthError}
+            </div>
+          )}
+
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isOauthSubmitting}
             className="group relative h-12 w-full overflow-hidden rounded-xl text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-80"
             style={{ background: "var(--gradient-primary)" }}
           >
@@ -432,11 +476,43 @@ export function SignUpForm() {
             ) : (
               <>
                 Create account
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform" />
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </>
             )}
           </Button>
         </form>
+
+        <div className="relative my-7">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-background px-3 text-xs uppercase tracking-wider text-muted-foreground">
+              Or sign up with SSO
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSubmitting || isOauthSubmitting}
+            onClick={() => onOAuthSignUp("azure")}
+            className="h-11 rounded-xl border-border bg-background text-sm font-medium hover:bg-muted"
+          >
+            <MicrosoftIcon className="mr-2 h-4 w-4" /> Microsoft 365
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isSubmitting || isOauthSubmitting}
+            onClick={() => onOAuthSignUp("google")}
+            className="h-11 rounded-xl border-border bg-background text-sm font-medium hover:bg-muted"
+          >
+            <GoogleIcon className="mr-2 h-4 w-4" /> Google Workspace
+          </Button>
+        </div>
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
@@ -445,6 +521,11 @@ export function SignUpForm() {
           </Link>
         </p>
       </motion.div>
+
+      <footer className="mt-auto flex items-center justify-center gap-2 pt-6 text-xs text-muted-foreground">
+        <Check className="h-3 w-3 text-emerald-500" />
+        SOC 2 Type II Certified <span className="opacity-50">•</span> GDPR &amp; FERPA Compliant
+      </footer>
     </section>
   );
 }
