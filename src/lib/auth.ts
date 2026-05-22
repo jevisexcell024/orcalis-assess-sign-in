@@ -1,7 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 
-const PUBLIC_PATHS = new Set(["/", "/signup", "/admin-login"]);
+const PUBLIC_PATHS = new Set([
+  "/",
+  "/signup",
+  "/admin-login",
+  "/forgot-password",
+  "/reset-password",
+  "/auth-callback",
+]);
 
 export function isPublicPath(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true;
