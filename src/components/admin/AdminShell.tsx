@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Library,
   Maximize2,
-  Scan,
   Search,
   Settings,
   ShieldAlert,
