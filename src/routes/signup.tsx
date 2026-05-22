@@ -1,9 +1,10 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { getSession } from "@/lib/auth";
 import { SignUpForm } from "@/components/auth/SignUpForm";
+import { BrandingPanel } from "@/components/auth/BrandingPanel";
 
 export const Route = createFileRoute("/signup")({
-  component: SignUpForm,
+  component: SignUpPage,
   head: () => ({
     meta: [
       { title: "Sign up · Orcalis Assess" },
@@ -21,3 +22,12 @@ export const Route = createFileRoute("/signup")({
     }
   },
 });
+
+function SignUpPage() {
+  return (
+    <main className="grid min-h-screen grid-cols-1 lg:grid-cols-2">
+      <BrandingPanel />
+      <SignUpForm />
+    </main>
+  );
+}
