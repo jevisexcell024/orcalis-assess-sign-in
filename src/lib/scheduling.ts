@@ -87,3 +87,51 @@ export async function updateRegistration(
   if (error) throw error;
   return data;
 }
+
+// ---------- Admin / monitoring ----------
+
+export async function listRegistrationsForSchedule(scheduleId: string) {
+  const { data, error } = await supabase
+    .from("exam_registrations")
+    .select("*")
+    .eq("schedule_id", scheduleId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function countAllRegistrations() {
+  const { count, error } = await supabase
+    .from("exam_registrations")
+    .select("*", { count: "exact", head: true });
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function listRecentProctoringEvents(limit = 25, scheduleId?: string) {
+  let q = supabase
+    .from("proctoring_events")
+    .select("*, exam_registrations!inner(schedule_id, candidate_id)")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (scheduleId) {
+    q = q.eq("exam_registrations.schedule_id", scheduleId);
+  }
+  const { data, error } = await q;
+  if (error) throw error;
+  return data;
+}
+
+export function pickActiveSchedule<T extends { start_at: string; end_at: string }>(
+  schedules: T[],
+): T | null {
+  const now = Date.now();
+  const live = schedules.find(
+    (s) => new Date(s.start_at).getTime() <= now && new Date(s.end_at).getTime() >= now,
+  );
+  if (live) return live;
+  const upcoming = schedules
+    .filter((s) => new Date(s.start_at).getTime() > now)
+    .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0];
+  return upcoming ?? schedules[0] ?? null;
+}
