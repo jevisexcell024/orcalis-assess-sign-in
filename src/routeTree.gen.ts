@@ -20,6 +20,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminSchedulerRouteImport } from './routes/admin.scheduler'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
+import { Route as AdminLiveMonitorRouteImport } from './routes/admin.live-monitor'
 import { Route as AdminExamsRouteImport } from './routes/admin.exams'
 import { Route as AdminExamsExamIdBuilderRouteImport } from './routes/admin.exams.$examId.builder'
 
@@ -78,6 +79,11 @@ const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
   path: '/question-bank',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLiveMonitorRoute = AdminLiveMonitorRouteImport.update({
+  id: '/live-monitor',
+  path: '/live-monitor',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminExamsRoute = AdminExamsRouteImport.update({
   id: '/exams',
   path: '/exams',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
+  '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/': typeof AdminIndexRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
+  '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin': typeof AdminIndexRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
+  '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/': typeof AdminIndexRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/exams'
+    | '/admin/live-monitor'
     | '/admin/question-bank'
     | '/admin/scheduler'
     | '/admin/'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/exams'
+    | '/admin/live-monitor'
     | '/admin/question-bank'
     | '/admin/scheduler'
     | '/admin'
@@ -175,6 +186,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/exams'
+    | '/admin/live-monitor'
     | '/admin/question-bank'
     | '/admin/scheduler'
     | '/admin/'
@@ -271,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQuestionBankRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/live-monitor': {
+      id: '/admin/live-monitor'
+      path: '/live-monitor'
+      fullPath: '/admin/live-monitor'
+      preLoaderRoute: typeof AdminLiveMonitorRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/exams': {
       id: '/admin/exams'
       path: '/exams'
@@ -302,6 +321,7 @@ const AdminExamsRouteWithChildren = AdminExamsRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminExamsRoute: typeof AdminExamsRouteWithChildren
+  AdminLiveMonitorRoute: typeof AdminLiveMonitorRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   AdminSchedulerRoute: typeof AdminSchedulerRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -309,6 +329,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminExamsRoute: AdminExamsRouteWithChildren,
+  AdminLiveMonitorRoute: AdminLiveMonitorRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   AdminSchedulerRoute: AdminSchedulerRoute,
   AdminIndexRoute: AdminIndexRoute,
