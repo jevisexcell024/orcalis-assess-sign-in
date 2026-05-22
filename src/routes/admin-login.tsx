@@ -18,7 +18,7 @@ export const Route = createFileRoute("/admin-login")({
     const session = await getSession();
     if (!session) return;
 
-    if (isAdminUser(session.user)) {
+    if (await isAdminUser(session.user)) {
       return redirect({ to: "/admin" });
     }
 

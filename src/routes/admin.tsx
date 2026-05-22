@@ -51,7 +51,7 @@ export const Route = createFileRoute("/admin")({
       return redirect({ to: "/" });
     }
 
-    if (!isAdminUser(session.user)) {
+    if (!(await isAdminUser(session.user))) {
       return redirect({ to: "/dashboard" });
     }
   },
