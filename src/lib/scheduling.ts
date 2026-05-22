@@ -222,3 +222,97 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
     perExam,
   };
 }
+
+// ---------- Billing / audit ----------
+
+export type BillingSummary = {
+  totalRegistrations: number;
+  totalCompleted: number;
+  activeCandidates: number;
+  totalProctoringEvents: number;
+  highSeverityEvents: number;
+  usageByDay: { day: string; exams: number; flags: number }[];
+  candidatesSpark: { i: number; v: number }[];
+};
+
+export async function getBillingSummary(): Promise<BillingSummary> {
+  const since = new Date();
+  since.setDate(since.getDate() - 29);
+  since.setHours(0, 0, 0, 0);
+
+  const [{ data: regs, error: regErr }, { data: events, error: evErr }, totalRegistrations] = await Promise.all([
+    supabase
+      .from("exam_registrations")
+      .select("status, candidate_id, created_at")
+      .gte("created_at", since.toISOString()),
+    supabase
+      .from("proctoring_events")
+      .select("severity, created_at")
+      .gte("created_at", since.toISOString()),
+    countAllRegistrations(),
+  ]);
+  if (regErr) throw regErr;
+  if (evErr) throw evErr;
+
+  const regRows = regs ?? [];
+  const evRows = events ?? [];
+
+  const days: { day: string; exams: number; flags: number }[] = [];
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(since);
+    d.setDate(since.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    const label = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const exams = regRows.filter((r) => r.created_at.slice(0, 10) === key).length;
+    const flags = evRows.filter((e) => e.created_at.slice(0, 10) === key).length;
+    days.push({ day: label, exams, flags });
+  }
+
+  const candidatesSpark = days.slice(-24).map((d, i) => ({ i, v: d.exams }));
+  const activeCandidates = new Set(regRows.map((r) => r.candidate_id)).size;
+  const highSeverityEvents = evRows.filter((e) => e.severity === "high").length;
+
+  return {
+    totalRegistrations,
+    totalCompleted: regRows.filter((r) => r.status === "completed").length,
+    activeCandidates,
+    totalProctoringEvents: evRows.length,
+    highSeverityEvents,
+    usageByDay: days,
+    candidatesSpark,
+  };
+}
+
+export type AuditLogRow = {
+  id: string;
+  ts: string;
+  event: string;
+  resource: string;
+  status: "Success" | "Failed" | "Warning";
+  severity: string;
+  registration_id: string;
+};
+
+export async function listAuditLogs(limit = 25): Promise<AuditLogRow[]> {
+  const { data, error } = await supabase
+    .from("proctoring_events")
+    .select("id, created_at, event_type, message, severity, registration_id")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).map((e) => ({
+    id: e.id,
+    ts: new Date(e.created_at).toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    }),
+    event: e.event_type,
+    resource: e.message ?? "Proctoring",
+    status: e.severity === "high" ? "Failed" : e.severity === "warning" ? "Warning" : "Success",
+    severity: e.severity,
+    registration_id: e.registration_id,
+  }));
+}
