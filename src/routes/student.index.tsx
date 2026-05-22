@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
-import { Bell, CheckCircle2, Database, Code2, ChevronRight, Search, ShieldCheck } from "lucide-react";
+import { Bell, CheckCircle2, Code2, ChevronRight, Search, ShieldCheck } from "lucide-react";
 import { StudentShell } from "@/components/student/StudentShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,14 +13,70 @@ export const Route = createFileRoute("/student/")({
   head: () => ({ meta: [{ title: "Student Hub · Orcalis Assess" }] }),
 });
 
-const perf = [
-  { m: "Jan", v: 4 }, { m: "Feb", v: 5 }, { m: "Mar", v: 6 }, { m: "Apr", v: 8 },
-  { m: "May", v: 5 }, { m: "Jun", v: 6 }, { m: "Jul", v: 4 },
-];
+type RegRow = {
+  id: string;
+  status: string;
+  system_check_passed: boolean;
+  schedule_id: string | null;
+  score: number | null;
+  created_at: string;
+  exams?: { title?: string | null } | null;
+  exam_schedules?: { start_at?: string | null; end_at?: string | null; timezone?: string | null } | null;
+};
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function formatDate(iso?: string | null) {
+  if (!iso) return "TBD";
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+}
+
+function daysUntil(iso?: string | null): number | null {
+  if (!iso) return null;
+  const diff = new Date(iso).getTime() - Date.now();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
 
 function StudentHub() {
   const regsQ = useQuery({ queryKey: ["my-regs"], queryFn: listMyRegistrations });
-  const regs = regsQ.data ?? [];
+  const regs = (regsQ.data ?? []) as RegRow[];
+
+  const upcoming = regs
+    .filter((r) => r.exam_schedules?.start_at && new Date(r.exam_schedules.start_at).getTime() > Date.now())
+    .sort(
+      (a, b) =>
+        new Date(a.exam_schedules!.start_at!).getTime() -
+        new Date(b.exam_schedules!.start_at!).getTime(),
+    )[0];
+  const nextDays = daysUntil(upcoming?.exam_schedules?.start_at);
+  const nextLabel =
+    nextDays === null
+      ? "No upcoming exams scheduled."
+      : nextDays <= 0
+        ? "Your next exam is live now."
+        : `Your next exam is in ${nextDays} day${nextDays === 1 ? "" : "s"}.`;
+
+  const completed = regs.filter((r) => r.status === "completed" && typeof r.score === "number");
+  const eligibilityCleared = regs.every((r) => r.status !== "action_required");
+
+  // Performance overview: average score per month over the last 7 months
+  const now = new Date();
+  const perf = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - (6 - i), 1);
+    const key = `${d.getFullYear()}-${d.getMonth()}`;
+    const bucket = completed.filter((r) => {
+      const dd = new Date(r.created_at);
+      return `${dd.getFullYear()}-${dd.getMonth()}` === key;
+    });
+    const avg = bucket.length ? bucket.reduce((s, r) => s + (r.score ?? 0), 0) / bucket.length : 0;
+    return { m: MONTHS[d.getMonth()], v: Math.round(avg) };
+  });
+
+  const recent = completed
+    .slice()
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 3);
 
   return (
     <StudentShell>
@@ -28,19 +84,21 @@ function StudentHub() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Student Hub</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Welcome back, your next exam is in 3 days.</p>
+            <p className="mt-1 text-sm text-muted-foreground">{nextLabel}</p>
           </div>
           <div className="flex items-center gap-3 rounded-xl border border-border bg-background px-4 py-2 shadow-sm">
             <div>
-              <p className="text-[11px] text-muted-foreground">Credits</p>
-              <p className="text-sm font-semibold">1,250</p>
+              <p className="text-[11px] text-muted-foreground">Registered</p>
+              <p className="text-sm font-semibold">{regs.length}</p>
             </div>
             <div className="h-8 w-px bg-border" />
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              <CheckCircle2 className={`h-5 w-5 ${eligibilityCleared ? "text-emerald-600" : "text-amber-600"}`} />
               <div>
                 <p className="text-[11px] text-muted-foreground">Eligibility</p>
-                <p className="text-sm font-semibold text-emerald-700">Cleared</p>
+                <p className={`text-sm font-semibold ${eligibilityCleared ? "text-emerald-700" : "text-amber-700"}`}>
+                  {eligibilityCleared ? "Cleared" : "Action needed"}
+                </p>
               </div>
             </div>
           </div>
@@ -53,32 +111,37 @@ function StudentHub() {
                 <h3 className="text-base font-semibold">Performance Overview</h3>
                 <Link to="/student" className="text-xs font-semibold text-[color:var(--brand-blue)]">Detailed Report ›</Link>
               </div>
+              {completed.length === 0 ? (
+                <p className="mt-6 text-sm text-muted-foreground">
+                  Complete an exam to see your score trend appear here.
+                </p>
+              ) : (
               <div className="mt-4 h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={perf}>
                     <XAxis dataKey="m" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} />
                     <Bar dataKey="v" fill="oklch(0.58 0.22 262)" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+              )}
             </section>
 
             <section>
               <h3 className="text-base font-semibold">Registered Exams</h3>
               <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
                 {regs.length === 0 ? (
-                  <>
-                    <ExamCard title="Software Engineering II" sub="Proctored · 120 mins" date="Oct 24, 2024" status="Confirmed" tone="bg-emerald-100 text-emerald-700" icon={<Code2 className="h-4 w-4" />} />
-                    <ExamCard title="Database Architecture" sub="System Check Pending" date="Oct 28, 2024" status="Action Required" tone="bg-amber-100 text-amber-700" icon={<Database className="h-4 w-4" />} cta="Check Setup" />
-                  </>
+                  <div className="col-span-full rounded-2xl border border-dashed border-border bg-background p-8 text-center text-sm text-muted-foreground">
+                    You haven't registered for any exams yet. New sessions will appear here as soon as they're published.
+                  </div>
                 ) : (
                   regs.map((r) => (
                     <ExamCard
                       key={r.id}
-                      title={(r as { exams?: { title?: string } }).exams?.title ?? "Exam"}
+                      title={r.exams?.title ?? "Exam"}
                       sub={r.system_check_passed ? "Ready" : "System Check Pending"}
-                      date={r.schedule_id ? "Scheduled" : "TBD"}
+                      date={formatDate(r.exam_schedules?.start_at)}
                       status={r.status}
                       tone={r.status === "confirmed" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}
                       icon={<Code2 className="h-4 w-4" />}
@@ -118,10 +181,27 @@ function StudentHub() {
                 <h4 className="text-sm font-semibold">Recent Results</h4>
                 <button className="text-xs text-muted-foreground">View all ⌄</button>
               </div>
-              <ul className="mt-3 space-y-2">
-                <ResultRow date="OCT 12" title="Cloud Computing Basics" sub="Certificate Available" score="92%" />
-                <ResultRow date="SEP 28" title="Network Security" sub="Practice Test" score="78%" />
-              </ul>
+              {recent.length === 0 ? (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Your completed exam scores will appear here.
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {recent.map((r) => {
+                    const d = new Date(r.created_at);
+                    const label = `${MONTHS[d.getMonth()].toUpperCase()} ${d.getDate()}`;
+                    return (
+                      <ResultRow
+                        key={r.id}
+                        date={label}
+                        title={r.exams?.title ?? "Exam"}
+                        sub={(r.score ?? 0) >= 60 ? "Passed" : "Below passing"}
+                        score={`${r.score}%`}
+                      />
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </aside>
         </div>
