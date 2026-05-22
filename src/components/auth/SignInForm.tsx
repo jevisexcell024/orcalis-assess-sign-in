@@ -148,12 +148,12 @@ export function SignInForm() {
               <Label htmlFor="password" className="text-sm font-medium">
                 Password
               </Label>
-              <a
-                href="#"
+              <Link
+                to="/forgot-password"
                 className="text-xs font-medium text-[color:var(--brand-blue)] hover:underline"
               >
                 Forgot password?
-              </a>
+              </Link>
             </div>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
