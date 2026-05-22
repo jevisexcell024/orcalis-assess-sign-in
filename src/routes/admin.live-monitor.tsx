@@ -20,7 +20,7 @@ export const Route = createFileRoute("/admin/live-monitor")({
 });
 
 function severityToTone(sev: string) {
-  if (sev === "critical" || sev === "high")
+  if (sev === "high")
     return { card: "border-rose-300", chip: "bg-rose-500 text-white", status: "High Risk", action: "Intervene" as const, text: "text-rose-600" };
   if (sev === "warning")
     return { card: "border-amber-300", chip: "bg-amber-500 text-white", status: "Warning", action: "Send Warning" as const, text: "text-amber-600" };
@@ -91,10 +91,10 @@ function LiveMonitorPage() {
 
   const stats = useMemo(() => {
     const total = regs.length;
-    const inProgress = regs.filter((r) => r.status === "in_progress" || r.status === "confirmed").length;
+    const inProgress = regs.filter((r) => r.status === "confirmed").length;
     const highRisk = regs.filter((r) => {
       const evs = eventsByReg.get(r.id) ?? [];
-      return evs.some((e) => e.severity === "critical" || e.severity === "high");
+      return evs.some((e) => e.severity === "high");
     }).length;
     const network = events.filter((e) => e.event_type.toLowerCase().includes("network")).length;
     return { total, inProgress, highRisk, network };
