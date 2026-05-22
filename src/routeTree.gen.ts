@@ -18,6 +18,7 @@ import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as AdminExamsRouteImport } from './routes/admin.exams'
 import { Route as AdminExamsExamIdBuilderRouteImport } from './routes/admin.exams.$examId.builder'
 
@@ -66,6 +67,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
+  id: '/question-bank',
+  path: '/question-bank',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminExamsRoute = AdminExamsRouteImport.update({
   id: '/exams',
   path: '/exams',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
+  '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
 }
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
+  '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin': typeof AdminIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
 }
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
+  '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
 }
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/exams'
+    | '/admin/question-bank'
     | '/admin/'
     | '/admin/exams/$examId/builder'
   fileRoutesByTo: FileRoutesByTo
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/exams'
+    | '/admin/question-bank'
     | '/admin'
     | '/admin/exams/$examId/builder'
   id:
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin/exams'
+    | '/admin/question-bank'
     | '/admin/'
     | '/admin/exams/$examId/builder'
   fileRoutesById: FileRoutesById
@@ -233,6 +245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/question-bank': {
+      id: '/admin/question-bank'
+      path: '/question-bank'
+      fullPath: '/admin/question-bank'
+      preLoaderRoute: typeof AdminQuestionBankRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/exams': {
       id: '/admin/exams'
       path: '/exams'
@@ -264,11 +283,13 @@ const AdminExamsRouteWithChildren = AdminExamsRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminExamsRoute: typeof AdminExamsRouteWithChildren
+  AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminExamsRoute: AdminExamsRouteWithChildren,
+  AdminQuestionBankRoute: AdminQuestionBankRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
