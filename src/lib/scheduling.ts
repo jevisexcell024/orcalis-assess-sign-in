@@ -135,3 +135,84 @@ export function pickActiveSchedule<T extends { start_at: string; end_at: string 
     .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0];
   return upcoming ?? schedules[0] ?? null;
 }
+
+// ---------- Analytics ----------
+
+export type AnalyticsSummary = {
+  averageScore: number | null;
+  highestScore: number | null;
+  totalCompleted: number;
+  passingRate: number | null;
+  passingThreshold: number;
+  totalRegistrations: number;
+  scoreDistribution: { bucket: string; count: number }[];
+  perExam: { exam: string; average: number; completed: number }[];
+};
+
+const PASSING_THRESHOLD = 60;
+
+export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
+  const { data, error } = await supabase
+    .from("exam_registrations")
+    .select("score, status, exams(title)")
+    .eq("status", "completed");
+  if (error) throw error;
+
+  const rows = (data ?? []) as Array<{
+    score: number | null;
+    status: string;
+    exams: { title: string } | null;
+  }>;
+
+  const scored = rows.filter((r) => typeof r.score === "number") as Array<{
+    score: number;
+    exams: { title: string } | null;
+  }>;
+
+  const totalCompleted = rows.length;
+  const averageScore = scored.length
+    ? scored.reduce((a, r) => a + r.score, 0) / scored.length
+    : null;
+  const highestScore = scored.length ? Math.max(...scored.map((r) => r.score)) : null;
+  const passingRate = scored.length
+    ? (scored.filter((r) => r.score >= PASSING_THRESHOLD).length / scored.length) * 100
+    : null;
+
+  const buckets = [
+    { bucket: "0–20", min: 0, max: 20 },
+    { bucket: "21–40", min: 21, max: 40 },
+    { bucket: "41–60", min: 41, max: 60 },
+    { bucket: "61–80", min: 61, max: 80 },
+    { bucket: "81–100", min: 81, max: 100 },
+  ];
+  const scoreDistribution = buckets.map((b) => ({
+    bucket: b.bucket,
+    count: scored.filter((r) => r.score >= b.min && r.score <= b.max).length,
+  }));
+
+  const byExam = new Map<string, { sum: number; count: number }>();
+  for (const r of scored) {
+    const title = r.exams?.title ?? "Untitled";
+    const cur = byExam.get(title) ?? { sum: 0, count: 0 };
+    cur.sum += r.score;
+    cur.count += 1;
+    byExam.set(title, cur);
+  }
+  const perExam = Array.from(byExam.entries())
+    .map(([exam, v]) => ({ exam, average: v.sum / v.count, completed: v.count }))
+    .sort((a, b) => b.completed - a.completed)
+    .slice(0, 8);
+
+  const totalReg = await countAllRegistrations();
+
+  return {
+    averageScore,
+    highestScore,
+    totalCompleted,
+    passingRate,
+    passingThreshold: PASSING_THRESHOLD,
+    totalRegistrations: totalReg,
+    scoreDistribution,
+    perExam,
+  };
+}
