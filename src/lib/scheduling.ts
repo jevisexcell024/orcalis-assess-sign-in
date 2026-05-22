@@ -154,20 +154,14 @@ const PASSING_THRESHOLD = 60;
 export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
   const { data, error } = await supabase
     .from("exam_registrations")
-    .select("score, status, exams(title)")
+    .select("score, status, exam_id")
     .eq("status", "completed");
   if (error) throw error;
 
-  const rows = (data ?? []) as Array<{
-    score: number | null;
-    status: string;
-    exams: { title: string } | null;
-  }>;
-
-  const scored = rows.filter((r) => typeof r.score === "number") as Array<{
-    score: number;
-    exams: { title: string } | null;
-  }>;
+  const rows = data ?? [];
+  const scored = rows.filter(
+    (r): r is typeof r & { score: number } => typeof r.score === "number",
+  );
 
   const totalCompleted = rows.length;
   const averageScore = scored.length
@@ -190,16 +184,28 @@ export async function getAnalyticsSummary(): Promise<AnalyticsSummary> {
     count: scored.filter((r) => r.score >= b.min && r.score <= b.max).length,
   }));
 
-  const byExam = new Map<string, { sum: number; count: number }>();
+  const byExamId = new Map<string, { sum: number; count: number }>();
   for (const r of scored) {
-    const title = r.exams?.title ?? "Untitled";
-    const cur = byExam.get(title) ?? { sum: 0, count: 0 };
+    const cur = byExamId.get(r.exam_id) ?? { sum: 0, count: 0 };
     cur.sum += r.score;
     cur.count += 1;
-    byExam.set(title, cur);
+    byExamId.set(r.exam_id, cur);
   }
-  const perExam = Array.from(byExam.entries())
-    .map(([exam, v]) => ({ exam, average: v.sum / v.count, completed: v.count }))
+  const examIds = Array.from(byExamId.keys());
+  let titleById = new Map<string, string>();
+  if (examIds.length) {
+    const { data: exams } = await supabase
+      .from("exams")
+      .select("id, title")
+      .in("id", examIds);
+    titleById = new Map((exams ?? []).map((e) => [e.id, e.title]));
+  }
+  const perExam = Array.from(byExamId.entries())
+    .map(([id, v]) => ({
+      exam: titleById.get(id) ?? "Untitled",
+      average: v.sum / v.count,
+      completed: v.count,
+    }))
     .sort((a, b) => b.completed - a.completed)
     .slice(0, 8);
 
