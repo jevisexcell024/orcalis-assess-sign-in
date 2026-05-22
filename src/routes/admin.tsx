@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { getSession, isAdminUser } from "@/lib/auth";
+import { getSession, getUserRoles, resolveHomeRoute } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin")({
   component: () => <Outlet />,
@@ -8,8 +8,11 @@ export const Route = createFileRoute("/admin")({
     if (!session) {
       return redirect({ to: "/" });
     }
-    if (!(await isAdminUser(session.user))) {
-      return redirect({ to: "/dashboard" });
+    const roles = await getUserRoles(session.user);
+    // Admin section is open to super_admin and proctor roles.
+    if (!roles.includes("super_admin") && !roles.includes("proctor")) {
+      const home = await resolveHomeRoute(session.user);
+      return redirect({ to: home });
     }
   },
 });

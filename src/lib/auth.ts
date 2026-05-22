@@ -1,5 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+
+export type AppRole = Database["public"]["Enums"]["app_role"];
 
 const PUBLIC_PATHS = new Set([
   "/",
@@ -45,6 +48,32 @@ export async function isAdminUser(user: User | null | undefined): Promise<boolea
     return false;
   }
   return !!data;
+}
+
+export async function getUserRoles(user: User | null | undefined): Promise<AppRole[]> {
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", user.id);
+  if (error) {
+    console.error("getUserRoles:", error);
+    return [];
+  }
+  return (data ?? []).map((r) => r.role as AppRole);
+}
+
+/**
+ * Resolve the landing route for a signed-in user based on their roles.
+ * Priority: super_admin → /admin, proctor → /admin/live-monitor,
+ * candidate → /student, fallback → /dashboard.
+ */
+export async function resolveHomeRoute(user: User | null | undefined): Promise<string> {
+  const roles = await getUserRoles(user);
+  if (roles.includes("super_admin")) return "/admin";
+  if (roles.includes("proctor")) return "/admin/live-monitor";
+  if (roles.includes("candidate")) return "/student";
+  return "/dashboard";
 }
 
 export async function signOut(): Promise<void> {

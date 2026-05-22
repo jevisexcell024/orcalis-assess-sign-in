@@ -8,12 +8,13 @@ import {
   LayoutDashboard,
   Library,
   Maximize2,
-  Scan,
   Search,
   Settings,
   ShieldAlert,
   ShieldCheck,
   UsersRound,
+  CalendarClock,
+  Video,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -33,11 +34,12 @@ const mainNav: NavLink[] = [
 const examNav: NavLink[] = [
   { label: "Exams", to: "/admin/exams", icon: Layers },
   { label: "Question Bank", to: "/admin/question-bank", icon: Library },
+  { label: "Scheduler", to: "/admin/scheduler", icon: CalendarClock },
 ];
 
 const platformNav: NavLink[] = [
   { label: "Institutions", to: "/admin", icon: Building2 },
-  { label: "Active Sessions", to: "/admin", icon: Scan, badge: "124" },
+  { label: "Live Monitor", to: "/admin/live-monitor", icon: Video, badge: "Live" },
   { label: "Candidates", to: "/admin", icon: UsersRound },
 ];
 
