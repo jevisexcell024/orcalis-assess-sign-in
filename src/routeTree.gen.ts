@@ -28,6 +28,8 @@ import { Route as AdminCertificatesRouteImport } from './routes/admin.certificat
 import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as StudentExamsIdCheckinRouteImport } from './routes/student.exams.$id.checkin'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as AdminExamsExamIdBuilderRouteImport } from './routes/admin.exams.$examId.builder'
 
 const StudentRoute = StudentRouteImport.update({
@@ -125,6 +127,16 @@ const StudentExamsIdCheckinRoute = StudentExamsIdCheckinRouteImport.update({
   path: '/exams/$id/checkin',
   getParentRoute: () => StudentRoute,
 } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminExamsExamIdBuilderRoute = AdminExamsExamIdBuilderRouteImport.update({
   id: '/$examId/builder',
   path: '/$examId/builder',
@@ -151,6 +163,8 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/student/exams/$id/checkin': typeof StudentExamsIdCheckinRoute
 }
 export interface FileRoutesByTo {
@@ -171,6 +185,8 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/student': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/student/exams/$id/checkin': typeof StudentExamsIdCheckinRoute
 }
 export interface FileRoutesById {
@@ -194,6 +210,8 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/student/exams/$id/checkin': typeof StudentExamsIdCheckinRoute
 }
 export interface FileRouteTypes {
@@ -218,6 +236,8 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/student/'
     | '/admin/exams/$examId/builder'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/student/exams/$id/checkin'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -238,6 +258,8 @@ export interface FileRouteTypes {
     | '/admin'
     | '/student'
     | '/admin/exams/$examId/builder'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/student/exams/$id/checkin'
   id:
     | '__root__'
@@ -260,6 +282,8 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/student/'
     | '/admin/exams/$examId/builder'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/student/exams/$id/checkin'
   fileRoutesById: FileRoutesById
 }
@@ -273,6 +297,8 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   StudentRoute: typeof StudentRouteWithChildren
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -410,6 +436,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentExamsIdCheckinRouteImport
       parentRoute: typeof StudentRoute
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/exams/$examId/builder': {
       id: '/admin/exams/$examId/builder'
       path: '/$examId/builder'
@@ -479,6 +519,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   StudentRoute: StudentRouteWithChildren,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
