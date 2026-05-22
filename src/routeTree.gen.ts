@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as AdminLoginRouteImport } from './routes/admin-login'
@@ -19,6 +20,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/admin-login': typeof AdminLoginRoute
   '/auth-callback': typeof AuthCallbackRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/admin-login': typeof AdminLoginRoute
   '/auth-callback': typeof AuthCallbackRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRoutesById {
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   '/admin-login': typeof AdminLoginRoute
   '/auth-callback': typeof AuthCallbackRoute
   '/dashboard': typeof DashboardRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRouteTypes {
@@ -80,6 +89,7 @@ export interface FileRouteTypes {
     | '/admin-login'
     | '/auth-callback'
     | '/dashboard'
+    | '/forgot-password'
     | '/signup'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
     | '/admin-login'
     | '/auth-callback'
     | '/dashboard'
+    | '/forgot-password'
     | '/signup'
   id:
     | '__root__'
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '/admin-login'
     | '/auth-callback'
     | '/dashboard'
+    | '/forgot-password'
     | '/signup'
   fileRoutesById: FileRoutesById
 }
@@ -105,6 +117,7 @@ export interface RootRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   DashboardRoute: typeof DashboardRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   SignupRoute: typeof SignupRoute
 }
 
@@ -115,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -161,8 +181,19 @@ const rootRouteChildren: RootRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   DashboardRoute: DashboardRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   SignupRoute: SignupRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
