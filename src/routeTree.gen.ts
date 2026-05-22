@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as AuthCallbackRouteImport } from './routes/auth-callback'
 import { Route as AdminLoginRouteImport } from './routes/admin-login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -23,6 +24,11 @@ const SignupRoute = SignupRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth-callback',
+  path: '/auth-callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/admin-login': typeof AdminLoginRoute
+  '/auth-callback': typeof AuthCallbackRoute
   '/dashboard': typeof DashboardRoute
   '/signup': typeof SignupRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/admin-login': typeof AdminLoginRoute
+  '/auth-callback': typeof AuthCallbackRoute
   '/dashboard': typeof DashboardRoute
   '/signup': typeof SignupRoute
 }
@@ -60,21 +68,42 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/admin-login': typeof AdminLoginRoute
+  '/auth-callback': typeof AuthCallbackRoute
   '/dashboard': typeof DashboardRoute
   '/signup': typeof SignupRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/admin-login' | '/dashboard' | '/signup'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/admin-login'
+    | '/auth-callback'
+    | '/dashboard'
+    | '/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/admin-login' | '/dashboard' | '/signup'
-  id: '__root__' | '/' | '/admin' | '/admin-login' | '/dashboard' | '/signup'
+  to:
+    | '/'
+    | '/admin'
+    | '/admin-login'
+    | '/auth-callback'
+    | '/dashboard'
+    | '/signup'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/admin-login'
+    | '/auth-callback'
+    | '/dashboard'
+    | '/signup'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   DashboardRoute: typeof DashboardRoute
   SignupRoute: typeof SignupRoute
 }
@@ -93,6 +122,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth-callback': {
+      id: '/auth-callback'
+      path: '/auth-callback'
+      fullPath: '/auth-callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin-login': {
@@ -123,6 +159,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   DashboardRoute: DashboardRoute,
   SignupRoute: SignupRoute,
 }
