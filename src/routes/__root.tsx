@@ -84,7 +84,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Orcalis Assess — enterprise online examination platform with AI-powered remote proctoring for universities, certification bodies, and corporations.",
       },
       { name: "author", content: "Orcalis Assess" },
-      { property: "og:title", content: "Orcalis Assess" },
+      { property: "og:title", content: "Orcalis Assess · Secure online exams & AI proctoring" },
       {
         property: "og:description",
         content:
@@ -92,6 +92,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Orcalis Assess · Secure online exams & AI proctoring" },
+      { name: "description", content: "Orcalis Assess Sign-In provides a premium, enterprise-grade authentication page for an AI-powered examination platform." },
+      { property: "og:description", content: "Orcalis Assess Sign-In provides a premium, enterprise-grade authentication page for an AI-powered examination platform." },
+      { name: "twitter:description", content: "Orcalis Assess Sign-In provides a premium, enterprise-grade authentication page for an AI-powered examination platform." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/85cc6f1d-90b9-49ad-a9a2-35fd133891a2/id-preview-86b3e317--8f2025ab-6d97-4b22-9d05-2e93349702a2.lovable.app-1779549912744.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/85cc6f1d-90b9-49ad-a9a2-35fd133891a2/id-preview-86b3e317--8f2025ab-6d97-4b22-9d05-2e93349702a2.lovable.app-1779549912744.png" },
     ],
     links: [
       {
