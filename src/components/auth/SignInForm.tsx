@@ -74,8 +74,25 @@ export function SignInForm() {
     }
   };
 
-  const onOAuthSignIn = async (_provider: "azure" | "google") => {
-    setOauthError("SSO is not available yet. Please sign in with email and password.");
+  const onOAuthSignIn = async (provider: "azure" | "google") => {
+    setOauthError(null);
+    setIsOauthSubmitting(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth-callback`,
+          scopes: provider === "azure" ? "email openid profile" : undefined,
+        },
+      });
+      if (error) {
+        setOauthError(error.message);
+      }
+    } catch {
+      setOauthError("Unable to start SSO. Please try again.");
+    } finally {
+      setIsOauthSubmitting(false);
+    }
   };
 
   return (
