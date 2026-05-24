@@ -11,6 +11,14 @@ const PUBLIC_PATHS = new Set([
   "/forgot-password",
   "/reset-password",
   "/auth-callback",
+  "/home",
+  "/features",
+  "/solutions",
+  "/pricing",
+  "/about",
+  "/contact",
+  "/blog",
+  "/not-found",
 ]);
 
 export function isPublicPath(pathname: string): boolean {
