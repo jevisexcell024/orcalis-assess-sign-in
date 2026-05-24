@@ -282,6 +282,16 @@ export function SignInForm() {
             Sign up
           </Link>
         </p>
+
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          Administrator?{" "}
+          <Link
+            to="/admin-login"
+            className="font-medium text-[color:var(--brand-blue)] hover:underline"
+          >
+            Sign in to the admin portal
+          </Link>
+        </p>
       </motion.div>
 
       <footer className="mt-auto flex items-center justify-center gap-2 pt-6 text-xs text-muted-foreground">
