@@ -24,14 +24,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { signUpSchema, type SignUpValues } from "@/lib/auth-schema";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 
-function MicrosoftIcon({ className }: { className?: string }) {
+function AppleIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
-      <path fill="#F25022" d="M2 2h9.5v9.5H2z" />
-      <path fill="#7FBA00" d="M12.5 2H22v9.5h-9.5z" />
-      <path fill="#00A4EF" d="M2 12.5h9.5V22H2z" />
-      <path fill="#FFB900" d="M12.5 12.5H22V22h-9.5z" />
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true" fill="currentColor">
+      <path d="M17.05 12.04c-.03-2.78 2.27-4.12 2.38-4.18-1.3-1.9-3.32-2.16-4.04-2.19-1.72-.17-3.36 1.01-4.23 1.01-.88 0-2.22-.99-3.65-.96-1.88.03-3.61 1.09-4.58 2.77-1.96 3.39-.5 8.4 1.4 11.15.93 1.35 2.03 2.86 3.47 2.81 1.4-.06 1.93-.9 3.62-.9 1.69 0 2.16.9 3.63.87 1.5-.03 2.45-1.37 3.36-2.73 1.06-1.56 1.5-3.07 1.52-3.15-.03-.01-2.91-1.12-2.94-4.4zM14.3 4.07c.77-.93 1.29-2.23 1.15-3.52-1.11.04-2.46.74-3.26 1.67-.71.82-1.34 2.14-1.17 3.41 1.24.1 2.5-.63 3.28-1.56z"/>
     </svg>
   );
 }
@@ -89,16 +87,19 @@ export function SignUpForm() {
   const passwordValue = watch("password") ?? "";
   const strength = passwordStrength(passwordValue);
 
-  const onOAuthSignUp = async (provider: "azure" | "google") => {
+  const onOAuthSignUp = async (provider: "google" | "apple") => {
     setOauthError(null);
     setIsOauthSubmitting(true);
     try {
-      const redirectTo = `${window.location.origin}/auth-callback`;
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo },
+      const result = await lovable.auth.signInWithOAuth(provider, {
+        redirect_uri: `${window.location.origin}/auth-callback`,
       });
-      if (error) setOauthError(error.message);
+      if (result.error) {
+        setOauthError(result.error.message ?? "Unable to start SSO sign-up.");
+        return;
+      }
+      if (result.redirected) return;
+      navigate({ to: "/dashboard" });
     } catch {
       setOauthError("Unable to start SSO sign-up. Please try again.");
     } finally {
@@ -498,19 +499,19 @@ export function SignUpForm() {
             type="button"
             variant="outline"
             disabled={isSubmitting || isOauthSubmitting}
-            onClick={() => onOAuthSignUp("azure")}
+            onClick={() => onOAuthSignUp("google")}
             className="h-11 rounded-xl border-border bg-background text-sm font-medium hover:bg-muted"
           >
-            <MicrosoftIcon className="mr-2 h-4 w-4" /> Microsoft 365
+            <GoogleIcon className="mr-2 h-4 w-4" /> Google
           </Button>
           <Button
             type="button"
             variant="outline"
             disabled={isSubmitting || isOauthSubmitting}
-            onClick={() => onOAuthSignUp("google")}
+            onClick={() => onOAuthSignUp("apple")}
             className="h-11 rounded-xl border-border bg-background text-sm font-medium hover:bg-muted"
           >
-            <GoogleIcon className="mr-2 h-4 w-4" /> Google Workspace
+            <AppleIcon className="mr-2 h-4 w-4" /> Apple
           </Button>
         </div>
 
