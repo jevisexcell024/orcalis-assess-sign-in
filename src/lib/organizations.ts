@@ -77,7 +77,7 @@ export async function getOrCreateCurrentOrg(): Promise<(Organization & { role: O
 }
 
 export async function updateOrganization(id: string, patch: Partial<Pick<Organization, "name" | "logo_url" | "settings">>): Promise<void> {
-  const { error } = await supabase.from("organizations" as never).update(patch).eq("id", id);
+  const { error } = await supabase.from("organizations" as never).update(patch as never).eq("id", id);
   if (error) throw error;
 }
 
@@ -104,7 +104,7 @@ export async function listOrgMembers(orgId: string): Promise<Array<OrgMember & {
 }
 
 export async function updateMemberRole(memberId: string, role: OrgRole): Promise<void> {
-  const { error } = await supabase.from("organization_members" as never).update({ role }).eq("id", memberId);
+  const { error } = await supabase.from("organization_members" as never).update({ role } as never).eq("id", memberId);
   if (error) throw error;
 }
 
