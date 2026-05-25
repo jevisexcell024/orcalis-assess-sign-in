@@ -157,7 +157,7 @@ export function SignUpForm() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mx-auto flex w-full max-w-[440px] flex-1 flex-col justify-center py-10"
+          className="mx-auto flex w-full max-w-110 flex-1 flex-col justify-center py-10"
         >
           <div
             className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-lg"
@@ -251,7 +251,7 @@ export function SignUpForm() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mx-auto flex w-full max-w-[480px] flex-1 flex-col justify-center py-10"
+        className="mx-auto flex w-full max-w-120 flex-1 flex-col justify-center py-10"
       >
         <div className="mb-7">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -437,11 +437,11 @@ export function SignUpForm() {
               />
               <span className="text-muted-foreground">
                 I agree to the{" "}
-                <a href="#" className="font-medium text-[color:var(--brand-blue)] hover:underline">
+                <a href="#" className="font-medium text-(--brand-blue) hover:underline">
                   Terms of Service
                 </a>{" "}
                 and{" "}
-                <a href="#" className="font-medium text-[color:var(--brand-blue)] hover:underline">
+                <a href="#" className="font-medium text-(--brand-blue) hover:underline">
                   Privacy Policy
                 </a>
                 .
@@ -517,7 +517,7 @@ export function SignUpForm() {
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link to="/" className="font-medium text-[color:var(--brand-blue)] hover:underline">
+          <Link to="/" className="font-medium text-(--brand-blue) hover:underline">
             Sign in
           </Link>
         </p>
