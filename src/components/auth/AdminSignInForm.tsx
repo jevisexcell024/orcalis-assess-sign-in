@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock, Loader2, ArrowRight } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
@@ -9,8 +10,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { isAdminUser } from "@/lib/auth";
-
-type AdminValues = { email: string; password: string; remember?: boolean };
+import { adminSignInSchema, type AdminSignInValues } from "@/lib/auth-schema";
+import { toFriendlyAuthError } from "@/lib/auth-errors";
 
 export function AdminSignInForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -20,9 +21,12 @@ export function AdminSignInForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<AdminValues>({ defaultValues: { email: "", password: "", remember: true } });
+  } = useForm<AdminSignInValues>({
+    resolver: zodResolver(adminSignInSchema),
+    defaultValues: { email: "", password: "", remember: true },
+  });
 
-  const onSubmit = async (values: AdminValues) => {
+  const onSubmit = async (values: AdminSignInValues) => {
     setSubmitError(null);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -31,7 +35,7 @@ export function AdminSignInForm() {
       });
 
       if (error) {
-        setSubmitError(error.message);
+        setSubmitError(toFriendlyAuthError(error, "signIn"));
         return;
       }
 
@@ -55,9 +59,9 @@ export function AdminSignInForm() {
         </Label>
         <div className="relative">
           <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input id="email" type="email" placeholder="admin@institution.edu" className={cn("h-12 rounded-xl border-input pl-10 text-sm", errors.email && "border-destructive")} {...register("email", { required: true })} />
+          <Input id="email" type="email" placeholder="admin@institution.edu" className={cn("h-12 rounded-xl border-input pl-10 text-sm", errors.email && "border-destructive")} {...register("email")} />
         </div>
-        {errors.email && <p className="text-xs text-destructive">Email is required</p>}
+        {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
       </div>
 
       <div className="space-y-2">
@@ -66,9 +70,9 @@ export function AdminSignInForm() {
         </Label>
         <div className="relative">
           <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input id="password" type="password" placeholder="••••••••" className={cn("h-12 rounded-xl border-input px-10 text-sm", errors.password && "border-destructive")} {...register("password", { required: true })} />
+          <Input id="password" type="password" placeholder="••••••••" className={cn("h-12 rounded-xl border-input px-10 text-sm", errors.password && "border-destructive")} {...register("password")} />
         </div>
-        {errors.password && <p className="text-xs text-destructive">Password is required</p>}
+        {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
       </div>
 
       <div className="flex items-center justify-between">

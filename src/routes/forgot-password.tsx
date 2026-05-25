@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { forgotPasswordSchema, type ForgotPasswordValues } from "@/lib/auth-schema";
+import { toFriendlyAuthError } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordPage,
@@ -44,7 +45,7 @@ function ForgotPasswordPage() {
       redirectTo: `${window.location.origin}/auth-callback`,
     });
     if (error) {
-      setSubmitError(error.message);
+      setSubmitError(toFriendlyAuthError(error, "forgotPassword"));
       return;
     }
     setSentTo(values.email);

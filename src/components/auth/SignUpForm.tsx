@@ -25,6 +25,7 @@ import { signUpSchema, type SignUpValues } from "@/lib/auth-schema";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { toFriendlyAuthError } from "@/lib/auth-errors";
 
 function AppleIcon({ className }: { className?: string }) {
   return (
@@ -95,7 +96,7 @@ export function SignUpForm() {
         redirect_uri: `${window.location.origin}/auth-callback`,
       });
       if (result.error) {
-        setOauthError(result.error.message ?? "Unable to start SSO sign-up.");
+        setOauthError(toFriendlyAuthError(result.error, "oauth"));
         return;
       }
       if (result.redirected) return;
@@ -124,7 +125,7 @@ export function SignUpForm() {
         },
       });
       if (error) {
-        setSubmitError(error.message);
+        setSubmitError(toFriendlyAuthError(error, "signUp"));
         return;
       }
       if (data.session) {

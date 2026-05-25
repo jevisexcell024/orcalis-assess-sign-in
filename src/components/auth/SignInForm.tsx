@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { isAdminUser } from "@/lib/auth";
+import { toFriendlyAuthError } from "@/lib/auth-errors";
 
 function AppleIcon({ className }: { className?: string }) {
   return (
@@ -58,7 +59,7 @@ export function SignInForm() {
         password: values.password,
       });
       if (error) {
-        setSubmitError(error.message);
+        setSubmitError(toFriendlyAuthError(error, "signIn"));
         return;
       }
       if (await isAdminUser(data.user)) {
@@ -80,7 +81,7 @@ export function SignInForm() {
         redirect_uri: `${window.location.origin}/auth-callback`,
       });
       if (result.error) {
-        setOauthError(result.error.message ?? "Unable to start SSO.");
+        setOauthError(toFriendlyAuthError(result.error, "oauth"));
         return;
       }
       if (result.redirected) {

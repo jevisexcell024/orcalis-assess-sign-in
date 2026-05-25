@@ -1,97 +1,107 @@
-import * as Sentry from '@sentry/react'
-import { BrowserTracing } from '@sentry/tracing'
-
 /**
- * Initialize Sentry for error tracking and performance monitoring
- * Call this as early as possible in your application setup
+ * Sentry error tracking + performance + session replay.
+ *
+ * Rewritten for @sentry/react v10. The previous file imported `BrowserTracing`
+ * from `@sentry/tracing` and instantiated `new Sentry.Replay(...)` — both are
+ * v7 APIs and will throw at runtime against the installed v10 package, which
+ * meant the app silently had no error tracking.
+ *
+ * v10 uses functional integrations: `browserTracingIntegration()` and
+ * `replayIntegration()`. The deprecated `@sentry/tracing` package can be
+ * removed from package.json after this lands.
  */
-export function initSentry() {
-  const dsn = import.meta.env.VITE_SENTRY_DSN
-  const environment = import.meta.env.MODE || 'development'
+import * as Sentry from "@sentry/react";
+
+let initialized = false;
+
+export function initSentry(): void {
+  if (initialized) return;
+
+  const dsn = import.meta.env.VITE_SENTRY_DSN;
+  const environment = import.meta.env.MODE || "development";
 
   if (!dsn) {
-    console.warn('Sentry DSN not configured. Error tracking disabled.')
-    return
+    // Quiet warning so devs aren't spammed in local dev.
+    if (environment !== "production") {
+      console.info("[Sentry] DSN not set — error tracking disabled in", environment);
+    }
+    return;
   }
 
   Sentry.init({
     dsn,
     environment,
+    release: import.meta.env.VITE_APP_VERSION || undefined,
+
     integrations: [
-      new BrowserTracing({
-        // Set sampling rate for performance monitoring
-        tracingOrigins: ['localhost', /^\//],
-      }),
-      // Session replay for debugging errors
-      new Sentry.Replay({
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({
         maskAllText: true,
+        maskAllInputs: true,
         blockAllMedia: true,
       }),
     ],
-    // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring
-    // We recommend adjusting this value in production
-    tracesSampleRate: environment === 'production' ? 0.1 : 1.0,
-    // Capture Replay for 10% of all sessions,
-    // plus 100% of sessions with an error
-    replaysSessionSampleRate: environment === 'production' ? 0.1 : 1.0,
+
+    // Performance — sample 10% in prod, everything in dev.
+    tracesSampleRate: environment === "production" ? 0.1 : 1.0,
+
+    // Replay — sample 10% normally, 100% if there's an error.
+    replaysSessionSampleRate: environment === "production" ? 0.1 : 1.0,
     replaysOnErrorSampleRate: 1.0,
-    // Additional config
+
+    // Hygiene
     maxBreadcrumbs: 50,
     attachStacktrace: true,
-    denyUrls: [
-      // Browser extensions
-      /extensions\//i,
-      /^chrome:\/\//i,
-    ],
-  })
+    sendDefaultPii: false,
+
+    // Don't capture noise from extensions / random scripts.
+    denyUrls: [/extensions\//i, /^chrome:\/\//i, /^moz-extension:\/\//i],
+
+    // Strip auth tokens and obvious secrets before they ever leave the client.
+    beforeSend(event) {
+      try {
+        if (event.request?.headers) {
+          delete event.request.headers["authorization"];
+          delete event.request.headers["cookie"];
+        }
+        if (event.request?.url) {
+          event.request.url = event.request.url.replace(
+            /([?&](access_token|refresh_token|token_hash|apikey)=)[^&]+/gi,
+            "$1[redacted]",
+          );
+        }
+      } catch {
+        // Never let scrubbing crash error reporting.
+      }
+      return event;
+    },
+  });
+
+  initialized = true;
 }
 
-/**
- * Capture an exception manually
- */
-export function captureException(error: Error, context?: Record<string, any>) {
-  if (context) {
-    Sentry.setContext('custom', context)
-  }
-  Sentry.captureException(error)
+export function captureException(error: unknown, context?: Record<string, unknown>): void {
+  if (!initialized) return;
+  if (context) Sentry.setContext("custom", context);
+  Sentry.captureException(error);
 }
 
-/**
- * Capture a message
- */
-export function captureMessage(message: string, level: Sentry.SeverityLevel = 'info') {
-  Sentry.captureMessage(message, level)
+export function captureMessage(
+  message: string,
+  level: Sentry.SeverityLevel = "info",
+): void {
+  if (!initialized) return;
+  Sentry.captureMessage(message, level);
 }
 
-/**
- * Set user context for error tracking
- */
-export function setUserContext(userId: string, email?: string, username?: string) {
-  Sentry.setUser({
-    id: userId,
-    email,
-    username,
-  })
+export function setUserContext(userId: string, email?: string, username?: string): void {
+  if (!initialized) return;
+  Sentry.setUser({ id: userId, email, username });
 }
 
-/**
- * Clear user context
- */
-export function clearUserContext() {
-  Sentry.setUser(null)
+export function clearUserContext(): void {
+  if (!initialized) return;
+  Sentry.setUser(null);
 }
 
-/**
- * Create a span for performance monitoring
- */
-export function createSpan(name: string, operation: string = 'http.request') {
-  const span = Sentry.getCurrentHub().getScope()?.getSpan()
-  if (span) {
-    return span.startChild({
-      name,
-      op: operation,
-    })
-  }
-}
-
-export default Sentry
+export default Sentry;

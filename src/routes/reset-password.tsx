@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { resetPasswordSchema, type ResetPasswordValues } from "@/lib/auth-schema";
+import { toFriendlyAuthError } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/reset-password")({
   component: ResetPasswordPage,
@@ -56,7 +57,7 @@ function ResetPasswordPage() {
     setSubmitError(null);
     const { error } = await supabase.auth.updateUser({ password: values.password });
     if (error) {
-      setSubmitError(error.message);
+      setSubmitError(toFriendlyAuthError(error, "resetPassword"));
       return;
     }
     setSuccess(true);
