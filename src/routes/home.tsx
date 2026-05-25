@@ -9,6 +9,7 @@ import { motion, useInView } from "motion/react";
 import { useRef, useState, useEffect } from "react";
 import { MarketingShell } from "@/components/marketing/MarketingShell";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/home")({
   component: HomePage,
@@ -246,10 +247,6 @@ function HeroDashboardMockup() {
       </motion.div>
     </div>
   );
-}
-
-function cn(...classes: (string | undefined | false)[]) {
-  return classes.filter(Boolean).join(" ");
 }
 
 function Trust({ icon: Icon, text }: { icon: typeof ShieldCheck; text: string }) {
