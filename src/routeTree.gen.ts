@@ -28,6 +28,8 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as ApiVersionRouteImport } from './routes/api/version'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AdminTeamRouteImport } from './routes/admin.team'
 import { Route as AdminSchedulerRouteImport } from './routes/admin.scheduler'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
@@ -137,6 +139,16 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiVersionRoute = ApiVersionRouteImport.update({
+  id: '/api/version',
+  path: '/api/version',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminTeamRoute = AdminTeamRouteImport.update({
   id: '/team',
   path: '/team',
@@ -230,6 +242,8 @@ export interface FileRoutesByFullPath {
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/team': typeof AdminTeamRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/version': typeof ApiVersionRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
@@ -262,6 +276,8 @@ export interface FileRoutesByTo {
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/team': typeof AdminTeamRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/version': typeof ApiVersionRoute
   '/admin': typeof AdminIndexRoute
   '/student': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
@@ -297,6 +313,8 @@ export interface FileRoutesById {
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/team': typeof AdminTeamRoute
+  '/api/health': typeof ApiHealthRoute
+  '/api/version': typeof ApiVersionRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
@@ -333,6 +351,8 @@ export interface FileRouteTypes {
     | '/admin/question-bank'
     | '/admin/scheduler'
     | '/admin/team'
+    | '/api/health'
+    | '/api/version'
     | '/admin/'
     | '/student/'
     | '/admin/exams/$examId/builder'
@@ -365,6 +385,8 @@ export interface FileRouteTypes {
     | '/admin/question-bank'
     | '/admin/scheduler'
     | '/admin/team'
+    | '/api/health'
+    | '/api/version'
     | '/admin'
     | '/student'
     | '/admin/exams/$examId/builder'
@@ -399,6 +421,8 @@ export interface FileRouteTypes {
     | '/admin/question-bank'
     | '/admin/scheduler'
     | '/admin/team'
+    | '/api/health'
+    | '/api/version'
     | '/admin/'
     | '/student/'
     | '/admin/exams/$examId/builder'
@@ -425,6 +449,8 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SolutionsRoute: typeof SolutionsRoute
   StudentRoute: typeof StudentRouteWithChildren
+  ApiHealthRoute: typeof ApiHealthRoute
+  ApiVersionRoute: typeof ApiVersionRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -563,6 +589,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/api/version': {
+      id: '/api/version'
+      path: '/api/version'
+      fullPath: '/api/version'
+      preLoaderRoute: typeof ApiVersionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/team': {
       id: '/admin/team'
@@ -729,6 +769,8 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SolutionsRoute: SolutionsRoute,
   StudentRoute: StudentRouteWithChildren,
+  ApiHealthRoute: ApiHealthRoute,
+  ApiVersionRoute: ApiVersionRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }

@@ -8,10 +8,15 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import * as Sentry from "@sentry/react";
 import { getSession, isPublicPath } from "@/lib/auth";
+import { initSentry, captureException } from "@/lib/sentry-init";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+// Initialize Sentry on app startup
+initSentry();
 
 import appCss from "../styles.css?url";
 
@@ -39,6 +44,8 @@ function NotFoundComponent() {
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
+  // Send error to Sentry
+  captureException(error, { component: "RootErrorBoundary" });
   const router = useRouter();
 
   return (
