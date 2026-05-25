@@ -21,6 +21,7 @@ export type Database = {
           exam_id: string
           id: string
           identity_verified: boolean
+          organization_id: string | null
           schedule_id: string | null
           score: number | null
           status: Database["public"]["Enums"]["registration_status"]
@@ -33,6 +34,7 @@ export type Database = {
           exam_id: string
           id?: string
           identity_verified?: boolean
+          organization_id?: string | null
           schedule_id?: string | null
           score?: number | null
           status?: Database["public"]["Enums"]["registration_status"]
@@ -45,6 +47,7 @@ export type Database = {
           exam_id?: string
           id?: string
           identity_verified?: boolean
+          organization_id?: string | null
           schedule_id?: string | null
           score?: number | null
           status?: Database["public"]["Enums"]["registration_status"]
@@ -52,6 +55,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "exam_registrations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "exam_registrations_schedule_id_fkey"
             columns: ["schedule_id"]
@@ -72,6 +82,7 @@ export type Database = {
           notify_confirmation: boolean
           notify_proctors: boolean
           notify_reminder: boolean
+          organization_id: string | null
           start_at: string
           timezone: string
           updated_at: string
@@ -87,6 +98,7 @@ export type Database = {
           notify_confirmation?: boolean
           notify_proctors?: boolean
           notify_reminder?: boolean
+          organization_id?: string | null
           start_at: string
           timezone?: string
           updated_at?: string
@@ -102,12 +114,21 @@ export type Database = {
           notify_confirmation?: boolean
           notify_proctors?: boolean
           notify_reminder?: boolean
+          organization_id?: string | null
           start_at?: string
           timezone?: string
           updated_at?: string
           waitlist_enabled?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exam_schedules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exam_sections: {
         Row: {
@@ -152,6 +173,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          organization_id: string | null
           status: Database["public"]["Enums"]["exam_status"]
           term: string | null
           title: string
@@ -161,6 +183,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          organization_id?: string | null
           status?: Database["public"]["Enums"]["exam_status"]
           term?: string | null
           title: string
@@ -170,9 +193,133 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          organization_id?: string | null
           status?: Database["public"]["Enums"]["exam_status"]
           term?: string | null
           title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          organization_id: string
+          role: Database["public"]["Enums"]["org_role"]
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["org_role"]
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["org_role"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_members: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          role: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["org_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          logo_url: string | null
+          name: string
+          plan: string
+          settings: Json
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          plan?: string
+          settings?: Json
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          plan?: string
+          settings?: Json
+          slug?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -249,6 +396,7 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["question_difficulty"]
           id: string
           options: Json
+          organization_id: string | null
           points: number
           position: number
           prompt: string
@@ -265,6 +413,7 @@ export type Database = {
           difficulty?: Database["public"]["Enums"]["question_difficulty"]
           id?: string
           options?: Json
+          organization_id?: string | null
           points?: number
           position?: number
           prompt?: string
@@ -281,6 +430,7 @@ export type Database = {
           difficulty?: Database["public"]["Enums"]["question_difficulty"]
           id?: string
           options?: Json
+          organization_id?: string | null
           points?: number
           position?: number
           prompt?: string
@@ -292,6 +442,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "questions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "questions_section_id_fkey"
             columns: ["section_id"]
@@ -327,6 +484,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_orgs: { Args: { _user_id?: string }; Returns: string[] }
+      has_org_role: {
+        Args: {
+          _org_id: string
+          _roles: Database["public"]["Enums"]["org_role"][]
+          _user_id?: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -334,10 +500,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_org_member: {
+        Args: { _org_id: string; _user_id?: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "super_admin" | "institution" | "candidate" | "proctor"
       exam_status: "draft" | "published" | "archived"
+      org_role: "owner" | "admin" | "instructor" | "proctor" | "member"
       proctoring_severity: "info" | "warning" | "high"
       question_difficulty: "easy" | "medium" | "hard"
       question_type: "mcq" | "descriptive" | "coding" | "true_false"
@@ -476,6 +647,7 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "institution", "candidate", "proctor"],
       exam_status: ["draft", "published", "archived"],
+      org_role: ["owner", "admin", "instructor", "proctor", "member"],
       proctoring_severity: ["info", "warning", "high"],
       question_difficulty: ["easy", "medium", "hard"],
       question_type: ["mcq", "descriptive", "coding", "true_false"],

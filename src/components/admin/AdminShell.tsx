@@ -17,6 +17,7 @@ import {
   CalendarClock,
   Video,
   FileText,
+  Building2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -53,6 +54,8 @@ const monitoringNav: NavLink[] = [
 ];
 
 const adminNav: NavLink[] = [
+  { label: "Organization", to: "/admin/organization", icon: Building2 },
+  { label: "Team", to: "/admin/team", icon: UsersRound },
   { label: "Billing & Plans", to: "/admin/billing", icon: CreditCard },
   { label: "Audit Logs", to: "/admin/billing", icon: FileText },
   { label: "Settings", to: "/admin", icon: Settings },

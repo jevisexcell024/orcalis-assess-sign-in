@@ -25,8 +25,10 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminTeamRouteImport } from './routes/admin.team'
 import { Route as AdminSchedulerRouteImport } from './routes/admin.scheduler'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
+import { Route as AdminOrganizationRouteImport } from './routes/admin.organization'
 import { Route as AdminLiveMonitorRouteImport } from './routes/admin.live-monitor'
 import { Route as AdminExamsRouteImport } from './routes/admin.exams'
 import { Route as AdminCertificatesRouteImport } from './routes/admin.certificates'
@@ -117,6 +119,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminTeamRoute = AdminTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSchedulerRoute = AdminSchedulerRouteImport.update({
   id: '/scheduler',
   path: '/scheduler',
@@ -125,6 +132,11 @@ const AdminSchedulerRoute = AdminSchedulerRouteImport.update({
 const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
   id: '/question-bank',
   path: '/question-bank',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminOrganizationRoute = AdminOrganizationRouteImport.update({
+  id: '/organization',
+  path: '/organization',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminLiveMonitorRoute = AdminLiveMonitorRouteImport.update({
@@ -193,8 +205,10 @@ export interface FileRoutesByFullPath {
   '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
+  '/admin/organization': typeof AdminOrganizationRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
+  '/admin/team': typeof AdminTeamRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
@@ -220,8 +234,10 @@ export interface FileRoutesByTo {
   '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
+  '/admin/organization': typeof AdminOrganizationRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
+  '/admin/team': typeof AdminTeamRoute
   '/admin': typeof AdminIndexRoute
   '/student': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
@@ -250,8 +266,10 @@ export interface FileRoutesById {
   '/admin/certificates': typeof AdminCertificatesRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
+  '/admin/organization': typeof AdminOrganizationRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
+  '/admin/team': typeof AdminTeamRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
@@ -281,8 +299,10 @@ export interface FileRouteTypes {
     | '/admin/certificates'
     | '/admin/exams'
     | '/admin/live-monitor'
+    | '/admin/organization'
     | '/admin/question-bank'
     | '/admin/scheduler'
+    | '/admin/team'
     | '/admin/'
     | '/student/'
     | '/admin/exams/$examId/builder'
@@ -308,8 +328,10 @@ export interface FileRouteTypes {
     | '/admin/certificates'
     | '/admin/exams'
     | '/admin/live-monitor'
+    | '/admin/organization'
     | '/admin/question-bank'
     | '/admin/scheduler'
+    | '/admin/team'
     | '/admin'
     | '/student'
     | '/admin/exams/$examId/builder'
@@ -337,8 +359,10 @@ export interface FileRouteTypes {
     | '/admin/certificates'
     | '/admin/exams'
     | '/admin/live-monitor'
+    | '/admin/organization'
     | '/admin/question-bank'
     | '/admin/scheduler'
+    | '/admin/team'
     | '/admin/'
     | '/student/'
     | '/admin/exams/$examId/builder'
@@ -480,6 +504,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/team': {
+      id: '/admin/team'
+      path: '/team'
+      fullPath: '/admin/team'
+      preLoaderRoute: typeof AdminTeamRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/scheduler': {
       id: '/admin/scheduler'
       path: '/scheduler'
@@ -492,6 +523,13 @@ declare module '@tanstack/react-router' {
       path: '/question-bank'
       fullPath: '/admin/question-bank'
       preLoaderRoute: typeof AdminQuestionBankRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/organization': {
+      id: '/admin/organization'
+      path: '/organization'
+      fullPath: '/admin/organization'
+      preLoaderRoute: typeof AdminOrganizationRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/live-monitor': {
@@ -578,8 +616,10 @@ interface AdminRouteChildren {
   AdminCertificatesRoute: typeof AdminCertificatesRoute
   AdminExamsRoute: typeof AdminExamsRouteWithChildren
   AdminLiveMonitorRoute: typeof AdminLiveMonitorRoute
+  AdminOrganizationRoute: typeof AdminOrganizationRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   AdminSchedulerRoute: typeof AdminSchedulerRoute
+  AdminTeamRoute: typeof AdminTeamRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -589,8 +629,10 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCertificatesRoute: AdminCertificatesRoute,
   AdminExamsRoute: AdminExamsRouteWithChildren,
   AdminLiveMonitorRoute: AdminLiveMonitorRoute,
+  AdminOrganizationRoute: AdminOrganizationRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   AdminSchedulerRoute: AdminSchedulerRoute,
+  AdminTeamRoute: AdminTeamRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
