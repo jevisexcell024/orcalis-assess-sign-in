@@ -1,5 +1,4 @@
 import * as Sentry from '@sentry/react'
-import { BrowserTracing } from '@sentry/tracing'
 
 /**
  * Initialize Sentry for error tracking and performance monitoring
@@ -18,15 +17,8 @@ export function initSentry() {
     dsn,
     environment,
     integrations: [
-      new BrowserTracing({
-        // Set sampling rate for performance monitoring
-        tracingOrigins: ['localhost', /^\//],
-      }),
-      // Session replay for debugging errors
-      new Sentry.Replay({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
     ],
     // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring
     // We recommend adjusting this value in production
@@ -85,13 +77,7 @@ export function clearUserContext() {
  * Create a span for performance monitoring
  */
 export function createSpan(name: string, operation: string = 'http.request') {
-  const span = Sentry.getCurrentHub().getScope()?.getSpan()
-  if (span) {
-    return span.startChild({
-      name,
-      op: operation,
-    })
-  }
+  return Sentry.startInactiveSpan({ name, op: operation })
 }
 
 export default Sentry

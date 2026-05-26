@@ -4,7 +4,6 @@ import { useState, useEffect, type ReactNode } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 
 const nav = [
   { label: "Features", to: "/features" },

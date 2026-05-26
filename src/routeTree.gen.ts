@@ -39,6 +39,7 @@ import { Route as AdminExamsRouteImport } from './routes/admin.exams'
 import { Route as AdminCertificatesRouteImport } from './routes/admin.certificates'
 import { Route as AdminBillingRouteImport } from './routes/admin.billing'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as StudentExamsIdSessionRouteImport } from './routes/student.exams.$id.session'
 import { Route as StudentExamsIdCheckinRouteImport } from './routes/student.exams.$id.checkin'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -194,6 +195,11 @@ const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AdminRoute,
 } as any)
+const StudentExamsIdSessionRoute = StudentExamsIdSessionRouteImport.update({
+  id: '/exams/$id/session',
+  path: '/exams/$id/session',
+  getParentRoute: () => StudentRoute,
+} as any)
 const StudentExamsIdCheckinRoute = StudentExamsIdCheckinRouteImport.update({
   id: '/exams/$id/checkin',
   path: '/exams/$id/checkin',
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/student/exams/$id/checkin': typeof StudentExamsIdCheckinRoute
+  '/student/exams/$id/session': typeof StudentExamsIdSessionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -284,6 +291,7 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/student/exams/$id/checkin': typeof StudentExamsIdCheckinRoute
+  '/student/exams/$id/session': typeof StudentExamsIdSessionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -321,6 +329,7 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/student/exams/$id/checkin': typeof StudentExamsIdCheckinRoute
+  '/student/exams/$id/session': typeof StudentExamsIdSessionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -359,6 +368,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/student/exams/$id/checkin'
+    | '/student/exams/$id/session'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/student/exams/$id/checkin'
+    | '/student/exams/$id/session'
   id:
     | '__root__'
     | '/'
@@ -429,6 +440,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/student/exams/$id/checkin'
+    | '/student/exams/$id/session'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -667,6 +679,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/student/exams/$id/session': {
+      id: '/student/exams/$id/session'
+      path: '/exams/$id/session'
+      fullPath: '/student/exams/$id/session'
+      preLoaderRoute: typeof StudentExamsIdSessionRouteImport
+      parentRoute: typeof StudentRoute
+    }
     '/student/exams/$id/checkin': {
       id: '/student/exams/$id/checkin'
       path: '/exams/$id/checkin'
@@ -741,11 +760,13 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 interface StudentRouteChildren {
   StudentIndexRoute: typeof StudentIndexRoute
   StudentExamsIdCheckinRoute: typeof StudentExamsIdCheckinRoute
+  StudentExamsIdSessionRoute: typeof StudentExamsIdSessionRoute
 }
 
 const StudentRouteChildren: StudentRouteChildren = {
   StudentIndexRoute: StudentIndexRoute,
   StudentExamsIdCheckinRoute: StudentExamsIdCheckinRoute,
+  StudentExamsIdSessionRoute: StudentExamsIdSessionRoute,
 }
 
 const StudentRouteWithChildren =
@@ -777,13 +798,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
