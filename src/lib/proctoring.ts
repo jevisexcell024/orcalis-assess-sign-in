@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-export type ProctorSeverity = "info" | "warning" | "critical";
+export type ProctorSeverity = "info" | "warning" | "high";
 
 export type ProctorEvent = {
   event_type: string;
@@ -83,7 +83,7 @@ export function useProctoring(registrationId: string | null, opts?: { enabled?: 
       } catch (e) {
         const msg = e instanceof Error ? e.message : "Camera access denied";
         setState((s) => ({ ...s, webcamError: msg }));
-        await logProctoringEvent(registrationId, { event_type: "media.denied", message: msg, severity: "critical" });
+        await logProctoringEvent(registrationId, { event_type: "media.denied", message: msg, severity: "high" });
       }
     })();
 
