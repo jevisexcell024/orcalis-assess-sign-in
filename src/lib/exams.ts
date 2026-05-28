@@ -7,6 +7,157 @@ export type Question = Database["public"]["Tables"]["questions"]["Row"];
 
 export type QuestionOption = { text: string; is_correct: boolean };
 
+export type ExamAttempt = Database["public"]["Tables"]["exam_attempts"]["Row"];
+export type ExamAnswer = Database["public"]["Tables"]["exam_answers"]["Row"];
+
+// ---------- Attempts ----------
+
+/**
+ * Load (or create) the attempt for a registration, plus the questions
+ * for that exam and any saved answers.
+ */
+export async function startOrResumeAttempt(registrationId: string) {
+  const { data: reg, error: regErr } = await supabase
+    .from("exam_registrations")
+    .select("id, exam_id, organization_id, candidate_id")
+    .eq("id", registrationId)
+    .maybeSingle();
+  if (regErr) throw regErr;
+  if (!reg) throw new Error("Registration not found");
+
+  // Existing attempt?
+  const { data: existing } = await supabase
+    .from("exam_attempts")
+    .select("*")
+    .eq("registration_id", registrationId)
+    .maybeSingle();
+
+  let attempt = existing;
+  if (!attempt) {
+    const { data: created, error: createErr } = await supabase
+      .from("exam_attempts")
+      .insert({
+        registration_id: registrationId,
+        organization_id: reg.organization_id,
+      })
+      .select()
+      .single();
+    if (createErr) throw createErr;
+    attempt = created;
+  }
+
+  // Load questions for this exam, in order
+  const { data: sections } = await supabase
+    .from("exam_sections")
+    .select("id")
+    .eq("exam_id", reg.exam_id)
+    .order("position", { ascending: true });
+  const sectionIds = (sections ?? []).map((s) => s.id);
+  let questions: Question[] = [];
+  if (sectionIds.length > 0) {
+    const { data: qs, error: qErr } = await supabase
+      .from("questions")
+      .select("*")
+      .in("section_id", sectionIds)
+      .order("position", { ascending: true });
+    if (qErr) throw qErr;
+    questions = qs ?? [];
+  }
+
+  // Load any saved answers
+  const { data: answers } = await supabase
+    .from("exam_answers")
+    .select("*")
+    .eq("attempt_id", attempt.id);
+
+  return { attempt, questions, answers: answers ?? [] };
+}
+
+/** Upsert a single answer (called as the candidate selects/edits). */
+export async function saveAnswer(input: {
+  attempt_id: string;
+  question_id: string;
+  response: Record<string, unknown>;
+}) {
+  const { error } = await supabase
+    .from("exam_answers")
+    .upsert(
+      {
+        attempt_id: input.attempt_id,
+        question_id: input.question_id,
+        response: input.response,
+      },
+      { onConflict: "attempt_id,question_id" },
+    );
+  if (error) throw error;
+}
+
+/**
+ * Auto-score MCQ/true-false answers and submit the attempt.
+ * Non-MCQ answers remain ungraded (manual review).
+ */
+export async function submitAttempt(attemptId: string) {
+  // Pull attempt + its answers + questions in one go
+  const { data: answers, error: aErr } = await supabase
+    .from("exam_answers")
+    .select("id, question_id, response")
+    .eq("attempt_id", attemptId);
+  if (aErr) throw aErr;
+
+  const questionIds = (answers ?? []).map((a) => a.question_id);
+  let questions: Pick<Question, "id" | "type" | "options" | "points">[] = [];
+  if (questionIds.length > 0) {
+    const { data: qs, error: qErr } = await supabase
+      .from("questions")
+      .select("id, type, options, points")
+      .in("id", questionIds);
+    if (qErr) throw qErr;
+    questions = qs ?? [];
+  }
+
+  let score = 0;
+  let maxScore = 0;
+  let autoScored = true;
+  for (const q of questions) {
+    maxScore += q.points ?? 1;
+    const ans = answers!.find((a) => a.question_id === q.id);
+    if (!ans) continue;
+    if (q.type === "mcq" || q.type === "true_false") {
+      const opts = (q.options as unknown as QuestionOption[]) ?? [];
+      const selectedIdx = (ans.response as { selected?: number })?.selected;
+      const correctIdx = opts.findIndex((o) => o.is_correct);
+      const isCorrect = selectedIdx === correctIdx && correctIdx >= 0;
+      const pts = isCorrect ? q.points ?? 1 : 0;
+      if (isCorrect) score += pts;
+      await supabase
+        .from("exam_answers")
+        .update({ is_correct: isCorrect, points_awarded: pts })
+        .eq("id", ans.id);
+    } else {
+      autoScored = false;
+    }
+  }
+
+  const { error: updErr } = await supabase
+    .from("exam_attempts")
+    .update({
+      submitted_at: new Date().toISOString(),
+      score,
+      max_score: maxScore,
+      auto_scored: autoScored,
+    })
+    .eq("id", attemptId);
+  if (updErr) throw updErr;
+
+  // Mirror onto the registration for legacy queries
+  await supabase
+    .from("exam_registrations")
+    .update({ score, status: "completed" })
+    .eq("id", (await supabase.from("exam_attempts").select("registration_id").eq("id", attemptId).single()).data!.registration_id);
+
+  return { score, maxScore, autoScored };
+}
+
 export async function listExams() {
   const { data, error } = await supabase
     .from("exams")
