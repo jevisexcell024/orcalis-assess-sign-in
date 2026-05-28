@@ -7,10 +7,21 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useProctoring } from "@/lib/proctoring";
 import { getSession } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  startOrResumeAttempt,
+  saveAnswer,
+  submitAttempt,
+  type ExamAnswer,
+  type Question,
+  type QuestionOption,
+} from "@/lib/exams";
 
 export const Route = createFileRoute("/student/exams/$id/session")({
   head: () => ({
@@ -32,6 +43,11 @@ function ExamSessionPage() {
   const [started, setStarted] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(60 * 60); // 60-min default
   const [examTitle, setExamTitle] = useState("Live Exam");
+  const [attemptId, setAttemptId] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [answers, setAnswers] = useState<Record<string, ExamAnswer["response"]>>({});
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
 
   const { videoRef, state, requestFullscreen, endSession } = useProctoring(
     started ? registrationId : null,
@@ -64,14 +80,50 @@ function ExamSessionPage() {
 
   const handleStart = async () => {
     await requestFullscreen();
-    setStarted(true);
+    try {
+      const { attempt, questions: qs, answers: existing } = await startOrResumeAttempt(registrationId);
+      setAttemptId(attempt.id);
+      setQuestions(qs);
+      const map: Record<string, ExamAnswer["response"]> = {};
+      for (const a of existing) map[a.question_id] = a.response;
+      setAnswers(map);
+      setStarted(true);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start exam");
+    }
   };
 
   const handleEnd = async () => {
-    await endSession();
-    toast.success("Exam submitted");
-    navigate({ to: "/student" });
+    if (!attemptId) return;
+    setSubmitting(true);
+    try {
+      const result = await submitAttempt(attemptId);
+      await endSession();
+      toast.success(
+        result.maxScore > 0
+          ? `Submitted · ${result.score}/${result.maxScore}${result.autoScored ? "" : " (pending review)"}`
+          : "Exam submitted",
+      );
+      navigate({ to: "/student" });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to submit");
+      setSubmitting(false);
+    }
   };
+
+  const persistAnswer = async (questionId: string, response: ExamAnswer["response"]) => {
+    if (!attemptId) return;
+    setAnswers((prev) => ({ ...prev, [questionId]: response }));
+    try {
+      await saveAnswer({ attempt_id: attemptId, question_id: questionId, response });
+    } catch (err) {
+      toast.error("Could not save answer");
+      console.error(err);
+    }
+  };
+
+  const currentQuestion = questions[currentIdx];
+  const progress = questions.length > 0 ? ((currentIdx + 1) / questions.length) * 100 : 0;
 
   return (
     <StudentShell>
@@ -114,17 +166,46 @@ function ExamSessionPage() {
 
               <Card className="p-6">
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Question 1 of 1</h3>
-                  <Progress value={5} className="h-1.5 w-32" />
+                  <h3 className="text-sm font-semibold">
+                    {questions.length > 0
+                      ? `Question ${currentIdx + 1} of ${questions.length}`
+                      : "No questions"}
+                  </h3>
+                  <Progress value={progress} className="h-1.5 w-32" />
                 </div>
-                <p className="text-sm leading-relaxed">
-                  This is a placeholder question. The proctoring engine is fully live — try switching tabs, exiting
-                  fullscreen, copying text, or right-clicking. Every event is recorded to the database in real time.
-                </p>
-                <div className="mt-6 flex justify-end gap-2">
-                  <Button variant="outline" onClick={handleEnd}>
-                    <X className="mr-2 h-4 w-4" /> End session
+
+                {currentQuestion ? (
+                  <QuestionRenderer
+                    question={currentQuestion}
+                    value={answers[currentQuestion.id]}
+                    onChange={(r) => persistAnswer(currentQuestion.id, r)}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No questions have been added to this exam yet.
+                  </p>
+                )}
+
+                <div className="mt-6 flex items-center justify-between gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentIdx((i) => Math.max(0, i - 1))}
+                    disabled={currentIdx === 0}
+                  >
+                    Previous
                   </Button>
+                  <div className="flex gap-2">
+                    {currentIdx < questions.length - 1 ? (
+                      <Button onClick={() => setCurrentIdx((i) => Math.min(questions.length - 1, i + 1))}>
+                        Next
+                      </Button>
+                    ) : (
+                      <Button onClick={handleEnd} disabled={submitting}>
+                        <X className="mr-2 h-4 w-4" />
+                        {submitting ? "Submitting…" : "Submit exam"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </Card>
             </div>
