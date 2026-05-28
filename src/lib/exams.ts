@@ -77,7 +77,7 @@ export async function startOrResumeAttempt(registrationId: string) {
 export async function saveAnswer(input: {
   attempt_id: string;
   question_id: string;
-  response: Record<string, unknown>;
+  response: Database["public"]["Tables"]["exam_answers"]["Insert"]["response"];
 }) {
   const { error } = await supabase
     .from("exam_answers")
