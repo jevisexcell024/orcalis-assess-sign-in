@@ -257,3 +257,55 @@ function Row({ label, value, flag }: { label: string; value: number; flag?: bool
     </div>
   );
 }
+
+function QuestionRenderer({
+  question,
+  value,
+  onChange,
+}: {
+  question: Question;
+  value: ExamAnswer["response"] | undefined;
+  onChange: (r: ExamAnswer["response"]) => void;
+}) {
+  if (question.type === "mcq" || question.type === "true_false") {
+    const opts = (question.options as unknown as QuestionOption[]) ?? [];
+    const selected = (value as { selected?: number } | undefined)?.selected;
+    return (
+      <div className="space-y-3">
+        <p className="text-sm leading-relaxed">{question.prompt || <em>Untitled question</em>}</p>
+        <RadioGroup
+          value={selected !== undefined ? String(selected) : undefined}
+          onValueChange={(v) => onChange({ selected: Number(v) })}
+          className="space-y-2"
+        >
+          {opts.map((opt, idx) => (
+            <div
+              key={idx}
+              className="flex items-center gap-3 rounded-md border border-border p-3 hover:bg-accent/40"
+            >
+              <RadioGroupItem id={`opt-${question.id}-${idx}`} value={String(idx)} />
+              <Label htmlFor={`opt-${question.id}-${idx}`} className="cursor-pointer text-sm font-normal">
+                {opt.text || <span className="text-muted-foreground">Option {idx + 1}</span>}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+      </div>
+    );
+  }
+
+  // descriptive / coding → textarea
+  const text = (value as { text?: string } | undefined)?.text ?? "";
+  return (
+    <div className="space-y-3">
+      <p className="text-sm leading-relaxed">{question.prompt || <em>Untitled question</em>}</p>
+      <Textarea
+        value={text}
+        onChange={(e) => onChange({ text: e.target.value })}
+        placeholder="Type your answer…"
+        rows={question.type === "coding" ? 12 : 6}
+        className={question.type === "coding" ? "font-mono text-xs" : ""}
+      />
+    </div>
+  );
+}
