@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      exam_answers: {
+        Row: {
+          answered_at: string
+          attempt_id: string
+          id: string
+          is_correct: boolean | null
+          points_awarded: number | null
+          question_id: string
+          response: Json
+          updated_at: string
+        }
+        Insert: {
+          answered_at?: string
+          attempt_id: string
+          id?: string
+          is_correct?: boolean | null
+          points_awarded?: number | null
+          question_id: string
+          response?: Json
+          updated_at?: string
+        }
+        Update: {
+          answered_at?: string
+          attempt_id?: string
+          id?: string
+          is_correct?: boolean | null
+          points_awarded?: number | null
+          question_id?: string
+          response?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      exam_attempts: {
+        Row: {
+          auto_scored: boolean
+          created_at: string
+          id: string
+          max_score: number | null
+          organization_id: string | null
+          registration_id: string
+          score: number | null
+          started_at: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_scored?: boolean
+          created_at?: string
+          id?: string
+          max_score?: number | null
+          organization_id?: string | null
+          registration_id: string
+          score?: number | null
+          started_at?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_scored?: boolean
+          created_at?: string
+          id?: string
+          max_score?: number | null
+          organization_id?: string | null
+          registration_id?: string
+          score?: number | null
+          started_at?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exam_registrations: {
         Row: {
           candidate_id: string
