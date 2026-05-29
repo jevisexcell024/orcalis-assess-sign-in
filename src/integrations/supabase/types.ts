@@ -556,6 +556,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_exam_questions_for_attempt: {
+        Args: { _attempt_id: string }
+        Returns: {
+          q_difficulty: Database["public"]["Enums"]["question_difficulty"]
+          q_id: string
+          q_options: Json
+          q_points: number
+          q_position: number
+          q_prompt: string
+          q_section_id: string
+          q_shuffle_options: boolean
+          q_type: Database["public"]["Enums"]["question_type"]
+        }[]
+      }
       get_user_orgs: { Args: { _user_id?: string }; Returns: string[] }
       has_org_role: {
         Args: {
@@ -576,6 +590,7 @@ export type Database = {
         Args: { _org_id: string; _user_id?: string }
         Returns: boolean
       }
+      submit_exam_attempt: { Args: { _attempt_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "super_admin" | "institution" | "candidate" | "proctor"
