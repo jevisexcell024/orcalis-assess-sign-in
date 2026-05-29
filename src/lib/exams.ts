@@ -46,23 +46,40 @@ export async function startOrResumeAttempt(registrationId: string) {
     attempt = created;
   }
 
-  // Load questions for this exam, in order
-  const { data: sections } = await supabase
-    .from("exam_sections")
-    .select("id")
-    .eq("exam_id", reg.exam_id)
-    .order("position", { ascending: true });
-  const sectionIds = (sections ?? []).map((s) => s.id);
-  let questions: Question[] = [];
-  if (sectionIds.length > 0) {
-    const { data: qs, error: qErr } = await supabase
-      .from("questions")
-      .select("*")
-      .in("section_id", sectionIds)
-      .order("position", { ascending: true });
-    if (qErr) throw qErr;
-    questions = qs ?? [];
-  }
+  // Load questions via secure RPC that strips correct-answer markers.
+  const { data: qs, error: qErr } = await supabase.rpc(
+    "get_exam_questions_for_attempt" as never,
+    { _attempt_id: attempt.id } as never,
+  );
+  if (qErr) throw qErr;
+  type RpcRow = {
+    q_id: string;
+    q_section_id: string | null;
+    q_position: number;
+    q_type: Question["type"];
+    q_prompt: string;
+    q_difficulty: Question["difficulty"];
+    q_points: number;
+    q_options: unknown;
+    q_shuffle_options: boolean;
+  };
+  const questions: Question[] = ((qs as unknown as RpcRow[]) ?? []).map((row) => ({
+    id: row.q_id,
+    section_id: row.q_section_id,
+    position: row.q_position,
+    type: row.q_type,
+    prompt: row.q_prompt,
+    difficulty: row.q_difficulty,
+    points: row.q_points,
+    options: row.q_options as Question["options"],
+    shuffle_options: row.q_shuffle_options,
+    organization_id: null,
+    created_by: "",
+    subject: null,
+    tags: [],
+    created_at: "",
+    updated_at: "",
+  }));
 
   // Load any saved answers
   const { data: answers } = await supabase
@@ -97,65 +114,19 @@ export async function saveAnswer(input: {
  * Non-MCQ answers remain ungraded (manual review).
  */
 export async function submitAttempt(attemptId: string) {
-  // Pull attempt + its answers + questions in one go
-  const { data: answers, error: aErr } = await supabase
-    .from("exam_answers")
-    .select("id, question_id, response")
-    .eq("attempt_id", attemptId);
-  if (aErr) throw aErr;
-
-  const questionIds = (answers ?? []).map((a) => a.question_id);
-  let questions: Pick<Question, "id" | "type" | "options" | "points">[] = [];
-  if (questionIds.length > 0) {
-    const { data: qs, error: qErr } = await supabase
-      .from("questions")
-      .select("id, type, options, points")
-      .in("id", questionIds);
-    if (qErr) throw qErr;
-    questions = qs ?? [];
-  }
-
-  let score = 0;
-  let maxScore = 0;
-  let autoScored = true;
-  for (const q of questions) {
-    maxScore += q.points ?? 1;
-    const ans = answers!.find((a) => a.question_id === q.id);
-    if (!ans) continue;
-    if (q.type === "mcq" || q.type === "true_false") {
-      const opts = (q.options as unknown as QuestionOption[]) ?? [];
-      const selectedIdx = (ans.response as { selected?: number })?.selected;
-      const correctIdx = opts.findIndex((o) => o.is_correct);
-      const isCorrect = selectedIdx === correctIdx && correctIdx >= 0;
-      const pts = isCorrect ? q.points ?? 1 : 0;
-      if (isCorrect) score += pts;
-      await supabase
-        .from("exam_answers")
-        .update({ is_correct: isCorrect, points_awarded: pts })
-        .eq("id", ans.id);
-    } else {
-      autoScored = false;
-    }
-  }
-
-  const { error: updErr } = await supabase
-    .from("exam_attempts")
-    .update({
-      submitted_at: new Date().toISOString(),
-      score,
-      max_score: maxScore,
-      auto_scored: autoScored,
-    })
-    .eq("id", attemptId);
-  if (updErr) throw updErr;
-
-  // Mirror onto the registration for legacy queries
-  await supabase
-    .from("exam_registrations")
-    .update({ score, status: "completed" })
-    .eq("id", (await supabase.from("exam_attempts").select("registration_id").eq("id", attemptId).single()).data!.registration_id);
-
-  return { score, maxScore, autoScored };
+  // Scoring + submission run server-side in a SECURITY DEFINER function so
+  // candidates cannot tamper with their score or read correct answers.
+  const { data, error } = await supabase.rpc(
+    "submit_exam_attempt" as never,
+    { _attempt_id: attemptId } as never,
+  );
+  if (error) throw error;
+  const result = (data as unknown as { score: number; max_score: number; auto_scored: boolean }) ?? {
+    score: 0,
+    max_score: 0,
+    auto_scored: true,
+  };
+  return { score: result.score, maxScore: result.max_score, autoScored: result.auto_scored };
 }
 
 export async function listExams() {
