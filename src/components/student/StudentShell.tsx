@@ -1,23 +1,27 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Award,
+  BarChart2,
   CreditCard,
   Home,
   LogOut,
   NotebookPen,
   ShieldCheck,
   Sparkles,
+  User,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth";
 
 const nav = [
-  { label: "Dashboard", to: "/student", icon: Home },
-  { label: "My Exams", to: "/student/exams", icon: NotebookPen },
-  { label: "Practice Tests", to: "/student/practice", icon: Sparkles },
-  { label: "Certificates", to: "/student/certificates", icon: Award },
-  { label: "Payments", to: "/student/payments", icon: CreditCard },
+  { label: "Dashboard",     to: "/student",              icon: Home        },
+  { label: "My Exams",      to: "/student/exams",        icon: NotebookPen },
+  { label: "My Results",    to: "/student/results",      icon: BarChart2   },
+  { label: "Certificates",  to: "/student/certificates", icon: Award       },
+  { label: "Profile",       to: "/student/profile",      icon: User        },
+  { label: "Practice Tests",to: "/student/practice",     icon: Sparkles    },
+  { label: "Payments",      to: "/student/payments",     icon: CreditCard  },
 ] as const;
 
 export function StudentShell({ children }: { children: ReactNode }) {
