@@ -49,6 +49,9 @@ const platformNav: NavLink[] = [
   { label: "Results", to: "/admin/results", icon: FileText },
   { label: "Attendance", to: "/admin/attendance", icon: CalendarClock },
   { label: "Students (SIS)", to: "/admin/students", icon: UsersRound },
+  { label: "Communication", to: "/admin/communication", icon: Bell },
+  { label: "Integrity", to: "/admin/academic-integrity", icon: ShieldCheck },
+  { label: "Reports", to: "/admin/reports", icon: FileText },
 ];
 
 const monitoringNav: NavLink[] = [
