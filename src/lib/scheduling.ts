@@ -316,3 +316,167 @@ export async function listAuditLogs(limit = 25): Promise<AuditLogRow[]> {
     registration_id: e.registration_id,
   }));
 }
+
+// ---------- Super admin dashboard overview ----------
+
+export type DashboardOverview = {
+  activeCandidates: number;
+  activeExams: number;
+  totalInterventions: number;
+  systemHealthPct: number;
+  usageByHour: { t: string; v: number }[];
+  violationTypes: { name: string; value: number; color: string }[];
+  recentInterventions: Array<{
+    id: string;
+    candidate: string;
+    candidateId: string;
+    exam: string;
+    violation: string;
+    severity: "info" | "warning" | "high";
+    confidence: number;
+    at: string;
+  }>;
+  totalEventCount: number;
+};
+
+const VIOLATION_PALETTE = [
+  "oklch(0.65 0.22 22)",
+  "oklch(0.78 0.17 70)",
+  "oklch(0.55 0.22 275)",
+  "oklch(0.7 0.17 162)",
+  "oklch(0.6 0.2 320)",
+];
+
+function humanizeEvent(type: string): string {
+  return type
+    .split(/[_\s-]+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+export async function getDashboardOverview(): Promise<DashboardOverview> {
+  const now = Date.now();
+  const dayAgoIso = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+
+  const [examsRes, attemptsRes, eventsRes, regsRes] = await Promise.all([
+    supabase.from("exams").select("id, title, status"),
+    supabase
+      .from("exam_attempts")
+      .select("id, started_at, submitted_at, registration_id")
+      .is("submitted_at", null),
+    supabase
+      .from("proctoring_events")
+      .select("id, event_type, severity, message, created_at, registration_id")
+      .gte("created_at", dayAgoIso)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("exam_registrations")
+      .select("id, candidate_id, exam_id"),
+  ]);
+
+  if (examsRes.error) throw examsRes.error;
+  if (attemptsRes.error) throw attemptsRes.error;
+  if (eventsRes.error) throw eventsRes.error;
+  if (regsRes.error) throw regsRes.error;
+
+  const exams = examsRes.data ?? [];
+  const attempts = attemptsRes.data ?? [];
+  const events = eventsRes.data ?? [];
+  const regs = regsRes.data ?? [];
+
+  const examById = new Map(exams.map((e) => [e.id, e]));
+  const regById = new Map(regs.map((r) => [r.id, r]));
+
+  const activeCandidates = attempts.length;
+  const activeExams = exams.filter((e) => e.status === "published").length;
+  const totalInterventions = events.length;
+  const highSeverity = events.filter((e) => e.severity === "high").length;
+  const systemHealthPct = totalInterventions
+    ? Math.max(80, 100 - (highSeverity / totalInterventions) * 20)
+    : 99.98;
+
+  // Usage by hour (last 24h) — count attempt starts per hour bucket.
+  const buckets: { t: string; v: number }[] = [];
+  for (let i = 23; i >= 0; i--) {
+    const d = new Date(now - i * 60 * 60 * 1000);
+    d.setMinutes(0, 0, 0);
+    buckets.push({
+      t: `${String(d.getHours()).padStart(2, "0")}:00`,
+      v: 0,
+    });
+  }
+  for (const a of attempts) {
+    const t = new Date(a.started_at).getTime();
+    const hoursAgo = Math.floor((now - t) / (60 * 60 * 1000));
+    if (hoursAgo >= 0 && hoursAgo < 24) {
+      buckets[23 - hoursAgo].v += 1;
+    }
+  }
+
+  // Violation distribution
+  const counts = new Map<string, number>();
+  for (const e of events) {
+    counts.set(e.event_type, (counts.get(e.event_type) ?? 0) + 1);
+  }
+  const total = Array.from(counts.values()).reduce((a, b) => a + b, 0);
+  const violationTypes = Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, n], i) => ({
+      name: humanizeEvent(name),
+      value: total ? Math.round((n / total) * 100) : 0,
+      color: VIOLATION_PALETTE[i % VIOLATION_PALETTE.length],
+    }));
+
+  // Recent interventions: warning + high only
+  const flagged = events.filter((e) => e.severity !== "info").slice(0, 10);
+  const candidateIds = Array.from(
+    new Set(
+      flagged
+        .map((e) => regById.get(e.registration_id)?.candidate_id)
+        .filter((x): x is string => !!x),
+    ),
+  );
+  let profileByUser = new Map<string, { contact_name: string | null; email: string }>();
+  if (candidateIds.length) {
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("user_id, contact_name, email")
+      .in("user_id", candidateIds);
+    profileByUser = new Map(
+      (profs ?? []).map((p) => [p.user_id, { contact_name: p.contact_name, email: p.email }]),
+    );
+  }
+
+  const recentInterventions = flagged.map((e) => {
+    const reg = regById.get(e.registration_id);
+    const prof = reg ? profileByUser.get(reg.candidate_id) : undefined;
+    const exam = reg ? examById.get(reg.exam_id) : undefined;
+    const ageMs = now - new Date(e.created_at).getTime();
+    const ageMin = Math.floor(ageMs / 60000);
+    const at =
+      ageMin < 1 ? "Just now" : ageMin < 60 ? `${ageMin} min ago` : `${Math.floor(ageMin / 60)}h ago`;
+    return {
+      id: e.id,
+      candidate: prof?.contact_name ?? prof?.email ?? "Candidate",
+      candidateId: reg?.candidate_id?.slice(0, 8) ?? "—",
+      exam: exam?.title ?? "Exam",
+      violation: humanizeEvent(e.event_type),
+      severity: e.severity as "info" | "warning" | "high",
+      confidence: e.severity === "high" ? 95 : 80,
+      at,
+    };
+  });
+
+  return {
+    activeCandidates,
+    activeExams,
+    totalInterventions,
+    systemHealthPct,
+    usageByHour: buckets,
+    violationTypes,
+    recentInterventions,
+    totalEventCount: totalInterventions,
+  };
+}
