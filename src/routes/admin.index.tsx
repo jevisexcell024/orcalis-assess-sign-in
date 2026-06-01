@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import {
   Area,
@@ -12,16 +13,14 @@ import {
 import {
   Activity,
   AlertTriangle,
-  Eye,
   Filter,
   Heart,
   LayoutDashboard,
-  Mic,
   Scan,
-  UsersRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminShell } from "@/components/admin/AdminShell";
+import { getDashboardOverview } from "@/lib/scheduling";
 
 export const Route = createFileRoute("/admin/")({
   component: SuperAdminPage,
@@ -37,69 +36,17 @@ export const Route = createFileRoute("/admin/")({
   }),
 });
 
-const bandwidthData = Array.from({ length: 23 }, (_, i) => {
-  const x = i;
-  const wave =
-    18 +
-    Math.exp(-Math.pow((x - 10) / 3.2, 2)) * 28 +
-    Math.sin(x / 2) * 1.5;
-  return { t: `${String(i).padStart(2, "0")}:00`, v: Math.max(6, Math.round(wave)) };
-});
-
-const violationData = [
-  { name: "Multiple Faces", value: 42, color: "oklch(0.65 0.22 22)" },
-  { name: "Looking Away", value: 35, color: "oklch(0.78 0.17 70)" },
-  { name: "Audio Detected", value: 23, color: "oklch(0.55 0.22 275)" },
-];
-
-const interventions = [
-  {
-    candidate: "Michael Chen",
-    id: "CND-8492",
-    institution: "Stanford Univ.",
-    exam: "CS101 Final",
-    violation: "Multiple Faces",
-    vIcon: UsersRound,
-    vTone: "bg-rose-50 text-rose-700 ring-rose-200",
-    confidence: 98,
-    bar: "bg-rose-500",
-    time: "Just now",
-    avatar: "from-sky-400 to-indigo-500",
-    initials: "MC",
-  },
-  {
-    candidate: "Sarah Jenkins",
-    id: "CND-7731",
-    institution: "Tech Institute",
-    exam: "Data Structures",
-    violation: "Prolonged Look Away",
-    vIcon: Eye,
-    vTone: "bg-amber-50 text-amber-700 ring-amber-200",
-    confidence: 85,
-    bar: "bg-amber-500",
-    time: "2 min ago",
-    avatar: "from-rose-400 to-orange-400",
-    initials: "SJ",
-  },
-  {
-    candidate: "David Jones",
-    id: "CND-9012",
-    institution: "Global Cert Corp",
-    exam: "AWS Architect",
-    violation: "Speech Detected",
-    vIcon: Mic,
-    vTone: "bg-violet-50 text-violet-700 ring-violet-200",
-    confidence: 92,
-    bar: "bg-violet-500",
-    time: "5 min ago",
-    avatar: "from-slate-400 to-slate-600",
-    initials: "DJ",
-  },
-];
-
 function SuperAdminPage() {
-  const _navigate = useNavigate();
-  void _navigate;
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "dashboard-overview"],
+    queryFn: getDashboardOverview,
+    refetchInterval: 30_000,
+  });
+
+  const bandwidthData = data?.usageByHour ?? [];
+  const violationData = data?.violationTypes ?? [];
+  const interventions = data?.recentInterventions ?? [];
+  const fmt = (n: number) => n.toLocaleString();
 
   return (
     <AdminShell title="Super Admin Overview">
@@ -111,20 +58,18 @@ function SuperAdminPage() {
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard
-            label="Concurrent Candidates"
-            value="42,891"
-            delta="+12.5%"
-            sub="vs last hour"
+            label="Active Candidates"
+            value={isLoading ? "—" : fmt(data?.activeCandidates ?? 0)}
+            sub="in-progress attempts"
             trend="up"
             accent="oklch(0.58 0.22 262)"
             icon={Scan}
             iconTone="bg-sky-50 text-sky-600"
           />
           <KpiCard
-            label="Active Exams"
-            value="1,204"
-            delta="+3.2%"
-            sub="vs yesterday"
+            label="Published Exams"
+            value={isLoading ? "—" : fmt(data?.activeExams ?? 0)}
+            sub="live across orgs"
             trend="up"
             accent="oklch(0.58 0.22 262)"
             icon={Activity}
@@ -132,9 +77,8 @@ function SuperAdminPage() {
           />
           <KpiCard
             label="AI Interventions"
-            value="342"
-            delta="-0.8%"
-            sub="vs avg baseline"
+            value={isLoading ? "—" : fmt(data?.totalInterventions ?? 0)}
+            sub="last 24 hours"
             trend="down"
             accent="oklch(0.78 0.17 70)"
             icon={AlertTriangle}
@@ -142,7 +86,9 @@ function SuperAdminPage() {
           />
           <KpiCard
             label="System Health"
-            value="99.98%"
+            value={
+              isLoading ? "—" : `${(data?.systemHealthPct ?? 100).toFixed(2)}%`
+            }
             health
             accent="oklch(0.7 0.17 162)"
             icon={Heart}
@@ -190,7 +136,7 @@ function SuperAdminPage() {
                       border: "1px solid oklch(0.92 0.01 260)",
                       fontSize: 12,
                     }}
-                    formatter={(v: number) => [`${v}k`, "Users"]}
+                    formatter={(v: number) => [`${v}`, "Attempts"]}
                   />
                   <Area
                     type="monotone"
@@ -227,20 +173,26 @@ function SuperAdminPage() {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <ul className="mt-2 space-y-2">
-              {violationData.map((d) => (
-                <li key={d.name} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{ background: d.color }}
-                    />
-                    <span className="text-foreground/80">{d.name}</span>
-                  </span>
-                  <span className="font-semibold tabular-nums">{d.value}%</span>
-                </li>
-              ))}
-            </ul>
+            {violationData.length === 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                No proctoring events recorded in the last 24 hours.
+              </p>
+            ) : (
+              <ul className="mt-2 space-y-2">
+                {violationData.map((d) => (
+                  <li key={d.name} className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2">
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ background: d.color }}
+                      />
+                      <span className="text-foreground/80">{d.name}</span>
+                    </span>
+                    <span className="font-semibold tabular-nums">{d.value}%</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Card>
         </div>
 
@@ -271,7 +223,7 @@ function SuperAdminPage() {
               <thead>
                 <tr className="border-b border-border text-left text-[11px] uppercase tracking-wider text-muted-foreground">
                   <th className="pb-3 font-medium">Candidate</th>
-                  <th className="pb-3 font-medium">Institution / Exam</th>
+                  <th className="pb-3 font-medium">Exam</th>
                   <th className="pb-3 font-medium">Violation Type</th>
                   <th className="pb-3 font-medium">Confidence</th>
                   <th className="pb-3 font-medium">Time</th>
@@ -279,67 +231,83 @@ function SuperAdminPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {interventions.map((row) => (
-                  <tr key={row.id} className="align-middle">
-                    <td className="py-3 pr-3">
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className={cn(
-                            "flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br text-[11px] font-semibold text-white",
-                            row.avatar,
-                          )}
-                        >
-                          {row.initials}
-                        </div>
-                        <div>
-                          <p className="font-semibold leading-tight">{row.candidate}</p>
-                          <p className="text-xs text-muted-foreground">ID: {row.id}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 pr-3">
-                      <p className="font-medium leading-tight">{row.institution}</p>
-                      <p className="text-xs text-muted-foreground">{row.exam}</p>
-                    </td>
-                    <td className="py-3 pr-3">
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1",
-                          row.vTone,
-                        )}
-                      >
-                        <row.vIcon className="h-3 w-3" />
-                        {row.violation}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-3">
-                      <div className="flex items-center gap-2">
-                        <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
-                          <div
-                            className={cn("h-full rounded-full", row.bar)}
-                            style={{ width: `${row.confidence}%` }}
-                          />
-                        </div>
-                        <span className="text-xs font-semibold tabular-nums">
-                          {row.confidence}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 pr-3 text-xs text-muted-foreground">{row.time}</td>
-                    <td className="py-3 text-right">
-                      <button className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted">
-                        Review
-                      </button>
+                {interventions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                      No live interventions. All sessions are clean.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  interventions.map((row) => {
+                    const tone =
+                      row.severity === "high"
+                        ? "bg-rose-50 text-rose-700 ring-rose-200"
+                        : "bg-amber-50 text-amber-700 ring-amber-200";
+                    const bar = row.severity === "high" ? "bg-rose-500" : "bg-amber-500";
+                    const initials = row.candidate
+                      .split(" ")
+                      .map((p) => p[0])
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .join("")
+                      .toUpperCase() || "??";
+                    return (
+                      <tr key={row.id} className="align-middle">
+                        <td className="py-3 pr-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 text-[11px] font-semibold text-white">
+                              {initials}
+                            </div>
+                            <div>
+                              <p className="font-semibold leading-tight">{row.candidate}</p>
+                              <p className="text-xs text-muted-foreground">ID: {row.candidateId}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 pr-3">
+                          <p className="font-medium leading-tight">{row.exam}</p>
+                        </td>
+                        <td className="py-3 pr-3">
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ring-1",
+                              tone,
+                            )}
+                          >
+                            <AlertTriangle className="h-3 w-3" />
+                            {row.violation}
+                          </span>
+                        </td>
+                        <td className="py-3 pr-3">
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className={cn("h-full rounded-full", bar)}
+                                style={{ width: `${row.confidence}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-semibold tabular-nums">
+                              {row.confidence}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3 pr-3 text-xs text-muted-foreground">{row.at}</td>
+                        <td className="py-3 text-right">
+                          <button className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted">
+                            Review
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
 
           <div className="mt-3 border-t border-border pt-3 text-center">
             <button className="text-xs font-semibold text-[color:var(--brand-blue)] hover:underline">
-              View All Events (142)
+              View All Events ({data?.totalEventCount ?? 0})
             </button>
           </div>
         </Card>
