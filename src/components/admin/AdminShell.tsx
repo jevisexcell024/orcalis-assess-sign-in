@@ -45,11 +45,14 @@ const platformNav: NavLink[] = [
   { label: "Live Monitor", to: "/admin/live-monitor", icon: Video, badge: "Live" },
   { label: "Analytics", to: "/admin/analytics", icon: BarChart3 },
   { label: "Certificates", to: "/admin/certificates", icon: Award },
-  { label: "Candidates", to: "/admin", icon: UsersRound },
+  { label: "Candidates", to: "/admin/candidates", icon: UsersRound },
+  { label: "Results", to: "/admin/results", icon: FileText },
+  { label: "Attendance", to: "/admin/attendance", icon: CalendarClock },
+  { label: "Students (SIS)", to: "/admin/students", icon: UsersRound },
 ];
 
 const monitoringNav: NavLink[] = [
-  { label: "AI Violations", to: "/admin", icon: ShieldAlert, badge: "12" },
+  { label: "AI Violations", to: "/admin/violations", icon: ShieldAlert, badge: "Live" },
   { label: "System Health", to: "/admin", icon: Heart },
 ];
 
@@ -57,8 +60,8 @@ const adminNav: NavLink[] = [
   { label: "Organization", to: "/admin/organization", icon: Building2 },
   { label: "Team", to: "/admin/team", icon: UsersRound },
   { label: "Billing & Plans", to: "/admin/billing", icon: CreditCard },
-  { label: "Audit Logs", to: "/admin/billing", icon: FileText },
-  { label: "Settings", to: "/admin", icon: Settings },
+  { label: "Audit Logs", to: "/admin/audit-logs", icon: FileText },
+  { label: "Settings", to: "/admin/settings", icon: Settings },
 ];
 
 export function AdminShell({

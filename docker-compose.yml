@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4173:4173"
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+    restart: unless-stopped
+
+  # Local Supabase stack (for offline dev / CI)
+  supabase-db:
+    image: supabase/postgres:15.8.1.078
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - supabase-db:/var/lib/postgresql/data
+
+  supabase-studio:
+    image: supabase/studio:latest
+    ports:
+      - "3000:3000"
+    environment:
+      SUPABASE_URL: http://supabase-kong:8000
+      STUDIO_PG_META_URL: http://supabase-kong:8000/pg
+
+volumes:
+  supabase-db:
