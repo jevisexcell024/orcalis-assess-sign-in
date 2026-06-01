@@ -2,6 +2,8 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Award,
   BarChart2,
+  Bell,
+  CalendarDays,
   CreditCard,
   Home,
   LogOut,
@@ -15,13 +17,15 @@ import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth";
 
 const nav = [
-  { label: "Dashboard",     to: "/student",              icon: Home        },
-  { label: "My Exams",      to: "/student/exams",        icon: NotebookPen },
-  { label: "My Results",    to: "/student/results",      icon: BarChart2   },
-  { label: "Certificates",  to: "/student/certificates", icon: Award       },
-  { label: "Profile",       to: "/student/profile",      icon: User        },
-  { label: "Practice Tests",to: "/student/practice",     icon: Sparkles    },
-  { label: "Payments",      to: "/student/payments",     icon: CreditCard  },
+  { label: "Dashboard",     to: "/student",                icon: Home        },
+  { label: "My Exams",      to: "/student/exams",          icon: NotebookPen },
+  { label: "My Results",    to: "/student/results",        icon: BarChart2   },
+  { label: "Attendance",    to: "/student/attendance",     icon: CalendarDays},
+  { label: "Certificates",  to: "/student/certificates",   icon: Award       },
+  { label: "Announcements", to: "/student/announcements",  icon: Bell        },
+  { label: "Payments",      to: "/student/payments",       icon: CreditCard  },
+  { label: "Profile",       to: "/student/profile",        icon: User        },
+  { label: "Practice Tests",to: "/student/practice",       icon: Sparkles    },
 ] as const;
 
 export function StudentShell({ children }: { children: ReactNode }) {
