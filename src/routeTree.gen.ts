@@ -35,6 +35,7 @@ import { Route as StudentPaymentsRouteImport } from './routes/student.payments'
 import { Route as StudentCertificatesRouteImport } from './routes/student.certificates'
 import { Route as StudentAttendanceRouteImport } from './routes/student.attendance'
 import { Route as StudentAnnouncementsRouteImport } from './routes/student.announcements'
+import { Route as EmployerVerifyRouteImport } from './routes/employer.verify'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as AdminViolationsRouteImport } from './routes/admin.violations'
@@ -56,9 +57,16 @@ import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
 import { Route as AdminAttendanceRouteImport } from './routes/admin.attendance'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAcademicIntegrityRouteImport } from './routes/admin.academic-integrity'
+import { Route as ApiTranscriptsGenerateRouteImport } from './routes/api/transcripts.generate'
 import { Route as ApiResultsExportRouteImport } from './routes/api/results.export'
+import { Route as ApiPaymentsWebhookRouteImport } from './routes/api/payments.webhook'
+import { Route as ApiPaymentsInvoicesRouteImport } from './routes/api/payments.invoices'
+import { Route as ApiPaymentsCreateSessionRouteImport } from './routes/api/payments.create-session'
 import { Route as ApiCertificatesVerifyRouteImport } from './routes/api/certificates.verify'
 import { Route as ApiAttendanceQrRouteImport } from './routes/api/attendance.qr'
+import { Route as ApiAiGradeAnswerRouteImport } from './routes/api/ai.grade-answer'
+import { Route as ApiAiGenerateQuestionsRouteImport } from './routes/api/ai.generate-questions'
+import { Route as ApiAiAnalyzeRiskRouteImport } from './routes/api/ai.analyze-risk'
 import { Route as StudentExamsIdSessionRouteImport } from './routes/student.exams.$id.session'
 import { Route as StudentExamsIdCheckinRouteImport } from './routes/student.exams.$id.checkin'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -195,6 +203,11 @@ const StudentAnnouncementsRoute = StudentAnnouncementsRouteImport.update({
   path: '/announcements',
   getParentRoute: () => StudentRoute,
 } as any)
+const EmployerVerifyRoute = EmployerVerifyRouteImport.update({
+  id: '/employer/verify',
+  path: '/employer/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiVersionRoute = ApiVersionRouteImport.update({
   id: '/api/version',
   path: '/api/version',
@@ -300,11 +313,32 @@ const AdminAcademicIntegrityRoute = AdminAcademicIntegrityRouteImport.update({
   path: '/academic-integrity',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiTranscriptsGenerateRoute = ApiTranscriptsGenerateRouteImport.update({
+  id: '/api/transcripts/generate',
+  path: '/api/transcripts/generate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiResultsExportRoute = ApiResultsExportRouteImport.update({
   id: '/api/results/export',
   path: '/api/results/export',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPaymentsWebhookRoute = ApiPaymentsWebhookRouteImport.update({
+  id: '/api/payments/webhook',
+  path: '/api/payments/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPaymentsInvoicesRoute = ApiPaymentsInvoicesRouteImport.update({
+  id: '/api/payments/invoices',
+  path: '/api/payments/invoices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPaymentsCreateSessionRoute =
+  ApiPaymentsCreateSessionRouteImport.update({
+    id: '/api/payments/create-session',
+    path: '/api/payments/create-session',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiCertificatesVerifyRoute = ApiCertificatesVerifyRouteImport.update({
   id: '/api/certificates/verify',
   path: '/api/certificates/verify',
@@ -313,6 +347,21 @@ const ApiCertificatesVerifyRoute = ApiCertificatesVerifyRouteImport.update({
 const ApiAttendanceQrRoute = ApiAttendanceQrRouteImport.update({
   id: '/api/attendance/qr',
   path: '/api/attendance/qr',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiGradeAnswerRoute = ApiAiGradeAnswerRouteImport.update({
+  id: '/api/ai/grade-answer',
+  path: '/api/ai/grade-answer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiGenerateQuestionsRoute = ApiAiGenerateQuestionsRouteImport.update({
+  id: '/api/ai/generate-questions',
+  path: '/api/ai/generate-questions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiAnalyzeRiskRoute = ApiAiAnalyzeRiskRouteImport.update({
+  id: '/api/ai/analyze-risk',
+  path: '/api/ai/analyze-risk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StudentExamsIdSessionRoute = StudentExamsIdSessionRouteImport.update({
@@ -380,6 +429,7 @@ export interface FileRoutesByFullPath {
   '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
   '/api/version': typeof ApiVersionRoute
+  '/employer/verify': typeof EmployerVerifyRoute
   '/student/announcements': typeof StudentAnnouncementsRoute
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/certificates': typeof StudentCertificatesRoute
@@ -389,9 +439,16 @@ export interface FileRoutesByFullPath {
   '/verify/$certNumber': typeof VerifyCertNumberRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
+  '/api/ai/analyze-risk': typeof ApiAiAnalyzeRiskRoute
+  '/api/ai/generate-questions': typeof ApiAiGenerateQuestionsRoute
+  '/api/ai/grade-answer': typeof ApiAiGradeAnswerRoute
   '/api/attendance/qr': typeof ApiAttendanceQrRoute
   '/api/certificates/verify': typeof ApiCertificatesVerifyRoute
+  '/api/payments/create-session': typeof ApiPaymentsCreateSessionRoute
+  '/api/payments/invoices': typeof ApiPaymentsInvoicesRoute
+  '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
   '/api/results/export': typeof ApiResultsExportRoute
+  '/api/transcripts/generate': typeof ApiTranscriptsGenerateRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -435,6 +492,7 @@ export interface FileRoutesByTo {
   '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
   '/api/version': typeof ApiVersionRoute
+  '/employer/verify': typeof EmployerVerifyRoute
   '/student/announcements': typeof StudentAnnouncementsRoute
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/certificates': typeof StudentCertificatesRoute
@@ -444,9 +502,16 @@ export interface FileRoutesByTo {
   '/verify/$certNumber': typeof VerifyCertNumberRoute
   '/admin': typeof AdminIndexRoute
   '/student': typeof StudentIndexRoute
+  '/api/ai/analyze-risk': typeof ApiAiAnalyzeRiskRoute
+  '/api/ai/generate-questions': typeof ApiAiGenerateQuestionsRoute
+  '/api/ai/grade-answer': typeof ApiAiGradeAnswerRoute
   '/api/attendance/qr': typeof ApiAttendanceQrRoute
   '/api/certificates/verify': typeof ApiCertificatesVerifyRoute
+  '/api/payments/create-session': typeof ApiPaymentsCreateSessionRoute
+  '/api/payments/invoices': typeof ApiPaymentsInvoicesRoute
+  '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
   '/api/results/export': typeof ApiResultsExportRoute
+  '/api/transcripts/generate': typeof ApiTranscriptsGenerateRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -493,6 +558,7 @@ export interface FileRoutesById {
   '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
   '/api/version': typeof ApiVersionRoute
+  '/employer/verify': typeof EmployerVerifyRoute
   '/student/announcements': typeof StudentAnnouncementsRoute
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/certificates': typeof StudentCertificatesRoute
@@ -502,9 +568,16 @@ export interface FileRoutesById {
   '/verify/$certNumber': typeof VerifyCertNumberRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
+  '/api/ai/analyze-risk': typeof ApiAiAnalyzeRiskRoute
+  '/api/ai/generate-questions': typeof ApiAiGenerateQuestionsRoute
+  '/api/ai/grade-answer': typeof ApiAiGradeAnswerRoute
   '/api/attendance/qr': typeof ApiAttendanceQrRoute
   '/api/certificates/verify': typeof ApiCertificatesVerifyRoute
+  '/api/payments/create-session': typeof ApiPaymentsCreateSessionRoute
+  '/api/payments/invoices': typeof ApiPaymentsInvoicesRoute
+  '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
   '/api/results/export': typeof ApiResultsExportRoute
+  '/api/transcripts/generate': typeof ApiTranscriptsGenerateRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -552,6 +625,7 @@ export interface FileRouteTypes {
     | '/admin/violations'
     | '/api/health'
     | '/api/version'
+    | '/employer/verify'
     | '/student/announcements'
     | '/student/attendance'
     | '/student/certificates'
@@ -561,9 +635,16 @@ export interface FileRouteTypes {
     | '/verify/$certNumber'
     | '/admin/'
     | '/student/'
+    | '/api/ai/analyze-risk'
+    | '/api/ai/generate-questions'
+    | '/api/ai/grade-answer'
     | '/api/attendance/qr'
     | '/api/certificates/verify'
+    | '/api/payments/create-session'
+    | '/api/payments/invoices'
+    | '/api/payments/webhook'
     | '/api/results/export'
+    | '/api/transcripts/generate'
     | '/admin/exams/$examId/builder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -607,6 +688,7 @@ export interface FileRouteTypes {
     | '/admin/violations'
     | '/api/health'
     | '/api/version'
+    | '/employer/verify'
     | '/student/announcements'
     | '/student/attendance'
     | '/student/certificates'
@@ -616,9 +698,16 @@ export interface FileRouteTypes {
     | '/verify/$certNumber'
     | '/admin'
     | '/student'
+    | '/api/ai/analyze-risk'
+    | '/api/ai/generate-questions'
+    | '/api/ai/grade-answer'
     | '/api/attendance/qr'
     | '/api/certificates/verify'
+    | '/api/payments/create-session'
+    | '/api/payments/invoices'
+    | '/api/payments/webhook'
     | '/api/results/export'
+    | '/api/transcripts/generate'
     | '/admin/exams/$examId/builder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -664,6 +753,7 @@ export interface FileRouteTypes {
     | '/admin/violations'
     | '/api/health'
     | '/api/version'
+    | '/employer/verify'
     | '/student/announcements'
     | '/student/attendance'
     | '/student/certificates'
@@ -673,9 +763,16 @@ export interface FileRouteTypes {
     | '/verify/$certNumber'
     | '/admin/'
     | '/student/'
+    | '/api/ai/analyze-risk'
+    | '/api/ai/generate-questions'
+    | '/api/ai/grade-answer'
     | '/api/attendance/qr'
     | '/api/certificates/verify'
+    | '/api/payments/create-session'
+    | '/api/payments/invoices'
+    | '/api/payments/webhook'
     | '/api/results/export'
+    | '/api/transcripts/generate'
     | '/admin/exams/$examId/builder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -703,10 +800,18 @@ export interface RootRouteChildren {
   StudentRoute: typeof StudentRouteWithChildren
   ApiHealthRoute: typeof ApiHealthRoute
   ApiVersionRoute: typeof ApiVersionRoute
+  EmployerVerifyRoute: typeof EmployerVerifyRoute
   VerifyCertNumberRoute: typeof VerifyCertNumberRoute
+  ApiAiAnalyzeRiskRoute: typeof ApiAiAnalyzeRiskRoute
+  ApiAiGenerateQuestionsRoute: typeof ApiAiGenerateQuestionsRoute
+  ApiAiGradeAnswerRoute: typeof ApiAiGradeAnswerRoute
   ApiAttendanceQrRoute: typeof ApiAttendanceQrRoute
   ApiCertificatesVerifyRoute: typeof ApiCertificatesVerifyRoute
+  ApiPaymentsCreateSessionRoute: typeof ApiPaymentsCreateSessionRoute
+  ApiPaymentsInvoicesRoute: typeof ApiPaymentsInvoicesRoute
+  ApiPaymentsWebhookRoute: typeof ApiPaymentsWebhookRoute
   ApiResultsExportRoute: typeof ApiResultsExportRoute
+  ApiTranscriptsGenerateRoute: typeof ApiTranscriptsGenerateRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -895,6 +1000,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentAnnouncementsRouteImport
       parentRoute: typeof StudentRoute
     }
+    '/employer/verify': {
+      id: '/employer/verify'
+      path: '/employer/verify'
+      fullPath: '/employer/verify'
+      preLoaderRoute: typeof EmployerVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/version': {
       id: '/api/version'
       path: '/api/version'
@@ -1042,11 +1154,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAcademicIntegrityRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/transcripts/generate': {
+      id: '/api/transcripts/generate'
+      path: '/api/transcripts/generate'
+      fullPath: '/api/transcripts/generate'
+      preLoaderRoute: typeof ApiTranscriptsGenerateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/results/export': {
       id: '/api/results/export'
       path: '/api/results/export'
       fullPath: '/api/results/export'
       preLoaderRoute: typeof ApiResultsExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/payments/webhook': {
+      id: '/api/payments/webhook'
+      path: '/api/payments/webhook'
+      fullPath: '/api/payments/webhook'
+      preLoaderRoute: typeof ApiPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/payments/invoices': {
+      id: '/api/payments/invoices'
+      path: '/api/payments/invoices'
+      fullPath: '/api/payments/invoices'
+      preLoaderRoute: typeof ApiPaymentsInvoicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/payments/create-session': {
+      id: '/api/payments/create-session'
+      path: '/api/payments/create-session'
+      fullPath: '/api/payments/create-session'
+      preLoaderRoute: typeof ApiPaymentsCreateSessionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/certificates/verify': {
@@ -1061,6 +1201,27 @@ declare module '@tanstack/react-router' {
       path: '/api/attendance/qr'
       fullPath: '/api/attendance/qr'
       preLoaderRoute: typeof ApiAttendanceQrRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/grade-answer': {
+      id: '/api/ai/grade-answer'
+      path: '/api/ai/grade-answer'
+      fullPath: '/api/ai/grade-answer'
+      preLoaderRoute: typeof ApiAiGradeAnswerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/generate-questions': {
+      id: '/api/ai/generate-questions'
+      path: '/api/ai/generate-questions'
+      fullPath: '/api/ai/generate-questions'
+      preLoaderRoute: typeof ApiAiGenerateQuestionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/analyze-risk': {
+      id: '/api/ai/analyze-risk'
+      path: '/api/ai/analyze-risk'
+      fullPath: '/api/ai/analyze-risk'
+      preLoaderRoute: typeof ApiAiAnalyzeRiskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/student/exams/$id/session': {
@@ -1208,10 +1369,18 @@ const rootRouteChildren: RootRouteChildren = {
   StudentRoute: StudentRouteWithChildren,
   ApiHealthRoute: ApiHealthRoute,
   ApiVersionRoute: ApiVersionRoute,
+  EmployerVerifyRoute: EmployerVerifyRoute,
   VerifyCertNumberRoute: VerifyCertNumberRoute,
+  ApiAiAnalyzeRiskRoute: ApiAiAnalyzeRiskRoute,
+  ApiAiGenerateQuestionsRoute: ApiAiGenerateQuestionsRoute,
+  ApiAiGradeAnswerRoute: ApiAiGradeAnswerRoute,
   ApiAttendanceQrRoute: ApiAttendanceQrRoute,
   ApiCertificatesVerifyRoute: ApiCertificatesVerifyRoute,
+  ApiPaymentsCreateSessionRoute: ApiPaymentsCreateSessionRoute,
+  ApiPaymentsInvoicesRoute: ApiPaymentsInvoicesRoute,
+  ApiPaymentsWebhookRoute: ApiPaymentsWebhookRoute,
   ApiResultsExportRoute: ApiResultsExportRoute,
+  ApiTranscriptsGenerateRoute: ApiTranscriptsGenerateRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
