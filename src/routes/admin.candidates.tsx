@@ -212,5 +212,3 @@ function CandidatesPage() {
     </AdminShell>
   );
 }
-EOSX
-echo "admin.candidates.tsx written"
