@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { createBankQuestion, listBankQuestions, type Question } from "@/lib/exams";
+import { generateQuestions, type GeneratedQuestion, type Difficulty, type QuestionType } from "@/lib/ai";
+import { Loader2, CheckCheck, AlertCircle, Brain } from "lucide-react";
 
 export const Route = createFileRoute("/admin/question-bank")({
   component: QuestionBankPage,
@@ -60,6 +62,7 @@ const difficultyTone: Record<Question["difficulty"], string> = {
 function QuestionBankPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -104,7 +107,7 @@ function QuestionBankPage() {
             <Button variant="outline" size="sm" disabled>
               <Upload className="mr-1.5 h-4 w-4" /> Import
             </Button>
-            <Button variant="outline" size="sm" disabled className="text-violet-600">
+            <Button variant="outline" size="sm" className="text-violet-600" onClick={() => setAiOpen(true)}>
               <Sparkles className="mr-1.5 h-4 w-4" /> AI Generate
             </Button>
             <Button size="sm" onClick={() => setOpen(true)}>
@@ -247,6 +250,25 @@ function QuestionBankPage() {
         </div>
       </div>
 
+      <AIGeneratorDialog
+        open={aiOpen}
+        onClose={() => setAiOpen(false)}
+        onImport={async (qs) => {
+          for (const q of qs) {
+            await createBankQuestion({
+              prompt: q.prompt,
+              type: q.type,
+              difficulty: q.difficulty,
+              points: q.points,
+              options: q.options ?? [],
+              tags: q.tags,
+              subject: q.subject,
+              shuffle_options: q.type === "mcq",
+            });
+          }
+          await qc.invalidateQueries({ queryKey: ["admin", "question-bank"] });
+        }}
+      />
       <NewQuestionDialog
         open={open}
         onOpenChange={setOpen}
@@ -382,6 +404,226 @@ function NewQuestionDialog({
           <Button onClick={handleSubmit} disabled={submitting || !prompt.trim()}>
             {submitting ? "Saving…" : "Add to bank"}
           </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
+// ── AI Question Generator Dialog ─────────────────────────────────────────────
+function AIGeneratorDialog({
+  open,
+  onClose,
+  onImport,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onImport: (questions: GeneratedQuestion[]) => Promise<void>;
+}) {
+  const [topic, setTopic] = useState("");
+  const [subject, setSubject] = useState("");
+  const [context, setContext] = useState("");
+  const [count, setCount] = useState("5");
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
+  const [types, setTypes] = useState<QuestionType[]>(["mcq"]);
+  const [generated, setGenerated] = useState<GeneratedQuestion[]>([]);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [loading, setLoading] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const TYPE_OPTIONS: { value: QuestionType; label: string }[] = [
+    { value: "mcq",         label: "Multiple Choice" },
+    { value: "true_false",  label: "True / False"    },
+    { value: "descriptive", label: "Essay"           },
+    { value: "coding",      label: "Coding"          },
+  ];
+
+  const toggleType = (t: QuestionType) =>
+    setTypes((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]);
+
+  const toggleSelect = (i: number) =>
+    setSelected((prev) => { const s = new Set(prev); s.has(i) ? s.delete(i) : s.add(i); return s; });
+
+  const handleGenerate = async () => {
+    if (!topic.trim()) return;
+    setLoading(true); setError(null); setGenerated([]); setSelected(new Set());
+    try {
+      const qs = await generateQuestions({
+        topic: topic.trim(),
+        subject: subject.trim() || undefined,
+        context: context.trim() || undefined,
+        difficulty,
+        count: Math.min(20, Math.max(1, Number(count))),
+        types: types.length ? types : ["mcq"],
+      });
+      setGenerated(qs);
+      setSelected(new Set(qs.map((_, i) => i)));
+    } catch (e: any) {
+      setError(e.message ?? "Generation failed. Check your OpenAI API key.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImport = async () => {
+    const toImport = generated.filter((_, i) => selected.has(i));
+    if (!toImport.length) return;
+    setImporting(true);
+    try {
+      await onImport(toImport);
+      toast.success(`${toImport.length} question${toImport.length !== 1 ? "s" : ""} added to question bank.`);
+      onClose();
+      setGenerated([]); setSelected(new Set()); setTopic("");
+    } catch (e: any) {
+      toast.error(e.message ?? "Import failed");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Brain className="h-5 w-5 text-violet-600" />
+            AI Question Generator
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Config */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2 space-y-1.5">
+              <Label>Topic <span className="text-rose-500">*</span></Label>
+              <Input value={topic} onChange={(e) => setTopic(e.target.value)}
+                placeholder="e.g. Newton's Laws of Motion" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Subject (optional)</Label>
+              <Input value={subject} onChange={(e) => setSubject(e.target.value)}
+                placeholder="e.g. Physics" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Number of questions</Label>
+              <Input type="number" min="1" max="20" value={count}
+                onChange={(e) => setCount(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Difficulty</Label>
+              <select value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}
+                className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Question types</Label>
+              <div className="flex flex-wrap gap-2">
+                {TYPE_OPTIONS.map((t) => (
+                  <button key={t.value} type="button"
+                    onClick={() => toggleType(t.value)}
+                    className={cn(
+                      "rounded-lg border px-3 py-1.5 text-xs font-medium transition",
+                      types.includes(t.value)
+                        ? "border-transparent text-white"
+                        : "border-border bg-background text-muted-foreground hover:bg-muted",
+                    )}
+                    style={types.includes(t.value) ? { background: "var(--gradient-primary)" } : undefined}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="sm:col-span-2 space-y-1.5">
+              <Label>Curriculum context (optional)</Label>
+              <Textarea value={context} onChange={(e) => setContext(e.target.value)}
+                placeholder="Paste relevant syllabus excerpt or learning objectives…"
+                rows={2} />
+            </div>
+          </div>
+
+          <Button onClick={handleGenerate} disabled={loading || !topic.trim()} className="w-full gap-2">
+            {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</> : <><Sparkles className="h-4 w-4" /> Generate Questions</>}
+          </Button>
+
+          {error && (
+            <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              {error}
+            </div>
+          )}
+
+          {/* Generated questions */}
+          {generated.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">{generated.length} questions generated — select to import:</p>
+                <button className="text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setSelected(selected.size === generated.length ? new Set() : new Set(generated.map((_, i) => i)))}>
+                  {selected.size === generated.length ? "Deselect all" : "Select all"}
+                </button>
+              </div>
+              {generated.map((q, i) => (
+                <div key={i}
+                  onClick={() => toggleSelect(i)}
+                  className={cn(
+                    "cursor-pointer rounded-xl border p-4 transition select-none",
+                    selected.has(i) ? "border-violet-300 bg-violet-50/40" : "border-border bg-background hover:bg-muted/30",
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={cn(
+                      "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition",
+                      selected.has(i) ? "border-violet-500 bg-violet-500" : "border-muted-foreground",
+                    )}>
+                      {selected.has(i) && <CheckCheck className="h-3 w-3 text-white" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap gap-2 mb-1.5">
+                        <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 ring-1 ring-sky-200 uppercase">
+                          {q.type.replace("_", "/")}
+                        </span>
+                        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 uppercase", difficultyTone[q.difficulty])}>
+                          {q.difficulty}
+                        </span>
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                          {q.points} pt{q.points !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium leading-snug">{q.prompt}</p>
+                      {q.options && q.options.length > 0 && (
+                        <ul className="mt-2 space-y-1">
+                          {q.options.map((opt, j) => (
+                            <li key={j} className={cn("text-xs", opt.is_correct ? "text-emerald-700 font-semibold" : "text-muted-foreground")}>
+                              {opt.is_correct ? "✓ " : "○ "}{opt.text}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {q.explanation && (
+                        <p className="mt-2 text-[11px] text-muted-foreground italic">💡 {q.explanation}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose} disabled={importing}>Cancel</Button>
+          {generated.length > 0 && (
+            <Button onClick={handleImport} disabled={importing || selected.size === 0} className="gap-1.5">
+              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCheck className="h-4 w-4" />}
+              {importing ? "Importing…" : `Import ${selected.size} question${selected.size !== 1 ? "s" : ""}`}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
