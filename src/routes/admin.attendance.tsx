@@ -8,6 +8,7 @@ import {
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { listAttendanceSessions, type AttendanceSession } from "@/lib/attendance";
 
 export const Route = createFileRoute("/admin/attendance")({
   component: AttendancePage,
@@ -21,24 +22,22 @@ const METHODS = [
   { id: "facial",    label: "Facial",     icon: Camera,         desc: "AI face recognition" },
 ];
 
-// Mock sessions for demo (replace with real Supabase query once table is deployed)
-const MOCK_SESSIONS = [
-  { id: "1", title: "CS101 Final Exam Session", session_date: "2026-06-10", method: "qr",  present: 142, absent: 8, total: 150 },
-  { id: "2", title: "Physics Practical",        session_date: "2026-06-08", method: "gps", present: 38,  absent: 2, total: 40 },
-  { id: "3", title: "MBA Cohort Seminar",       session_date: "2026-06-05", method: "facial", present: 61, absent: 4, total: 65 },
-];
+
 
 function AttendancePage() {
   const [activeMethod, setActiveMethod] = useState("qr");
   const [creating, setCreating] = useState(false);
 
+  const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
+    queryKey: ["admin", "attendance-sessions"],
+    queryFn: () => listAttendanceSessions(),
+  });
+
   const stats = {
-    totalSessions: MOCK_SESSIONS.length,
-    totalPresent: MOCK_SESSIONS.reduce((s, r) => s + r.present, 0),
-    totalAbsent: MOCK_SESSIONS.reduce((s, r) => s + r.absent, 0),
-    avgRate: Math.round(
-      MOCK_SESSIONS.reduce((s, r) => s + (r.present / r.total) * 100, 0) / MOCK_SESSIONS.length,
-    ),
+    totalSessions: sessions.length,
+    totalPresent: 0,
+    totalAbsent: 0,
+    avgRate: 0,
   };
 
   return (
@@ -139,47 +138,42 @@ function AttendancePage() {
                   <th className="px-4 py-3 font-medium">Session</th>
                   <th className="px-4 py-3 font-medium">Date</th>
                   <th className="px-4 py-3 font-medium">Method</th>
-                  <th className="px-4 py-3 font-medium">Attendance</th>
-                  <th className="px-4 py-3 font-medium">Rate</th>
+                  <th className="px-4 py-3 font-medium">Created</th>
                   <th className="px-4 py-3 text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {MOCK_SESSIONS.map((s) => {
-                  const Method = METHODS.find((m) => m.id === s.method);
-                  const rate = Math.round((s.present / s.total) * 100);
-                  return (
-                    <tr key={s.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3 font-medium">{s.title}</td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">{s.session_date}</td>
-                      <td className="px-4 py-3">
-                        {Method && (
-                          <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
-                            <Method.icon className="h-3 w-3" />
-                            {Method.label}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-emerald-700 font-medium">{s.present}</span>
-                        <span className="text-muted-foreground"> / {s.total}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
-                            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${rate}%` }} />
-                          </div>
-                          <span className="text-xs font-semibold">{rate}%</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <button className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted">
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {sessionsLoading ? (
+                  <tr><td colSpan={5} className="py-12 text-center text-sm text-muted-foreground">Loading sessions…</td></tr>
+                ) : sessions.length === 0 ? (
+                  <tr><td colSpan={5} className="py-12 text-center text-sm text-muted-foreground">No attendance sessions yet. Create one above.</td></tr>
+                ) : (
+                  sessions.map((s: AttendanceSession) => {
+                    const Method = METHODS.find((m) => m.id === s.method);
+                    return (
+                      <tr key={s.id} className="hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-3 font-medium">{s.title}</td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">{s.session_date}</td>
+                        <td className="px-4 py-3">
+                          {Method && (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium">
+                              <Method.icon className="h-3 w-3" />
+                              {Method.label}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {new Date(s.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted">
+                            View Details
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>

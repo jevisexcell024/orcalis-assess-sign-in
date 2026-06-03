@@ -13,17 +13,7 @@ export const Route = createFileRoute("/admin/audit-logs")({
   head: () => ({ meta: [{ title: "Audit Logs · Orcalis Assess" }] }),
 });
 
-// Mock until audit_logs table is deployed
-const MOCK_LOGS = [
-  { id: "1", actor_email: "admin@orcalis.io", action: "CREATE", resource_type: "exam",       resource_id: "ex-001", created_at: "2026-06-01T10:30:00Z", ip_address: "105.112.45.22" },
-  { id: "2", actor_email: "admin@orcalis.io", action: "PUBLISH", resource_type: "exam",      resource_id: "ex-001", created_at: "2026-06-01T10:45:00Z", ip_address: "105.112.45.22" },
-  { id: "3", actor_email: "officer@uni.edu",  action: "INVITE",  resource_type: "user",      resource_id: "u-012",  created_at: "2026-06-01T09:15:00Z", ip_address: "41.77.200.14"  },
-  { id: "4", actor_email: "admin@orcalis.io", action: "DELETE",  resource_type: "question",  resource_id: "q-087",  created_at: "2026-05-31T16:22:00Z", ip_address: "105.112.45.22" },
-  { id: "5", actor_email: "officer@uni.edu",  action: "UPDATE",  resource_type: "exam",      resource_id: "ex-002", created_at: "2026-05-31T14:08:00Z", ip_address: "41.77.200.14"  },
-  { id: "6", actor_email: "admin@orcalis.io", action: "LOGIN",   resource_type: "auth",      resource_id: null,     created_at: "2026-05-31T08:00:00Z", ip_address: "105.112.45.22" },
-  { id: "7", actor_email: "registrar@uni.edu",action: "CREATE",  resource_type: "student",   resource_id: "s-201",  created_at: "2026-05-30T11:30:00Z", ip_address: "196.1.200.88"  },
-  { id: "8", actor_email: "admin@orcalis.io", action: "REVOKE",  resource_type: "certificate",resource_id: "c-005", created_at: "2026-05-29T15:45:00Z", ip_address: "105.112.45.22" },
-];
+
 
 const ACTION_CLS: Record<string, string> = {
   CREATE:  "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -39,13 +29,19 @@ function AuditLogsPage() {
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
 
-  const filtered = useMemo(() => MOCK_LOGS.filter((l) => {
-    const matchSearch = !search || l.actor_email.includes(search) || l.resource_type.includes(search) || (l.resource_id ?? "").includes(search);
+  const { data: logs = [], isLoading } = useQuery({
+    queryKey: ["admin", "audit-logs"],
+    queryFn: fetchAuditLogs,
+    refetchInterval: 60_000,
+  });
+
+  const filtered = useMemo(() => logs.filter((l: any) => {
+    const matchSearch = !search || (l.actor_email ?? "").includes(search) || l.resource_type.includes(search) || (l.resource_id ?? "").includes(search);
     const matchAction = actionFilter === "all" || l.action === actionFilter;
     return matchSearch && matchAction;
-  }), [search, actionFilter]);
+  }), [logs, search, actionFilter]);
 
-  const actions = Array.from(new Set(MOCK_LOGS.map((l) => l.action)));
+  const actions = Array.from(new Set(logs.map((l: any) => l.action)));
 
   return (
     <AdminShell
@@ -127,7 +123,7 @@ function AuditLogsPage() {
             </table>
           </div>
           <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-            Showing {filtered.length} of {MOCK_LOGS.length} log entries
+            Showing {filtered.length} of {logs.length} log entries
           </div>
         </div>
       </div>

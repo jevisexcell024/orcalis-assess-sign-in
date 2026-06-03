@@ -4,25 +4,19 @@ import {
   Search, Plus, Download, UserCheck, BookOpen,
   GraduationCap, FileText, ChevronDown,
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { listStudents, type Student } from "@/lib/students";
 
 export const Route = createFileRoute("/admin/students")({
   component: StudentsPage,
   head: () => ({ meta: [{ title: "Students (SIS) · Orcalis Assess" }] }),
 });
 
-// Mock data until students table is populated via migration
-const MOCK_STUDENTS = [
-  { id: "1", student_number: "STU-2024-001", full_name: "Amara Osei",      department: "Computer Science",  program: "BSc CS",       year_of_study: 3, enrollment_status: "active",    gpa: 3.8 },
-  { id: "2", student_number: "STU-2024-002", full_name: "James Kwame",     department: "Engineering",        program: "BEng Civil",   year_of_study: 2, enrollment_status: "active",    gpa: 3.5 },
-  { id: "3", student_number: "STU-2024-003", full_name: "Fatima Al-Hassan", department: "Business",          program: "MBA",          year_of_study: 1, enrollment_status: "active",    gpa: 3.9 },
-  { id: "4", student_number: "STU-2023-044", full_name: "David Mensah",    department: "Medicine",           program: "MBBS",         year_of_study: 4, enrollment_status: "active",    gpa: 3.2 },
-  { id: "5", student_number: "STU-2023-101", full_name: "Esi Boateng",     department: "Law",                program: "LLB",          year_of_study: 2, enrollment_status: "suspended", gpa: 2.8 },
-  { id: "6", student_number: "STU-2022-077", full_name: "Kofi Asante",     department: "Computer Science",   program: "MSc Data Sci", year_of_study: 2, enrollment_status: "graduated", gpa: 3.7 },
-];
+
 
 const STATUS_CLS: Record<string, string> = {
   active:    "bg-emerald-50 text-emerald-700 ring-emerald-200",
@@ -37,9 +31,14 @@ function StudentsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [deptFilter, setDeptFilter] = useState("all");
 
-  const departments = useMemo(() => Array.from(new Set(MOCK_STUDENTS.map((s) => s.department))), []);
+  const { data: students = [], isLoading } = useQuery({
+    queryKey: ["admin", "students"],
+    queryFn: () => listStudents(),
+  });
 
-  const filtered = useMemo(() => MOCK_STUDENTS.filter((s) => {
+  const departments = useMemo(() => Array.from(new Set(students.map((s) => s.department ?? "").filter(Boolean))), [students]);
+
+  const filtered = useMemo(() => students.filter((s) => {
     const matchSearch = !search ||
       s.full_name.toLowerCase().includes(search.toLowerCase()) ||
       s.student_number.toLowerCase().includes(search.toLowerCase());
@@ -49,11 +48,11 @@ function StudentsPage() {
   }), [search, statusFilter, deptFilter]);
 
   const stats = useMemo(() => ({
-    total: MOCK_STUDENTS.length,
-    active: MOCK_STUDENTS.filter((s) => s.enrollment_status === "active").length,
-    graduated: MOCK_STUDENTS.filter((s) => s.enrollment_status === "graduated").length,
-    avgGpa: (MOCK_STUDENTS.reduce((s, r) => s + r.gpa, 0) / MOCK_STUDENTS.length).toFixed(2),
-  }), []);
+    total: students.length,
+    active: students.filter((s) => s.enrollment_status === "active").length,
+    graduated: students.filter((s) => s.enrollment_status === "graduated").length,
+    avgGpa: "–",
+  }), [students]);
 
   return (
     <AdminShell
@@ -121,7 +120,9 @@ function StudentsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filtered.length === 0 ? (
+                {isLoading ? (
+                  <tr><td colSpan={8} className="py-16 text-center text-sm text-muted-foreground">Loading students…</td></tr>
+                ) : filtered.length === 0 ? (
                   <tr><td colSpan={8} className="py-16 text-center text-sm text-muted-foreground">No students found.</td></tr>
                 ) : (
                   filtered.map((s) => (
@@ -160,7 +161,7 @@ function StudentsPage() {
           </div>
           {filtered.length > 0 && (
             <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-              Showing {filtered.length} of {MOCK_STUDENTS.length} students
+              Showing {filtered.length} of {students.length} students
             </div>
           )}
         </div>
