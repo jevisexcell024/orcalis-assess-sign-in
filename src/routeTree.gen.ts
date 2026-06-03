@@ -28,17 +28,37 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as VerifyCertNumberRouteImport } from './routes/verify.$certNumber'
+import { Route as StudentResultsRouteImport } from './routes/student.results'
+import { Route as StudentProfileRouteImport } from './routes/student.profile'
+import { Route as StudentPaymentsRouteImport } from './routes/student.payments'
+import { Route as StudentCertificatesRouteImport } from './routes/student.certificates'
+import { Route as StudentAttendanceRouteImport } from './routes/student.attendance'
+import { Route as StudentAnnouncementsRouteImport } from './routes/student.announcements'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as AdminViolationsRouteImport } from './routes/admin.violations'
 import { Route as AdminTeamRouteImport } from './routes/admin.team'
+import { Route as AdminStudentsRouteImport } from './routes/admin.students'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminSchedulerRouteImport } from './routes/admin.scheduler'
+import { Route as AdminResultsRouteImport } from './routes/admin.results'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as AdminOrganizationRouteImport } from './routes/admin.organization'
 import { Route as AdminLiveMonitorRouteImport } from './routes/admin.live-monitor'
 import { Route as AdminExamsRouteImport } from './routes/admin.exams'
+import { Route as AdminCommunicationRouteImport } from './routes/admin.communication'
 import { Route as AdminCertificatesRouteImport } from './routes/admin.certificates'
+import { Route as AdminCandidatesRouteImport } from './routes/admin.candidates'
 import { Route as AdminBillingRouteImport } from './routes/admin.billing'
+import { Route as AdminAuditLogsRouteImport } from './routes/admin.audit-logs'
+import { Route as AdminAttendanceRouteImport } from './routes/admin.attendance'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
+import { Route as AdminAcademicIntegrityRouteImport } from './routes/admin.academic-integrity'
+import { Route as ApiResultsExportRouteImport } from './routes/api/results.export'
+import { Route as ApiCertificatesVerifyRouteImport } from './routes/api/certificates.verify'
+import { Route as ApiAttendanceQrRouteImport } from './routes/api/attendance.qr'
 import { Route as StudentExamsIdSessionRouteImport } from './routes/student.exams.$id.session'
 import { Route as StudentExamsIdCheckinRouteImport } from './routes/student.exams.$id.checkin'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -140,6 +160,41 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const VerifyCertNumberRoute = VerifyCertNumberRouteImport.update({
+  id: '/verify/$certNumber',
+  path: '/verify/$certNumber',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentResultsRoute = StudentResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentProfileRoute = StudentProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentPaymentsRoute = StudentPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentCertificatesRoute = StudentCertificatesRouteImport.update({
+  id: '/certificates',
+  path: '/certificates',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentAttendanceRoute = StudentAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentAnnouncementsRoute = StudentAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => StudentRoute,
+} as any)
 const ApiVersionRoute = ApiVersionRouteImport.update({
   id: '/api/version',
   path: '/api/version',
@@ -150,14 +205,39 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminViolationsRoute = AdminViolationsRouteImport.update({
+  id: '/violations',
+  path: '/violations',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminTeamRoute = AdminTeamRouteImport.update({
   id: '/team',
   path: '/team',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminStudentsRoute = AdminStudentsRouteImport.update({
+  id: '/students',
+  path: '/students',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSchedulerRoute = AdminSchedulerRouteImport.update({
   id: '/scheduler',
   path: '/scheduler',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminResultsRoute = AdminResultsRouteImport.update({
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
@@ -180,9 +260,19 @@ const AdminExamsRoute = AdminExamsRouteImport.update({
   path: '/exams',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCommunicationRoute = AdminCommunicationRouteImport.update({
+  id: '/communication',
+  path: '/communication',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCertificatesRoute = AdminCertificatesRouteImport.update({
   id: '/certificates',
   path: '/certificates',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCandidatesRoute = AdminCandidatesRouteImport.update({
+  id: '/candidates',
+  path: '/candidates',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminBillingRoute = AdminBillingRouteImport.update({
@@ -190,10 +280,40 @@ const AdminBillingRoute = AdminBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAttendanceRoute = AdminAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
   getParentRoute: () => AdminRoute,
+} as any)
+const AdminAcademicIntegrityRoute = AdminAcademicIntegrityRouteImport.update({
+  id: '/academic-integrity',
+  path: '/academic-integrity',
+  getParentRoute: () => AdminRoute,
+} as any)
+const ApiResultsExportRoute = ApiResultsExportRouteImport.update({
+  id: '/api/results/export',
+  path: '/api/results/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCertificatesVerifyRoute = ApiCertificatesVerifyRouteImport.update({
+  id: '/api/certificates/verify',
+  path: '/api/certificates/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAttendanceQrRoute = ApiAttendanceQrRouteImport.update({
+  id: '/api/attendance/qr',
+  path: '/api/attendance/qr',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const StudentExamsIdSessionRoute = StudentExamsIdSessionRouteImport.update({
   id: '/exams/$id/session',
@@ -239,19 +359,39 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/solutions': typeof SolutionsRoute
   '/student': typeof StudentRouteWithChildren
+  '/admin/academic-integrity': typeof AdminAcademicIntegrityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/attendance': typeof AdminAttendanceRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/certificates': typeof AdminCertificatesRoute
+  '/admin/communication': typeof AdminCommunicationRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/organization': typeof AdminOrganizationRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/students': typeof AdminStudentsRoute
   '/admin/team': typeof AdminTeamRoute
+  '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
   '/api/version': typeof ApiVersionRoute
+  '/student/announcements': typeof StudentAnnouncementsRoute
+  '/student/attendance': typeof StudentAttendanceRoute
+  '/student/certificates': typeof StudentCertificatesRoute
+  '/student/payments': typeof StudentPaymentsRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/results': typeof StudentResultsRoute
+  '/verify/$certNumber': typeof VerifyCertNumberRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
+  '/api/attendance/qr': typeof ApiAttendanceQrRoute
+  '/api/certificates/verify': typeof ApiCertificatesVerifyRoute
+  '/api/results/export': typeof ApiResultsExportRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -274,19 +414,39 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/solutions': typeof SolutionsRoute
+  '/admin/academic-integrity': typeof AdminAcademicIntegrityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/attendance': typeof AdminAttendanceRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/certificates': typeof AdminCertificatesRoute
+  '/admin/communication': typeof AdminCommunicationRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/organization': typeof AdminOrganizationRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/students': typeof AdminStudentsRoute
   '/admin/team': typeof AdminTeamRoute
+  '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
   '/api/version': typeof ApiVersionRoute
+  '/student/announcements': typeof StudentAnnouncementsRoute
+  '/student/attendance': typeof StudentAttendanceRoute
+  '/student/certificates': typeof StudentCertificatesRoute
+  '/student/payments': typeof StudentPaymentsRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/results': typeof StudentResultsRoute
+  '/verify/$certNumber': typeof VerifyCertNumberRoute
   '/admin': typeof AdminIndexRoute
   '/student': typeof StudentIndexRoute
+  '/api/attendance/qr': typeof ApiAttendanceQrRoute
+  '/api/certificates/verify': typeof ApiCertificatesVerifyRoute
+  '/api/results/export': typeof ApiResultsExportRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -312,19 +472,39 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/solutions': typeof SolutionsRoute
   '/student': typeof StudentRouteWithChildren
+  '/admin/academic-integrity': typeof AdminAcademicIntegrityRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
+  '/admin/attendance': typeof AdminAttendanceRoute
+  '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/billing': typeof AdminBillingRoute
+  '/admin/candidates': typeof AdminCandidatesRoute
   '/admin/certificates': typeof AdminCertificatesRoute
+  '/admin/communication': typeof AdminCommunicationRoute
   '/admin/exams': typeof AdminExamsRouteWithChildren
   '/admin/live-monitor': typeof AdminLiveMonitorRoute
   '/admin/organization': typeof AdminOrganizationRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/students': typeof AdminStudentsRoute
   '/admin/team': typeof AdminTeamRoute
+  '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
   '/api/version': typeof ApiVersionRoute
+  '/student/announcements': typeof StudentAnnouncementsRoute
+  '/student/attendance': typeof StudentAttendanceRoute
+  '/student/certificates': typeof StudentCertificatesRoute
+  '/student/payments': typeof StudentPaymentsRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/results': typeof StudentResultsRoute
+  '/verify/$certNumber': typeof VerifyCertNumberRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
+  '/api/attendance/qr': typeof ApiAttendanceQrRoute
+  '/api/certificates/verify': typeof ApiCertificatesVerifyRoute
+  '/api/results/export': typeof ApiResultsExportRoute
   '/admin/exams/$examId/builder': typeof AdminExamsExamIdBuilderRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -351,19 +531,39 @@ export interface FileRouteTypes {
     | '/signup'
     | '/solutions'
     | '/student'
+    | '/admin/academic-integrity'
     | '/admin/analytics'
+    | '/admin/attendance'
+    | '/admin/audit-logs'
     | '/admin/billing'
+    | '/admin/candidates'
     | '/admin/certificates'
+    | '/admin/communication'
     | '/admin/exams'
     | '/admin/live-monitor'
     | '/admin/organization'
     | '/admin/question-bank'
+    | '/admin/reports'
+    | '/admin/results'
     | '/admin/scheduler'
+    | '/admin/settings'
+    | '/admin/students'
     | '/admin/team'
+    | '/admin/violations'
     | '/api/health'
     | '/api/version'
+    | '/student/announcements'
+    | '/student/attendance'
+    | '/student/certificates'
+    | '/student/payments'
+    | '/student/profile'
+    | '/student/results'
+    | '/verify/$certNumber'
     | '/admin/'
     | '/student/'
+    | '/api/attendance/qr'
+    | '/api/certificates/verify'
+    | '/api/results/export'
     | '/admin/exams/$examId/builder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -386,19 +586,39 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/solutions'
+    | '/admin/academic-integrity'
     | '/admin/analytics'
+    | '/admin/attendance'
+    | '/admin/audit-logs'
     | '/admin/billing'
+    | '/admin/candidates'
     | '/admin/certificates'
+    | '/admin/communication'
     | '/admin/exams'
     | '/admin/live-monitor'
     | '/admin/organization'
     | '/admin/question-bank'
+    | '/admin/reports'
+    | '/admin/results'
     | '/admin/scheduler'
+    | '/admin/settings'
+    | '/admin/students'
     | '/admin/team'
+    | '/admin/violations'
     | '/api/health'
     | '/api/version'
+    | '/student/announcements'
+    | '/student/attendance'
+    | '/student/certificates'
+    | '/student/payments'
+    | '/student/profile'
+    | '/student/results'
+    | '/verify/$certNumber'
     | '/admin'
     | '/student'
+    | '/api/attendance/qr'
+    | '/api/certificates/verify'
+    | '/api/results/export'
     | '/admin/exams/$examId/builder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -423,19 +643,39 @@ export interface FileRouteTypes {
     | '/signup'
     | '/solutions'
     | '/student'
+    | '/admin/academic-integrity'
     | '/admin/analytics'
+    | '/admin/attendance'
+    | '/admin/audit-logs'
     | '/admin/billing'
+    | '/admin/candidates'
     | '/admin/certificates'
+    | '/admin/communication'
     | '/admin/exams'
     | '/admin/live-monitor'
     | '/admin/organization'
     | '/admin/question-bank'
+    | '/admin/reports'
+    | '/admin/results'
     | '/admin/scheduler'
+    | '/admin/settings'
+    | '/admin/students'
     | '/admin/team'
+    | '/admin/violations'
     | '/api/health'
     | '/api/version'
+    | '/student/announcements'
+    | '/student/attendance'
+    | '/student/certificates'
+    | '/student/payments'
+    | '/student/profile'
+    | '/student/results'
+    | '/verify/$certNumber'
     | '/admin/'
     | '/student/'
+    | '/api/attendance/qr'
+    | '/api/certificates/verify'
+    | '/api/results/export'
     | '/admin/exams/$examId/builder'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -463,6 +703,10 @@ export interface RootRouteChildren {
   StudentRoute: typeof StudentRouteWithChildren
   ApiHealthRoute: typeof ApiHealthRoute
   ApiVersionRoute: typeof ApiVersionRoute
+  VerifyCertNumberRoute: typeof VerifyCertNumberRoute
+  ApiAttendanceQrRoute: typeof ApiAttendanceQrRoute
+  ApiCertificatesVerifyRoute: typeof ApiCertificatesVerifyRoute
+  ApiResultsExportRoute: typeof ApiResultsExportRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -602,6 +846,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/verify/$certNumber': {
+      id: '/verify/$certNumber'
+      path: '/verify/$certNumber'
+      fullPath: '/verify/$certNumber'
+      preLoaderRoute: typeof VerifyCertNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/results': {
+      id: '/student/results'
+      path: '/results'
+      fullPath: '/student/results'
+      preLoaderRoute: typeof StudentResultsRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/profile': {
+      id: '/student/profile'
+      path: '/profile'
+      fullPath: '/student/profile'
+      preLoaderRoute: typeof StudentProfileRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/payments': {
+      id: '/student/payments'
+      path: '/payments'
+      fullPath: '/student/payments'
+      preLoaderRoute: typeof StudentPaymentsRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/certificates': {
+      id: '/student/certificates'
+      path: '/certificates'
+      fullPath: '/student/certificates'
+      preLoaderRoute: typeof StudentCertificatesRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/attendance': {
+      id: '/student/attendance'
+      path: '/attendance'
+      fullPath: '/student/attendance'
+      preLoaderRoute: typeof StudentAttendanceRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/announcements': {
+      id: '/student/announcements'
+      path: '/announcements'
+      fullPath: '/student/announcements'
+      preLoaderRoute: typeof StudentAnnouncementsRouteImport
+      parentRoute: typeof StudentRoute
+    }
     '/api/version': {
       id: '/api/version'
       path: '/api/version'
@@ -616,6 +909,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/violations': {
+      id: '/admin/violations'
+      path: '/violations'
+      fullPath: '/admin/violations'
+      preLoaderRoute: typeof AdminViolationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/team': {
       id: '/admin/team'
       path: '/team'
@@ -623,11 +923,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTeamRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/students': {
+      id: '/admin/students'
+      path: '/students'
+      fullPath: '/admin/students'
+      preLoaderRoute: typeof AdminStudentsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/scheduler': {
       id: '/admin/scheduler'
       path: '/scheduler'
       fullPath: '/admin/scheduler'
       preLoaderRoute: typeof AdminSchedulerRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/results': {
+      id: '/admin/results'
+      path: '/results'
+      fullPath: '/admin/results'
+      preLoaderRoute: typeof AdminResultsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/question-bank': {
@@ -658,11 +986,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminExamsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/communication': {
+      id: '/admin/communication'
+      path: '/communication'
+      fullPath: '/admin/communication'
+      preLoaderRoute: typeof AdminCommunicationRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/certificates': {
       id: '/admin/certificates'
       path: '/certificates'
       fullPath: '/admin/certificates'
       preLoaderRoute: typeof AdminCertificatesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/candidates': {
+      id: '/admin/candidates'
+      path: '/candidates'
+      fullPath: '/admin/candidates'
+      preLoaderRoute: typeof AdminCandidatesRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/billing': {
@@ -672,12 +1014,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBillingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/audit-logs': {
+      id: '/admin/audit-logs'
+      path: '/audit-logs'
+      fullPath: '/admin/audit-logs'
+      preLoaderRoute: typeof AdminAuditLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/attendance': {
+      id: '/admin/attendance'
+      path: '/attendance'
+      fullPath: '/admin/attendance'
+      preLoaderRoute: typeof AdminAttendanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/analytics': {
       id: '/admin/analytics'
       path: '/analytics'
       fullPath: '/admin/analytics'
       preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/admin/academic-integrity': {
+      id: '/admin/academic-integrity'
+      path: '/academic-integrity'
+      fullPath: '/admin/academic-integrity'
+      preLoaderRoute: typeof AdminAcademicIntegrityRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/api/results/export': {
+      id: '/api/results/export'
+      path: '/api/results/export'
+      fullPath: '/api/results/export'
+      preLoaderRoute: typeof ApiResultsExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/certificates/verify': {
+      id: '/api/certificates/verify'
+      path: '/api/certificates/verify'
+      fullPath: '/api/certificates/verify'
+      preLoaderRoute: typeof ApiCertificatesVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/attendance/qr': {
+      id: '/api/attendance/qr'
+      path: '/api/attendance/qr'
+      fullPath: '/api/attendance/qr'
+      preLoaderRoute: typeof ApiAttendanceQrRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/student/exams/$id/session': {
       id: '/student/exams/$id/session'
@@ -730,40 +1114,72 @@ const AdminExamsRouteWithChildren = AdminExamsRoute._addFileChildren(
 )
 
 interface AdminRouteChildren {
+  AdminAcademicIntegrityRoute: typeof AdminAcademicIntegrityRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminAttendanceRoute: typeof AdminAttendanceRoute
+  AdminAuditLogsRoute: typeof AdminAuditLogsRoute
   AdminBillingRoute: typeof AdminBillingRoute
+  AdminCandidatesRoute: typeof AdminCandidatesRoute
   AdminCertificatesRoute: typeof AdminCertificatesRoute
+  AdminCommunicationRoute: typeof AdminCommunicationRoute
   AdminExamsRoute: typeof AdminExamsRouteWithChildren
   AdminLiveMonitorRoute: typeof AdminLiveMonitorRoute
   AdminOrganizationRoute: typeof AdminOrganizationRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminResultsRoute: typeof AdminResultsRoute
   AdminSchedulerRoute: typeof AdminSchedulerRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminStudentsRoute: typeof AdminStudentsRoute
   AdminTeamRoute: typeof AdminTeamRoute
+  AdminViolationsRoute: typeof AdminViolationsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAcademicIntegrityRoute: AdminAcademicIntegrityRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminAttendanceRoute: AdminAttendanceRoute,
+  AdminAuditLogsRoute: AdminAuditLogsRoute,
   AdminBillingRoute: AdminBillingRoute,
+  AdminCandidatesRoute: AdminCandidatesRoute,
   AdminCertificatesRoute: AdminCertificatesRoute,
+  AdminCommunicationRoute: AdminCommunicationRoute,
   AdminExamsRoute: AdminExamsRouteWithChildren,
   AdminLiveMonitorRoute: AdminLiveMonitorRoute,
   AdminOrganizationRoute: AdminOrganizationRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminResultsRoute: AdminResultsRoute,
   AdminSchedulerRoute: AdminSchedulerRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminStudentsRoute: AdminStudentsRoute,
   AdminTeamRoute: AdminTeamRoute,
+  AdminViolationsRoute: AdminViolationsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface StudentRouteChildren {
+  StudentAnnouncementsRoute: typeof StudentAnnouncementsRoute
+  StudentAttendanceRoute: typeof StudentAttendanceRoute
+  StudentCertificatesRoute: typeof StudentCertificatesRoute
+  StudentPaymentsRoute: typeof StudentPaymentsRoute
+  StudentProfileRoute: typeof StudentProfileRoute
+  StudentResultsRoute: typeof StudentResultsRoute
   StudentIndexRoute: typeof StudentIndexRoute
   StudentExamsIdCheckinRoute: typeof StudentExamsIdCheckinRoute
   StudentExamsIdSessionRoute: typeof StudentExamsIdSessionRoute
 }
 
 const StudentRouteChildren: StudentRouteChildren = {
+  StudentAnnouncementsRoute: StudentAnnouncementsRoute,
+  StudentAttendanceRoute: StudentAttendanceRoute,
+  StudentCertificatesRoute: StudentCertificatesRoute,
+  StudentPaymentsRoute: StudentPaymentsRoute,
+  StudentProfileRoute: StudentProfileRoute,
+  StudentResultsRoute: StudentResultsRoute,
   StudentIndexRoute: StudentIndexRoute,
   StudentExamsIdCheckinRoute: StudentExamsIdCheckinRoute,
   StudentExamsIdSessionRoute: StudentExamsIdSessionRoute,
@@ -792,6 +1208,10 @@ const rootRouteChildren: RootRouteChildren = {
   StudentRoute: StudentRouteWithChildren,
   ApiHealthRoute: ApiHealthRoute,
   ApiVersionRoute: ApiVersionRoute,
+  VerifyCertNumberRoute: VerifyCertNumberRoute,
+  ApiAttendanceQrRoute: ApiAttendanceQrRoute,
+  ApiCertificatesVerifyRoute: ApiCertificatesVerifyRoute,
+  ApiResultsExportRoute: ApiResultsExportRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
