@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { CreditCard, Download, CheckCircle2, Clock, XCircle, Plus, Shield } from "lucide-react";
+import { CreditCard, Download, CheckCircle2, Clock, XCircle, Plus, Shield, ExternalLink, Loader2 } from "lucide-react";
+import { redirectToCheckout } from "@/lib/payments";
 import { StudentShell } from "@/components/student/StudentShell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/student/payments")({
   component: StudentPaymentsPage,
@@ -25,6 +27,20 @@ const STATUS_META: Record<string, { label: string; icon: typeof CheckCircle2; cl
 
 function StudentPaymentsPage() {
   const [showAddCard, setShowAddCard] = useState(false);
+  const [payingId, setPayingId] = useState<string | null>(null);
+
+  const handlePay = async (inv: typeof MOCK_INVOICES[0]) => {
+    setPayingId(inv.id);
+    try {
+      await redirectToCheckout({
+        items: [{ name: inv.description, amount_usd_cents: Math.round(inv.amount * 100) }],
+        metadata: { invoice_id: inv.id },
+      });
+    } catch (e: any) {
+      toast.error(e.message ?? "Payment failed. Check your Stripe configuration.");
+      setPayingId(null);
+    }
+  };
 
   const totalPaid = MOCK_INVOICES.filter((i) => i.status === "paid").reduce((s, i) => s + i.amount, 0);
   const totalDue  = MOCK_INVOICES.filter((i) => i.status === "pending").reduce((s, i) => s + i.amount, 0);
@@ -56,8 +72,9 @@ function StudentPaymentsPage() {
               ${totalDue.toFixed(2)}
             </p>
             {totalDue > 0 && (
-              <Button size="sm" className="mt-3 h-8 bg-amber-500 text-white hover:bg-amber-600 text-xs">
-                Pay Now
+              <Button size="sm" onClick={() => handlePay(MOCK_INVOICES.find(i => i.status === "pending")!)}
+                disabled={!!payingId} className="mt-3 h-8 bg-amber-500 text-white hover:bg-amber-600 text-xs gap-1.5">
+                {payingId ? <><Loader2 className="h-3 w-3 animate-spin" /> Processing…</> : "Pay Now"}
               </Button>
             )}
           </div>
