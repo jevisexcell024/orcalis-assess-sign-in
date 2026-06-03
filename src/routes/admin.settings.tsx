@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { MFASetup } from "@/components/auth/MFASetup";
 
 export const Route = createFileRoute("/admin/settings")({
   component: SettingsPage,
@@ -133,6 +134,13 @@ function SettingsPage() {
                     className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </Field>
+                <div className="space-y-1.5">
+                  <p className="text-sm font-medium">Your Two-Factor Authentication</p>
+                  <p className="text-xs text-muted-foreground">Manage 2FA for your own admin account.</p>
+                  <div className="mt-2">
+                    <MFASetup />
+                  </div>
+                </div>
               </Section>
             )}
 
