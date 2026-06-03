@@ -13,6 +13,7 @@ import { getSession, isPublicPath } from "@/lib/auth";
 import { initSentry, captureException } from "@/lib/sentry-init";
 import { Toaster } from "@/components/ui/sonner";
 import { useEffect } from "react";
+import { registerServiceWorker, setupAutoSync } from "@/lib/offline-exam";
 import { supabase } from "@/integrations/supabase/client";
 
 // Initialize Sentry on app startup
