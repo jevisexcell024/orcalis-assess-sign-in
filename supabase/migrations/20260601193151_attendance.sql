@@ -2,8 +2,8 @@
 -- Attendance Management
 -- ============================================================
 
-CREATE TYPE IF NOT EXISTS public.attendance_method AS ENUM ('qr','gps','biometric','facial','manual');
-CREATE TYPE IF NOT EXISTS public.attendance_status AS ENUM ('present','absent','late','excused');
+DO $$ BEGIN CREATE TYPE public.attendance_method AS ENUM ('qr','gps','biometric','facial','manual'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+DO $$ BEGIN CREATE TYPE public.attendance_status AS ENUM ('present','absent','late','excused'); EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Attendance sessions (one per class/event)
 CREATE TABLE IF NOT EXISTS public.attendance_sessions (

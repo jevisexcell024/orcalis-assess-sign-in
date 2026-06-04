@@ -19,7 +19,7 @@ CREATE OR REPLACE FUNCTION public.submit_exam_attempt(_attempt_id uuid)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public;
 AS $$
 DECLARE
   v_attempt public.exam_attempts%ROWTYPE;
@@ -97,7 +97,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public;
 AS $$
 DECLARE
   v_exam_id uuid;

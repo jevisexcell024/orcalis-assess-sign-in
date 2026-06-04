@@ -74,9 +74,11 @@ CREATE TABLE IF NOT EXISTS public.notification_preferences (
 -- ============================================================
 -- Academic Integrity
 -- ============================================================
-CREATE TYPE IF NOT EXISTS public.integrity_check_type AS ENUM (
-  'plagiarism','ai_generated','copy_paste','external_resource','identity_mismatch'
-);
+DO $$ BEGIN
+  CREATE TYPE public.integrity_check_type AS ENUM (
+    'plagiarism','ai_generated','copy_paste','external_resource','identity_mismatch'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 CREATE TABLE IF NOT EXISTS public.integrity_checks (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -2,9 +2,9 @@
 -- Result Management & Grading Workflow
 -- ============================================================
 
-CREATE TYPE IF NOT EXISTS public.result_status AS ENUM (
-  'pending','auto_graded','under_review','moderated','approved','published','disputed'
-);
+DO $$ BEGIN
+  CREATE TYPE public.result_status AS ENUM ('pending','auto_graded','under_review','moderated','approved','published','disputed');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 -- Result records per attempt
 CREATE TABLE IF NOT EXISTS public.results (
