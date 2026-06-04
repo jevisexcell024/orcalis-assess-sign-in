@@ -43,7 +43,7 @@ RETURNS BOOLEAN
 LANGUAGE SQL
 STABLE
 SECURITY DEFINER
-SET search_path = public;
+SET search_path = public
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM public.user_roles
@@ -64,7 +64,7 @@ CREATE POLICY "Super admins can manage roles"
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER
 LANGUAGE plpgsql
-SET search_path = public;
+SET search_path = public
 AS $$
 BEGIN
   NEW.updated_at = now();
@@ -81,7 +81,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public;
+SET search_path = public
 AS $$
 BEGIN
   INSERT INTO public.profiles (user_id, email, institution_name, contact_name)
