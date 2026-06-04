@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 export const Route = createFileRoute("/api/ai/analyze-risk")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        await checkRateLimit(getClientIp(request), { windowMs: 60_000, maxRequests: 20, message: "AI rate limit exceeded. Max 20 requests/minute." });
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
           return Response.json({ error: "OpenAI API key not configured" }, { status: 503 });

@@ -214,3 +214,45 @@ export default {
   rateLimitPresets,
   getClientIdentifier,
 };
+
+// ── Production-ready in-memory rate limiter for API routes ──────────────────
+
+const globalStore = new MemoryStore();
+
+/**
+ * Check rate limit for a request. Throws a 429 Response if exceeded.
+ * @param key      Unique key (e.g. IP address or user ID)
+ * @param config   Rate limit configuration
+ */
+export async function checkRateLimit(
+  key: string,
+  config: { windowMs?: number; maxRequests?: number; message?: string } = {},
+): Promise<void> {
+  const windowMs    = config.windowMs    ?? 60_000;  // 1 minute default
+  const maxRequests = config.maxRequests ?? 60;       // 60 req/min default
+  const message     = config.message     ?? "Too many requests. Please slow down.";
+
+  const count = await globalStore.increment(key, windowMs);
+  if (count > maxRequests) {
+    throw Response.json({ error: message }, {
+      status: 429,
+      headers: {
+        "Retry-After": String(Math.ceil(windowMs / 1000)),
+        "X-RateLimit-Limit": String(maxRequests),
+        "X-RateLimit-Remaining": "0",
+      },
+    });
+  }
+}
+
+/**
+ * Extract IP address from a Request for rate-limit keying.
+ */
+export function getClientIp(request: Request): string {
+  return (
+    request.headers.get("cf-connecting-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    request.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}

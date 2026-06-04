@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   Search, Filter, Download, UserPlus, MoreHorizontal,
   CheckCircle2, AlertCircle, Clock, XCircle, ChevronDown,
@@ -17,7 +17,8 @@ export const Route = createFileRoute("/admin/candidates")({
   head: () => ({ meta: [{ title: "Candidates · Orcalis Assess" }] }),
 });
 
-async function listCandidates() {
+async function listCandidates(page = 0, pageSize = 50) {
+  const from = page * pageSize;
   const { data, error } = await supabase
     .from("exam_registrations")
     .select(`
@@ -26,7 +27,7 @@ async function listCandidates() {
       exam_schedules ( start_at, end_at, timezone )
     `)
     .order("created_at", { ascending: false })
-    .limit(200);
+    .range(from, from + pageSize - 1);
   if (error) throw error;
   return data ?? [];
 }
@@ -42,11 +43,14 @@ const STATUS_META: Record<string, { label: string; icon: typeof CheckCircle2; cl
 function CandidatesPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 50;
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["admin", "candidates"],
-    queryFn: listCandidates,
+    queryKey: ["admin", "candidates", page],
+    queryFn: () => listCandidates(page, PAGE_SIZE),
     refetchInterval: 60_000,
+    placeholderData: (prev) => prev,
   });
 
   const filtered = useMemo(() => {
@@ -202,11 +206,27 @@ function CandidatesPage() {
               </tbody>
             </table>
           </div>
-          {filtered.length > 0 && (
-            <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-              Showing {filtered.length} of {rows.length} registrations
+          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+            <span className="text-xs text-muted-foreground">
+              Page {page + 1} · {rows.length} registrations loaded
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={page === 0}
+                className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium disabled:opacity-40 hover:bg-muted transition"
+              >
+                ← Previous
+              </button>
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                disabled={rows.length < PAGE_SIZE}
+                className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium disabled:opacity-40 hover:bg-muted transition"
+              >
+                Next →
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </AdminShell>

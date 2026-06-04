@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const SYSTEM_PROMPT = `You are an expert academic assessment designer for an enterprise examination platform.
 Generate high-quality exam questions based on the topic and parameters provided.
@@ -55,6 +56,7 @@ export const Route = createFileRoute("/api/ai/generate-questions")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        await checkRateLimit(getClientIp(request), { windowMs: 60_000, maxRequests: 20, message: "AI rate limit exceeded. Max 20 requests/minute." });
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
           return Response.json(

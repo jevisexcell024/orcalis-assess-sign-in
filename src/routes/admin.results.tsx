@@ -17,7 +17,8 @@ export const Route = createFileRoute("/admin/results")({
   head: () => ({ meta: [{ title: "Results · Orcalis Assess" }] }),
 });
 
-async function listResults() {
+async function listResults(page = 0, pageSize = 50) {
+  const from = page * pageSize;
   const { data, error } = await supabase
     .from("exam_attempts")
     .select(`
@@ -29,7 +30,7 @@ async function listResults() {
     `)
     .not("submitted_at", "is", null)
     .order("submitted_at", { ascending: false })
-    .limit(300);
+    .range(from, from + pageSize - 1);
   if (error) throw error;
   return data ?? [];
 }
@@ -40,10 +41,13 @@ function ResultsPage() {
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 50;
 
   const { data: attempts = [], isLoading } = useQuery({
-    queryKey: ["admin", "results"],
-    queryFn: listResults,
+    queryKey: ["admin", "results", page],
+    queryFn: () => listResults(page, PAGE_SIZE),
+    placeholderData: (prev) => prev,
   });
 
   const filtered = useMemo(() => {
@@ -185,11 +189,21 @@ function ResultsPage() {
               </tbody>
             </table>
           </div>
-          {filtered.length > 0 && (
-            <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-              Showing {filtered.length} of {attempts.length} attempts
+          <div className="flex items-center justify-between border-t border-border px-4 py-3">
+            <span className="text-xs text-muted-foreground">
+              Page {page + 1} · {filtered.length} results on this page
+            </span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}
+                className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium disabled:opacity-40 hover:bg-muted transition">
+                ← Previous
+              </button>
+              <button onClick={() => setPage((p) => p + 1)} disabled={attempts.length < PAGE_SIZE}
+                className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium disabled:opacity-40 hover:bg-muted transition">
+                Next →
+              </button>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </AdminShell>
