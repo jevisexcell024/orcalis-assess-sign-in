@@ -12,6 +12,7 @@ import * as Sentry from "@sentry/react";
 import { getSession, isPublicPath } from "@/lib/auth";
 import { initSentry, captureException } from "@/lib/sentry-init";
 import { Toaster } from "@/components/ui/sonner";
+import { GDPRConsentBanner } from "@/components/ui/GDPRConsent";
 import { useEffect } from "react";
 import { registerServiceWorker, setupAutoSync } from "@/lib/offline-exam";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,7 +101,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:image", content: "https://mjwdhjwgacggvontvgex.supabase.co/storage/v1/object/public/assets/og-image.png" },
+      { property: "og:image", content: "/og/image?title=Orcalis+Assess&sub=Enterprise+AI-Powered+Examination+Platform" },
       { property: "og:site_name", content: "Orcalis Assess" },
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "Orcalis Assess · Secure online exams & AI proctoring" },
@@ -180,6 +181,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster />
+      <GDPRConsentBanner />
     </QueryClientProvider>
   );
 }
