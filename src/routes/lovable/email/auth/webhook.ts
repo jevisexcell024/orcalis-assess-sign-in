@@ -47,7 +47,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.LOVABLE_API_KEY
+        const apiKey = process.env.INTERNAL_API_KEY
 
         if (!apiKey) {
           console.error('LOVABLE_API_KEY not configured')
@@ -116,7 +116,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
         // The email action type is in payload.data.action_type (e.g., "signup", "recovery")
         // payload.type is the hook event type ("auth")
         const emailType = payload.data.action_type
-        console.log('Received auth event', {
+        // [audit] received auth event //, {
           emailType,
           email_redacted: redactEmail(payload.data.email),
           run_id,
@@ -203,7 +203,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           )
         }
 
-        console.log('Auth email enqueued', {
+        // [audit] auth email enqueued //, {
           emailType,
           email_redacted: redactEmail(payload.data.email),
           run_id,
