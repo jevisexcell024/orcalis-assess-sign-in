@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthenticatedUser } from "./_auth";
 
 /** Builds a plain-text transcript for now.
  *  Swap the body generation for a real PDF library (e.g. pdf-lib, pdfmake)
@@ -9,6 +10,7 @@ export const Route = createFileRoute("/api/transcripts/generate")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        await getAuthenticatedUser(request);
         const url = new URL(request.url);
         const studentId = url.searchParams.get("student_id");
         if (!studentId) return Response.json({ error: "Missing student_id" }, { status: 400 });

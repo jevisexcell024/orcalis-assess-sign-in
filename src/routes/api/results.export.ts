@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthenticatedUser } from "./_auth";
 
 export const Route = createFileRoute("/api/results/export")({
   server: {
     handlers: {
       GET: async ({ request }) => {
+        await getAuthenticatedUser(request);
         const url = new URL(request.url);
         const format = url.searchParams.get("format") ?? "csv";
         const orgId = url.searchParams.get("org_id");

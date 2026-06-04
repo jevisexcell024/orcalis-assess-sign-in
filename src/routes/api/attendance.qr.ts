@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { getAuthenticatedUser } from "./_auth";
 
 export const Route = createFileRoute("/api/attendance/qr")({
   server: {
@@ -51,8 +52,9 @@ export const Route = createFileRoute("/api/attendance/qr")({
           expires_at: session.qr_expires_at,
         });
       },
-      // POST /api/attendance/qr — regenerate QR for a session
+      // POST /api/attendance/qr — regenerate QR for a session (requires auth)
       POST: async ({ request }) => {
+        await getAuthenticatedUser(request);
         const body = await request.json();
         const { session_id } = body as { session_id: string };
         if (!session_id) return Response.json({ error: "Missing session_id" }, { status: 400 });
