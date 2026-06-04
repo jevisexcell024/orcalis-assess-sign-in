@@ -13,7 +13,11 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:load": "k6 run tests/load/k6.js",
+    "test:all": "vitest run && playwright test"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
@@ -101,7 +105,8 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.7",
+    "@playwright/test": "^1.44.0"
   },
   "pnpm": {
     "overrides": {
