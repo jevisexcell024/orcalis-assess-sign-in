@@ -41,7 +41,7 @@ export type AcademicRecord = {
 };
 
 export async function listStudents(orgId?: string | null): Promise<Student[]> {
-  let q = (supabase as any).from("students").select("*").order("full_name");
+  let q = supabase.from("students").select("*").order("full_name");
   if (orgId) q = q.eq("organization_id", orgId);
   const { data, error } = await q;
   if (error) throw error;
@@ -49,7 +49,7 @@ export async function listStudents(orgId?: string | null): Promise<Student[]> {
 }
 
 export async function getStudent(id: string): Promise<Student | null> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("students")
     .select("*")
     .eq("id", id)
@@ -72,7 +72,7 @@ export async function createStudent(input: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("students")
     .insert({ ...input, user_id: user.id, enrollment_status: "active" })
     .select()
@@ -82,7 +82,7 @@ export async function createStudent(input: {
 }
 
 export async function updateStudent(id: string, patch: Partial<Student>): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("students")
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq("id", id);
@@ -90,12 +90,12 @@ export async function updateStudent(id: string, patch: Partial<Student>): Promis
 }
 
 export async function deleteStudent(id: string): Promise<void> {
-  const { error } = await (supabase as any).from("students").delete().eq("id", id);
+  const { error } = await supabase.from("students").delete().eq("id", id);
   if (error) throw error;
 }
 
 export async function listAcademicRecords(studentId: string): Promise<AcademicRecord[]> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("academic_records")
     .select("*")
     .eq("student_id", studentId)

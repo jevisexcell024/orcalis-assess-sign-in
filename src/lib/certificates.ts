@@ -21,7 +21,7 @@ export type Certificate = {
 };
 
 export async function listCertificates(orgId?: string | null): Promise<Certificate[]> {
-  let q = (supabase as any)
+  let q = supabase
     .from("certificates")
     .select("*, students(full_name, student_number), exams(title)")
     .order("issued_at", { ascending: false });
@@ -35,14 +35,14 @@ export async function getMyCertificates(): Promise<Certificate[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
   // Find the student record for this user
-  const { data: studentData } = await (supabase as any)
+  const { data: studentData } = await supabase
     .from("students")
     .select("id")
     .eq("user_id", user.id)
     .single();
   if (!studentData) return [];
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("certificates")
     .select("*, exams(id, title, term)")
     .eq("student_id", studentData.id)
@@ -59,7 +59,7 @@ export async function verifyCertificate(certNumber: string): Promise<{
   exam: { title: string } | null;
   organization: { name: string } | null;
 }> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("certificates")
     .select(`
       *,
@@ -91,7 +91,7 @@ export async function issueCertificate(input: {
   organization_id?: string;
   expires_at?: string;
 }): Promise<Certificate> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("certificates")
     .insert(input)
     .select()
@@ -101,7 +101,7 @@ export async function issueCertificate(input: {
 }
 
 export async function revokeCertificate(id: string, reason: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("certificates")
     .update({ revoked: true, revoked_at: new Date().toISOString(), revoked_reason: reason })
     .eq("id", id);

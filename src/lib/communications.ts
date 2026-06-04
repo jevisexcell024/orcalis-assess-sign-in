@@ -34,7 +34,7 @@ export type Message = {
 };
 
 export async function listAnnouncements(orgId?: string | null): Promise<Announcement[]> {
-  let q = (supabase as any)
+  let q = supabase
     .from("announcements")
     .select("*")
     .order("created_at", { ascending: false });
@@ -56,7 +56,7 @@ export async function createAnnouncement(input: {
 }): Promise<Announcement> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("announcements")
     .insert({
       ...input,
@@ -71,7 +71,7 @@ export async function createAnnouncement(input: {
 }
 
 export async function sendAnnouncement(id: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("announcements")
     .update({ sent_at: new Date().toISOString(), updated_at: new Date().toISOString() })
     .eq("id", id);
@@ -79,14 +79,14 @@ export async function sendAnnouncement(id: string): Promise<void> {
 }
 
 export async function deleteAnnouncement(id: string): Promise<void> {
-  const { error } = await (supabase as any).from("announcements").delete().eq("id", id);
+  const { error } = await supabase.from("announcements").delete().eq("id", id);
   if (error) throw error;
 }
 
 export async function listMyMessages(): Promise<Message[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("messages")
     .select("*")
     .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
@@ -106,7 +106,7 @@ export async function sendMessage(input: {
 }): Promise<Message> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("messages")
     .insert({ ...input, sender_id: user.id })
     .select()
@@ -116,7 +116,7 @@ export async function sendMessage(input: {
 }
 
 export async function markMessageRead(id: string): Promise<void> {
-  const { error } = await (supabase as any)
+  const { error } = await supabase
     .from("messages")
     .update({ read_at: new Date().toISOString() })
     .eq("id", id);
@@ -126,7 +126,7 @@ export async function markMessageRead(id: string): Promise<void> {
 export async function countUnreadMessages(): Promise<number> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return 0;
-  const { count, error } = await (supabase as any)
+  const { count, error } = await supabase
     .from("messages")
     .select("id", { count: "exact", head: true })
     .eq("recipient_id", user.id)

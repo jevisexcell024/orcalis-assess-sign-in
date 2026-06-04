@@ -141,7 +141,7 @@ export function AdminShell({
                 className="h-9 w-64 rounded-lg border-input bg-muted/40 pl-9 text-sm"
               />
             </div>
-            <button className="relative rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground">
+            <button aria-label="Notifications" className="relative rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground">
               <Bell className="h-5 w-5" />
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
             </button>
