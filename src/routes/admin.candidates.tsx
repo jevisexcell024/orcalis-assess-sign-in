@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useMemo, useCallback } from "react";
 import {
   Search, Filter, Download, UserPlus, MoreHorizontal,
@@ -52,6 +52,50 @@ function CandidatesPage() {
   const [registerOpen, setRegisterOpen] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [selectedExamId, setSelectedExamId] = useState("");
+  const [registering, setRegistering] = useState(false);
+  const qc = useQueryClient();
+
+  async function handleRegister() {
+    if (!newEmail.trim() || !selectedExamId.trim()) return;
+    setRegistering(true);
+    try {
+      // Resolve email → profile id
+      const { data: profile, error: profileErr } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", newEmail.trim().toLowerCase())
+        .single();
+      if (profileErr || !profile) {
+        toast.error("No account found for that email address.");
+        return;
+      }
+      // Check for duplicate registration
+      const { data: existing } = await supabase
+        .from("exam_registrations")
+        .select("id")
+        .eq("exam_id", selectedExamId.trim())
+        .eq("candidate_id", profile.id)
+        .maybeSingle();
+      if (existing) {
+        toast.error("This candidate is already registered for that exam.");
+        return;
+      }
+      // Create registration
+      const { error: insertErr } = await supabase
+        .from("exam_registrations")
+        .insert({ exam_id: selectedExamId.trim(), candidate_id: profile.id });
+      if (insertErr) throw insertErr;
+      toast.success(`${newEmail} registered successfully.`);
+      setRegisterOpen(false);
+      setNewEmail("");
+      setSelectedExamId("");
+      qc.invalidateQueries({ queryKey: ["admin", "candidates"] });
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Registration failed.");
+    } finally {
+      setRegistering(false);
+    }
+  }
   const PAGE_SIZE = 50;
 
   const { data: rows = [], isLoading } = useQuery({
@@ -271,14 +315,10 @@ function CandidatesPage() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setRegisterOpen(false)}>Cancel</Button>
             <Button
-              disabled={!newEmail.trim() || !selectedExamId.trim()}
-              onClick={() => {
-                toast.success(`Candidate ${newEmail} registered and invited.`);
-                setRegisterOpen(false);
-                setNewEmail(""); setSelectedExamId("");
-              }}
+              onClick={handleRegister}
+              disabled={!newEmail.trim() || !selectedExamId.trim() || registering}
             >
-              Register & Invite
+              {registering ? "Registering…" : "Register & Invite"}
             </Button>
           </DialogFooter>
         </DialogContent>
