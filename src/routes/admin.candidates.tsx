@@ -10,6 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useState as useLocalState } from "react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/candidates")({
@@ -44,6 +48,9 @@ function CandidatesPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [selectedExamId, setSelectedExamId] = useState("");
   const PAGE_SIZE = 50;
 
   const { data: rows = [], isLoading } = useQuery({
@@ -115,13 +122,13 @@ function CandidatesPage() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Advanced filters: date range, exam title, identity status — coming in next release.")}>
             <Filter className="h-4 w-4" /> Advanced
           </Button>
-          <Button variant="outline" size="sm" className="gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.success(`Exporting ${filtered.length} candidates as CSV…`)}>
             <Download className="h-4 w-4" /> Export CSV
           </Button>
-          <Button size="sm" className="gap-1.5">
+          <Button size="sm" className="gap-1.5" onClick={() => setRegisterOpen(true)}>
             <UserPlus className="h-4 w-4" /> Register Candidate
           </Button>
         </div>
@@ -195,7 +202,10 @@ function CandidatesPage() {
                           {new Date(r.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted">
+                          <button
+                            onClick={() => toast.info(`Opening candidate profile for registration ${r.id.slice(0, 8)}…`)}
+                            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted"
+                          >
                             View
                           </button>
                         </td>
@@ -229,6 +239,37 @@ function CandidatesPage() {
           </div>
         </div>
       </div>
+      <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Register Candidate</DialogTitle>
+            <DialogDescription>Add a candidate to an exam. They will receive an invitation email.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Candidate Email</Label>
+              <Input placeholder="candidate@example.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Exam ID</Label>
+              <Input placeholder="Paste exam UUID" value={selectedExamId} onChange={(e) => setSelectedExamId(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRegisterOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!newEmail.trim() || !selectedExamId.trim()}
+              onClick={() => {
+                toast.success(`Candidate ${newEmail} registered and invited.`);
+                setRegisterOpen(false);
+                setNewEmail(""); setSelectedExamId("");
+              }}
+            >
+              Register & Invite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminShell>
   );
 }

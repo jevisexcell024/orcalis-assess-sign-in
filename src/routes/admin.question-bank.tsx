@@ -66,6 +66,8 @@ function QuestionBankPage() {
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
 
   const { data: items, isLoading } = useQuery({
     queryKey: ["admin", "question-bank"],
@@ -87,6 +89,9 @@ function QuestionBankPage() {
     });
   }, [items, subjectFilter, difficultyFilter, typeFilter]);
 
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
   return (
     <AdminShell
       title="Question Bank"
@@ -104,7 +109,7 @@ function QuestionBankPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled>
+            <Button variant="outline" size="sm" onClick={() => toast.info("CSV import: drag and drop your questions file. Format: prompt, type, difficulty, subject")}>
               <Upload className="mr-1.5 h-4 w-4" /> Import
             </Button>
             <Button variant="outline" size="sm" className="text-violet-600" onClick={() => setAiOpen(true)}>
@@ -174,7 +179,7 @@ function QuestionBankPage() {
             </div>
           ) : (
             <ul className="divide-y divide-border">
-              {filtered.map((q) => {
+              {paginated.map((q) => {
                 const tm = typeMeta[q.type];
                 return (
                   <li
@@ -240,11 +245,12 @@ function QuestionBankPage() {
 
           <div className="flex items-center justify-between border-t border-border px-4 py-3 text-xs text-muted-foreground">
             <span>
-              Showing {filtered.length} of {items?.length ?? 0} questions
+              Showing {Math.min(PAGE_SIZE, filtered.length - page * PAGE_SIZE)} of {filtered.length} questions
             </span>
-            <div className="flex gap-1.5">
-              <Button variant="outline" size="sm" disabled>Prev</Button>
-              <Button variant="outline" size="sm" disabled>Next</Button>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-muted-foreground mr-1">Page {page + 1} of {Math.max(1, pageCount)}</span>
+              <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>Prev</Button>
+              <Button variant="outline" size="sm" disabled={page >= pageCount - 1} onClick={() => setPage((p) => p + 1)}>Next</Button>
             </div>
           </div>
         </div>

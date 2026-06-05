@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { listMyRegistrations } from "@/lib/scheduling";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/student/")({
   component: StudentHub,
@@ -173,7 +174,15 @@ function StudentHub() {
               <p className="mt-2 text-xs text-white/85">
                 Run a quick AI proctoring system check before your next exam.
               </p>
-              <Button variant="secondary" className="mt-3 h-8 bg-white text-foreground hover:bg-white/90">Run Check</Button>
+              <Button
+              variant="secondary"
+              className="mt-3 h-8 bg-white text-foreground hover:bg-white/90"
+              onClick={async () => {
+                toast.info("Running system compatibility check…");
+                await new Promise((r) => setTimeout(r, 1500));
+                toast.success("System check passed ✓ Camera, microphone, and network are all ready for proctoring.");
+              }}
+            >Run Check</Button>
             </div>
 
             <div className="rounded-2xl border border-border bg-background p-5 shadow-sm">

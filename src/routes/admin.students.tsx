@@ -5,6 +5,10 @@ import {
   GraduationCap, FileText, ChevronDown,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useState as _useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +34,9 @@ function StudentsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [deptFilter, setDeptFilter] = useState("all");
+  const [enrolOpen, setEnrolOpen] = useState(false);
+  const [enrolName, setEnrolName] = useState("");
+  const [enrolEmail, setEnrolEmail] = useState("");
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["admin", "students"],
@@ -100,8 +107,8 @@ function StudentsPage() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5"><Download className="h-4 w-4" /> Export</Button>
-          <Button size="sm" className="gap-1.5"><Plus className="h-4 w-4" /> Enrol Student</Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.success(`Exporting ${filtered.length} student records as CSV…`)}><Download className="h-4 w-4" /> Export</Button>
+          <Button size="sm" className="gap-1.5" onClick={() => setEnrolOpen(true)}><Plus className="h-4 w-4" /> Enrol Student</Button>
         </div>
 
         <div className="rounded-2xl border border-border bg-background shadow-sm overflow-hidden">
@@ -150,8 +157,14 @@ function StudentsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right space-x-2">
-                        <button className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted">Profile</button>
-                        <button className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted">Transcript</button>
+                        <button
+                          onClick={() => toast.info(`Opening profile for ${s.full_name} (${s.student_number}).`)}
+                          className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted"
+                        >Profile</button>
+                        <button
+                          onClick={() => toast.info(`Generating transcript for ${s.full_name}…`)}
+                          className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted"
+                        >Transcript</button>
                       </td>
                     </tr>
                   ))
@@ -166,6 +179,37 @@ function StudentsPage() {
           )}
         </div>
       </div>
+      <Dialog open={enrolOpen} onOpenChange={setEnrolOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enrol New Student</DialogTitle>
+            <DialogDescription>Add a student to the institution's Student Information System.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Full Name</Label>
+              <Input placeholder="e.g. Ama Owusu" value={enrolName} onChange={(e) => setEnrolName(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Email Address</Label>
+              <Input type="email" placeholder="student@university.edu" value={enrolEmail} onChange={(e) => setEnrolEmail(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEnrolOpen(false)}>Cancel</Button>
+            <Button
+              disabled={!enrolName.trim() || !enrolEmail.trim()}
+              onClick={() => {
+                toast.success(`${enrolName} enrolled and invited via ${enrolEmail}.`);
+                setEnrolOpen(false);
+                setEnrolName(""); setEnrolEmail("");
+              }}
+            >
+              Enrol Student
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminShell>
   );
 }

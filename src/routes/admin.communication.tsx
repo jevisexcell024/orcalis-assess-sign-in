@@ -52,6 +52,20 @@ function CommunicationPage() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Compose form state
+  const [recipient, setRecipient] = useState("");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+
+  // Broadcast state
+  const [broadcastMsg, setBroadcastMsg] = useState("");
+  const [broadcastChannels, setBroadcastChannels] = useState<string[]>(["in_app", "email", "sms", "whatsapp"]);
+  const [broadcasting, setBroadcasting] = useState(false);
+  const toggleBroadcastChannel = (id: string) => {
+    setBroadcastChannels((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]);
+  };
+
   // Form state
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -222,18 +236,30 @@ function CommunicationPage() {
             <h3 className="font-semibold">Send Direct Message</h3>
             <div className="space-y-1.5">
               <Label>Recipient (User ID or Email)</Label>
-              <Input placeholder="Enter recipient email or user ID" />
+              <Input placeholder="Enter recipient email or user ID" value={recipient} onChange={(e) => setRecipient(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Subject</Label>
-              <Input placeholder="Message subject" />
+              <Input placeholder="Message subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>Message</Label>
-              <Textarea placeholder="Type your message here…" rows={6} />
+              <Textarea placeholder="Type your message here…" rows={6} value={message} onChange={(e) => setMessage(e.target.value)} />
             </div>
             <div className="flex justify-end">
-              <Button className="gap-1.5"><Send className="h-4 w-4" /> Send Message</Button>
+              <Button
+                className="gap-1.5"
+                disabled={sending || !recipient.trim() || !message.trim()}
+                onClick={async () => {
+                  setSending(true);
+                  await new Promise((r) => setTimeout(r, 900));
+                  setSending(false);
+                  toast.success(`Message sent to ${recipient}.`);
+                  setRecipient(""); setSubject(""); setMessage("");
+                }}
+              >
+                <Send className="h-4 w-4" /> {sending ? "Sending…" : "Send Message"}
+              </Button>
             </div>
           </div>
         )}
@@ -250,20 +276,42 @@ function CommunicationPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Broadcast Message</Label>
-              <Textarea placeholder="Type your emergency broadcast message…" rows={5} />
+              <Textarea placeholder="Type your emergency broadcast message…" rows={5} value={broadcastMsg} onChange={(e) => setBroadcastMsg(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Channels</Label>
               <div className="flex flex-wrap gap-2">
                 {CHANNEL_OPTIONS.map((ch) => (
-                  <button key={ch.id} className="flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">
+                  <button
+                    key={ch.id}
+                    onClick={() => toggleBroadcastChannel(ch.id)}
+                    className={cn(
+                      "flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition",
+                      broadcastChannels.includes(ch.id)
+                        ? "border-rose-200 bg-rose-50 text-rose-700"
+                        : "border-border bg-muted/40 text-muted-foreground"
+                    )}
+                  >
                     <ch.icon className="h-4 w-4" /> {ch.label}
                   </button>
                 ))}
               </div>
             </div>
             <div className="flex justify-end">
-              <Button variant="destructive" className="gap-1.5"><AlertTriangle className="h-4 w-4" /> Send Broadcast</Button>
+              <Button
+                variant="destructive"
+                className="gap-1.5"
+                disabled={broadcasting || !broadcastMsg.trim() || broadcastChannels.length === 0}
+                onClick={async () => {
+                  setBroadcasting(true);
+                  await new Promise((r) => setTimeout(r, 1000));
+                  setBroadcasting(false);
+                  toast.success(`Emergency broadcast sent via ${broadcastChannels.join(", ")} to all users.`);
+                  setBroadcastMsg("");
+                }}
+              >
+                <AlertTriangle className="h-4 w-4" /> {broadcasting ? "Sending…" : "Send Broadcast"}
+              </Button>
             </div>
           </div>
         )}

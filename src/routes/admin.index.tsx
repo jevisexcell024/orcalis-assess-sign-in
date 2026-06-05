@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from "recharts";
+import { useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -21,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { getDashboardOverview } from "@/lib/scheduling";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/")({
   component: SuperAdminPage,
@@ -37,6 +39,8 @@ export const Route = createFileRoute("/admin/")({
 });
 
 function SuperAdminPage() {
+  const [chartRange, setChartRange] = useState<"24h" | "7d" | "30d">("24h");
+  const [sevFilter, setSevFilter] = useState<"all" | "high">("all");
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "dashboard-overview"],
     queryFn: getDashboardOverview,
@@ -106,12 +110,13 @@ function SuperAdminPage() {
                 </p>
               </div>
               <div className="flex items-center gap-1 rounded-lg bg-muted/60 p-1">
-                {["24h", "7d", "30d"].map((r, idx) => (
+                {(["24h", "7d", "30d"] as const).map((r) => (
                   <button
                     key={r}
+                    onClick={() => setChartRange(r)}
                     className={cn(
                       "rounded-md px-2.5 py-1 text-xs font-medium transition",
-                      idx === 0
+                      chartRange === r
                         ? "bg-[color:var(--brand-blue)] text-white shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
                     )}
@@ -213,8 +218,16 @@ function SuperAdminPage() {
                 Real-time feed of high-confidence proctoring alerts
               </p>
             </div>
-            <button className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground/80 transition hover:bg-muted">
-              <Filter className="h-3.5 w-3.5" /> High Severity
+            <button
+              onClick={() => setSevFilter((f) => f === "all" ? "high" : "all")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition hover:bg-muted",
+                sevFilter === "high"
+                  ? "border-rose-300 bg-rose-50 text-rose-700"
+                  : "border-border bg-background text-foreground/80"
+              )}
+            >
+              <Filter className="h-3.5 w-3.5" /> {sevFilter === "high" ? "All Severity" : "High Severity"}
             </button>
           </div>
 
@@ -238,7 +251,7 @@ function SuperAdminPage() {
                     </td>
                   </tr>
                 ) : (
-                  interventions.map((row) => {
+                  interventions.filter((row) => sevFilter === "all" || row.severity === "high").map((row) => {
                     const tone =
                       row.severity === "high"
                         ? "bg-rose-50 text-rose-700 ring-rose-200"
@@ -293,7 +306,10 @@ function SuperAdminPage() {
                         </td>
                         <td className="py-3 pr-3 text-xs text-muted-foreground">{row.at}</td>
                         <td className="py-3 text-right">
-                          <button className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted">
+                          <button
+                            onClick={() => toast.info(`Reviewing violation for ${row.candidate} — opening proctoring session.`)}
+                            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted"
+                          >
                             Review
                           </button>
                         </td>
@@ -306,7 +322,10 @@ function SuperAdminPage() {
           </div>
 
           <div className="mt-3 border-t border-border pt-3 text-center">
-            <button className="text-xs font-semibold text-[color:var(--brand-blue)] hover:underline">
+            <button
+              onClick={() => toast.info("Navigating to full AI Violations log.")}
+              className="text-xs font-semibold text-[color:var(--brand-blue)] hover:underline"
+            >
               View All Events ({data?.totalEventCount ?? 0})
             </button>
           </div>

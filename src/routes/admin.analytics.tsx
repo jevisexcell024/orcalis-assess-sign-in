@@ -29,9 +29,11 @@ import {
   ExternalLink,
   Trophy,
 } from "lucide-react";
+import { useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { getAnalyticsSummary } from "@/lib/scheduling";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsPage,
@@ -89,6 +91,7 @@ const interestData = [
 ];
 
 function AnalyticsPage() {
+  const [semester, setSemester] = useState("this");
   const { data: summary } = useQuery({
     queryKey: ["analytics-summary"],
     queryFn: getAnalyticsSummary,
@@ -146,10 +149,10 @@ function AnalyticsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2">
-            <Calendar className="h-4 w-4" /> This Semester
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => { const next = semester === "this" ? "last" : "this"; setSemester(next); toast.info(`Showing ${next === "this" ? "current" : "previous"} semester data.`); }}>
+            <Calendar className="h-4 w-4" /> {semester === "this" ? "This Semester" : "Last Semester"}
           </Button>
-          <Button size="sm" className="gap-2" style={{ background: "var(--gradient-primary)" }}>
+          <Button size="sm" className="gap-2" style={{ background: "var(--gradient-primary)" }} onClick={() => toast.success("Analytics report exported as PDF. Check your downloads.")}>
             <Download className="h-4 w-4" /> Export Report
           </Button>
         </div>

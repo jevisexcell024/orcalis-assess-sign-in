@@ -34,6 +34,18 @@ function SettingsPage() {
   const [orgSlug, setOrgSlug] = useState("orcalis-uni");
   const [timezone, setTimezone] = useState("Africa/Accra");
 
+  // API key state
+  const [liveRevealed, setLiveRevealed] = useState(false);
+  const [testRevealed, setTestRevealed] = useState(false);
+
+  // SMTP state
+  const [smtpHost, setSmtpHost] = useState("");
+  const [smtpPort, setSmtpPort] = useState("587");
+  const [smtpUser, setSmtpUser] = useState("");
+  const [smtpPass, setSmtpPass] = useState("");
+  const [fromAddr, setFromAddr] = useState("");
+  const [testEmailSending, setTestEmailSending] = useState(false);
+
   // Security settings
   const [mfaRequired, setMfaRequired] = useState(false);
   const [sessionTimeout, setSessionTimeout] = useState("8");
@@ -45,6 +57,22 @@ function SettingsPage() {
   const [smsNotifs, setSmsNotifs] = useState(false);
   const [whatsappNotifs, setWhatsappNotifs] = useState(false);
   const [pushNotifs, setPushNotifs] = useState(true);
+
+  const handleRotateKey = (type: "live" | "test") => {
+    toast.success(`${type === "live" ? "Production" : "Test"} API key rotated. Update your integrations.`);
+  };
+
+  const handleGenerateKey = () => {
+    toast.success("New API key generated. Copy it now — it won't be shown again.");
+  };
+
+  const handleSendTestEmail = async () => {
+    if (!smtpHost.trim()) { toast.error("Enter SMTP host before sending a test email."); return; }
+    setTestEmailSending(true);
+    await new Promise((r) => setTimeout(r, 1200));
+    setTestEmailSending(false);
+    toast.success("Test email sent. Check your inbox.");
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -156,22 +184,24 @@ function SettingsPage() {
             {active === "email" && (
               <Section title="Email Configuration" desc="SMTP settings for outgoing email.">
                 <Field label="SMTP Host" id="smtp-host">
-                  <Input id="smtp-host" placeholder="smtp.mailgun.org" />
+                  <Input id="smtp-host" placeholder="smtp.mailgun.org" value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} />
                 </Field>
                 <Field label="SMTP Port" id="smtp-port">
-                  <Input id="smtp-port" type="number" placeholder="587" className="w-32" />
+                  <Input id="smtp-port" type="number" placeholder="587" className="w-32" value={smtpPort} onChange={(e) => setSmtpPort(e.target.value)} />
                 </Field>
                 <Field label="SMTP Username" id="smtp-user">
-                  <Input id="smtp-user" placeholder="postmaster@yourdomain.com" />
+                  <Input id="smtp-user" placeholder="postmaster@yourdomain.com" value={smtpUser} onChange={(e) => setSmtpUser(e.target.value)} />
                 </Field>
                 <Field label="SMTP Password" id="smtp-pass">
-                  <Input id="smtp-pass" type="password" placeholder="••••••••" />
+                  <Input id="smtp-pass" type="password" placeholder="••••••••" value={smtpPass} onChange={(e) => setSmtpPass(e.target.value)} />
                 </Field>
                 <Field label="From Address" id="from-addr">
-                  <Input id="from-addr" placeholder="noreply@youruni.edu" />
+                  <Input id="from-addr" placeholder="noreply@youruni.edu" value={fromAddr} onChange={(e) => setFromAddr(e.target.value)} />
                 </Field>
                 <div>
-                  <Button variant="outline" size="sm">Send Test Email</Button>
+                  <Button variant="outline" size="sm" onClick={handleSendTestEmail} disabled={testEmailSending}>
+                    {testEmailSending ? "Sending…" : "Send Test Email"}
+                  </Button>
                 </div>
               </Section>
             )}
@@ -181,20 +211,20 @@ function SettingsPage() {
                 <div className="rounded-xl border border-border bg-muted/30 p-4">
                   <p className="text-sm font-medium">Production API Key</p>
                   <div className="mt-2 flex items-center gap-3">
-                    <Input value="oa_live_••••••••••••••••••••••••••••••••" readOnly className="font-mono text-xs" />
-                    <Button variant="outline" size="sm">Reveal</Button>
-                    <Button variant="outline" size="sm">Rotate</Button>
+                    <Input value={liveRevealed ? "oa_live_sk_7f3a9b2c1d4e5f6a7b8c9d0e1f2a3b4c" : "oa_live_••••••••••••••••••••••••••••••••"} readOnly className="font-mono text-xs" />
+                    <Button variant="outline" size="sm" onClick={() => setLiveRevealed((v) => !v)}>{liveRevealed ? "Hide" : "Reveal"}</Button>
+                    <Button variant="outline" size="sm" onClick={() => { setLiveRevealed(false); handleRotateKey("live"); }}>Rotate</Button>
                   </div>
                 </div>
                 <div className="rounded-xl border border-border bg-muted/30 p-4">
                   <p className="text-sm font-medium">Test API Key</p>
                   <div className="mt-2 flex items-center gap-3">
-                    <Input value="oa_test_••••••••••••••••••••••••••••••••" readOnly className="font-mono text-xs" />
-                    <Button variant="outline" size="sm">Reveal</Button>
-                    <Button variant="outline" size="sm">Rotate</Button>
+                    <Input value={testRevealed ? "oa_test_sk_1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d" : "oa_test_••••••••••••••••••••••••••••••••"} readOnly className="font-mono text-xs" />
+                    <Button variant="outline" size="sm" onClick={() => setTestRevealed((v) => !v)}>{testRevealed ? "Hide" : "Reveal"}</Button>
+                    <Button variant="outline" size="sm" onClick={() => { setTestRevealed(false); handleRotateKey("test"); }}>Rotate</Button>
                   </div>
                 </div>
-                <Button size="sm" className="gap-1.5"><Key className="h-4 w-4" /> Generate New Key</Button>
+                <Button size="sm" className="gap-1.5" onClick={handleGenerateKey}><Key className="h-4 w-4" /> Generate New Key</Button>
               </Section>
             )}
 

@@ -56,7 +56,7 @@ const platformNav: NavLink[] = [
 
 const monitoringNav: NavLink[] = [
   { label: "AI Violations", to: "/admin/violations", icon: ShieldAlert, badge: "Live" },
-  { label: "System Health", to: "/admin", icon: Heart },
+  { label: "System Health", to: "/admin/system-health", icon: Heart },
 ];
 
 const adminNav: NavLink[] = [

@@ -42,6 +42,7 @@ import { Route as AdminViolationsRouteImport } from './routes/admin.violations'
 import { Route as AdminTeamRouteImport } from './routes/admin.team'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminSystemHealthRouteImport } from './routes/admin.system-health'
 import { Route as AdminSchedulerRouteImport } from './routes/admin.scheduler'
 import { Route as AdminResultsRouteImport } from './routes/admin.results'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
@@ -390,6 +391,12 @@ const AdminExamsExamIdBuilderRoute = AdminExamsExamIdBuilderRouteImport.update({
   getParentRoute: () => AdminExamsRoute,
 } as any)
 
+const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
+  id: '/admin/system-health',
+  path: '/system-health',
+  getParentRoute: () => AdminRoute,
+} as any)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
@@ -424,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/settings': typeof AdminSettingsRoute
+    '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
@@ -487,6 +495,7 @@ export interface FileRoutesByTo {
   '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/settings': typeof AdminSettingsRoute
+    '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
@@ -553,6 +562,7 @@ export interface FileRoutesById {
   '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/settings': typeof AdminSettingsRoute
+    '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
@@ -1314,6 +1324,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminResultsRoute: AdminResultsRoute,
   AdminSchedulerRoute: AdminSchedulerRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+    AdminSystemHealthRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminTeamRoute: AdminTeamRoute,
   AdminViolationsRoute: AdminViolationsRoute,

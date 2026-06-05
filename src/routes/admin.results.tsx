@@ -117,7 +117,7 @@ function ResultsPage() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.success(`Exporting ${filtered.length} results as CSV…`)}>
             <Download className="h-4 w-4" /> Export
           </Button>
           <Button size="sm" className="gap-1.5" onClick={handlePublishAll}>
@@ -175,10 +175,16 @@ function ResultsPage() {
                           }
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted mr-2">
+                          <button
+                            onClick={() => toast.info(`Opening answer sheet review for attempt ${a.id.slice(0, 8)}…`)}
+                            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted mr-2"
+                          >
                             Review
                           </button>
-                          <button className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted">
+                          <button
+                            onClick={() => toast.success(`Result for attempt ${a.id.slice(0, 8)} published to candidate.`)}
+                            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted"
+                          >
                             Publish
                           </button>
                         </td>

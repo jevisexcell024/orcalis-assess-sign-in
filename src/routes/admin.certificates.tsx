@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/certificates")({
   component: CertificatesPage,
@@ -41,10 +42,10 @@ export const Route = createFileRoute("/admin/certificates")({
 });
 
 const assetTools = [
-  { label: "Text Block", icon: TypeIcon, active: false },
-  { label: "Image", icon: ImageIcon, active: false },
-  { label: "QR Code", icon: QrCode, active: true },
-  { label: "Signature", icon: PenLine, active: false },
+  { label: "Text Block", icon: TypeIcon },
+  { label: "Image", icon: ImageIcon },
+  { label: "QR Code", icon: QrCode },
+  { label: "Signature", icon: PenLine },
 ];
 
 const dynamicFields = ["candidate_name", "course_title", "issue_date", "certificate_id", "score"];
@@ -58,6 +59,12 @@ const templates = [
 function CertificatesPage() {
   const [selectedField, setSelectedField] = useState("candidate_name");
   const [securityOn, setSecurityOn] = useState(true);
+  const [activeAsset, setActiveAsset] = useState("QR Code");
+  const [canvasTab, setCanvasTab] = useState("Design");
+  const [zoom, setZoom] = useState(75);
+  const [selectedTemplate, setSelectedTemplate] = useState("Standard Academic");
+  const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   return (
     <AdminShell
@@ -65,14 +72,14 @@ function CertificatesPage() {
       breadcrumbs={[{ label: "Issuance" }, { label: "Certificates" }]}
       actions={
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Undo — last change reverted.")}>
             <Undo2 className="h-3.5 w-3.5" /> Undo
           </Button>
-          <Button variant="outline" size="sm" className="gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Redo — change re-applied.")}>
             <Redo2 className="h-3.5 w-3.5" /> Redo
           </Button>
-          <Button size="sm" style={{ background: "var(--gradient-primary)" }}>
-            Save Template
+          <Button size="sm" style={{ background: "var(--gradient-primary)" }} disabled={saving} onClick={async () => { setSaving(true); await new Promise(r => setTimeout(r, 800)); setSaving(false); toast.success("Template saved successfully."); }}>
+            {saving ? "Saving…" : "Save Template"}
           </Button>
         </div>
       }
@@ -90,9 +97,10 @@ function CertificatesPage() {
                 return (
                   <button
                     key={t.label}
+                    onClick={() => setActiveAsset(t.label)}
                     className={cn(
                       "flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl border text-xs transition",
-                      t.active
+                      activeAsset === t.label
                         ? "border-primary bg-primary/5 text-primary"
                         : "border-border hover:bg-muted/60",
                     )}
@@ -110,7 +118,7 @@ function CertificatesPage() {
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 Dynamic Fields
               </p>
-              <button className="text-[11px] font-semibold text-primary">Add Custom</button>
+              <button className="text-[11px] font-semibold text-primary" onClick={() => toast.info("Custom field dialog coming soon — name your variable and it will be injected into the certificate.")}>Add Custom</button>
             </div>
             <ul className="mt-3 space-y-1.5">
               {dynamicFields.map((f) => (
@@ -156,12 +164,13 @@ function CertificatesPage() {
         <div className="rounded-2xl border border-border bg-[oklch(0.97_0.005_260)] p-6">
           <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
-              {["Design", "Preview", "Code"].map((t, i) => (
+              {["Design", "Preview", "Code"].map((t) => (
                 <button
                   key={t}
+                  onClick={() => setCanvasTab(t)}
                   className={cn(
                     "rounded-md px-3 py-1 font-medium",
-                    i === 0 ? "bg-foreground text-background" : "text-muted-foreground",
+                    canvasTab === t ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted",
                   )}
                 >
                   {t}
@@ -170,9 +179,9 @@ function CertificatesPage() {
             </div>
             <span>800 × 600 · A4 Landscape</span>
             <div className="flex items-center gap-2">
-              <button className="rounded-md border border-border px-2 py-1">−</button>
-              <span>75%</span>
-              <button className="rounded-md border border-border px-2 py-1">+</button>
+              <button onClick={() => setZoom((z) => Math.max(25, z - 25))} className="rounded-md border border-border px-2 py-1">−</button>
+              <span>{zoom}%</span>
+              <button onClick={() => setZoom((z) => Math.min(150, z + 25))} className="rounded-md border border-border px-2 py-1">+</button>
             </div>
           </div>
 
@@ -314,8 +323,8 @@ function CertificatesPage() {
             </div>
           </section>
 
-          <Button className="w-full gap-2" size="lg" style={{ background: "var(--gradient-primary)" }}>
-            <Award className="h-4 w-4" /> Generate Batch (142)
+          <Button className="w-full gap-2" size="lg" style={{ background: "var(--gradient-primary)" }} disabled={generating} onClick={async () => { setGenerating(true); await new Promise(r => setTimeout(r, 1500)); setGenerating(false); toast.success("142 certificates queued for generation. Processing in background."); }}>
+            <Award className="h-4 w-4" /> {generating ? "Generating…" : "Generate Batch (142)"}
           </Button>
           <p className="-mt-3 text-center text-[11px] text-muted-foreground">Will process in background</p>
         </div>
