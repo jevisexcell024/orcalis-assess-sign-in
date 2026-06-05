@@ -1,4 +1,5 @@
 import "./lib/error-capture";
+import { applySecurityHeaders } from "./lib/security-headers";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
@@ -71,10 +72,17 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+      // Apply security headers to all HTML responses.
+      // Skip binary/stream responses (e.g. certificate PDFs, event-streams).
+      const ct = normalized.headers.get("content-type") ?? "";
+      const skipHeaders = ct.startsWith("text/event-stream") ||
+                          ct.startsWith("application/octet-stream") ||
+                          ct.startsWith("image/");
+      return skipHeaders ? normalized : applySecurityHeaders(normalized);
     } catch (error) {
       console.error(error);
-      return brandedErrorResponse();
+      return applySecurityHeaders(brandedErrorResponse());
     }
   },
 };
