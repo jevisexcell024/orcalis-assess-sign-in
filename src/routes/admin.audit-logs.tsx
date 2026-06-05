@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { exportToCSV } from "@/lib/csv";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/audit-logs")({
   component: AuditLogsPage,
@@ -92,7 +94,21 @@ function AuditLogsPage() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5"><Download className="h-4 w-4" /> Export CSV</Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
+              exportToCSV(
+                `audit-logs-${new Date().toISOString().slice(0,10)}.csv`,
+                filtered as any[],
+                [
+                  { key: "created_at",    header: "Timestamp" },
+                  { key: "actor_email",   header: "Actor" },
+                  { key: "action",        header: "Action" },
+                  { key: "resource_type", header: "Resource Type" },
+                  { key: "resource_id",   header: "Resource ID" },
+                  { key: "ip_address",    header: "IP Address" },
+                ]
+              );
+              toast.success(`Exported ${filtered.length} log entries`);
+            }}><Download className="h-4 w-4" /> Export CSV</Button>
         </div>
 
         <div className="rounded-2xl border border-border bg-background shadow-sm overflow-hidden">

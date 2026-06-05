@@ -34,6 +34,7 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { getAnalyticsSummary } from "@/lib/scheduling";
 import { toast } from "sonner";
+import { exportToCSV } from "@/lib/csv";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsPage,
@@ -152,7 +153,20 @@ function AnalyticsPage() {
           <Button variant="outline" size="sm" className="gap-2" onClick={() => { const next = semester === "this" ? "last" : "this"; setSemester(next); toast.info(`Showing ${next === "this" ? "current" : "previous"} semester data.`); }}>
             <Calendar className="h-4 w-4" /> {semester === "this" ? "This Semester" : "Last Semester"}
           </Button>
-          <Button size="sm" className="gap-2" style={{ background: "var(--gradient-primary)" }} onClick={() => toast.success("Analytics report exported as PDF. Check your downloads.")}>
+          <Button size="sm" className="gap-2" style={{ background: "var(--gradient-primary)" }} onClick={() => {
+              // Export the performance trend data as CSV
+              exportToCSV(
+                `analytics-report-${semester}-semester-${new Date().toISOString().slice(0,10)}.csv`,
+                perExam as any[],
+                [
+                  { key: "exam",     header: "Exam" },
+                  { key: "attempts", header: "Attempts" },
+                  { key: "passRate", header: "Pass Rate" },
+                  { key: "avgScore", header: "Avg Score" },
+                ]
+              );
+              toast.success("Analytics report exported as CSV.");
+            }}>
             <Download className="h-4 w-4" /> Export Report
           </Button>
         </div>

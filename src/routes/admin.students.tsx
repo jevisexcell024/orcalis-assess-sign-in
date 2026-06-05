@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { exportToCSV } from "@/lib/csv";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useState as _useState } from "react";
@@ -107,7 +108,22 @@ function StudentsPage() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.success(`Exporting ${filtered.length} student records as CSV…`)}><Download className="h-4 w-4" /> Export</Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
+              exportToCSV(
+                `students-${new Date().toISOString().slice(0,10)}.csv`,
+                filtered as any[],
+                [
+                  { key: "student_number",       header: "Student Number" },
+                  { key: "full_name",             header: "Full Name" },
+                  { key: "department",            header: "Department" },
+                  { key: "program",               header: "Program" },
+                  { key: "year_of_study",         header: "Year" },
+                  { key: "enrollment_status",     header: "Status" },
+                  { key: "enrolled_at",           header: "Enrolled At" },
+                ]
+              );
+              toast.success(`Exported ${filtered.length} students`);
+            }}><Download className="h-4 w-4" /> Export</Button>
           <Button size="sm" className="gap-1.5" onClick={() => setEnrolOpen(true)}><Plus className="h-4 w-4" /> Enrol Student</Button>
         </div>
 

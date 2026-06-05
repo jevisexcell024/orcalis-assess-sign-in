@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { exportToCSV } from "@/lib/csv";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useState as useLocalState } from "react";
@@ -125,7 +126,19 @@ function CandidatesPage() {
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Advanced filters: date range, exam title, identity status — coming in next release.")}>
             <Filter className="h-4 w-4" /> Advanced
           </Button>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.success(`Exporting ${filtered.length} candidates as CSV…`)}>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
+              exportToCSV(
+                `candidates-${new Date().toISOString().slice(0,10)}.csv`,
+                filtered as any[],
+                [
+                  { key: "id",          header: "ID" },
+                  { key: "status",      header: "Status" },
+                  { key: "exams.title", header: "Exam" },
+                  { key: "created_at",  header: "Registered At" },
+                ]
+              );
+              toast.success(`Exported ${filtered.length} candidates`);
+            }}>
             <Download className="h-4 w-4" /> Export CSV
           </Button>
           <Button size="sm" className="gap-1.5" onClick={() => setRegisterOpen(true)}>

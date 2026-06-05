@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { exportToCSV } from "@/lib/csv";
 
 export const Route = createFileRoute("/admin/results")({
   component: ResultsPage,
@@ -117,7 +118,22 @@ function ResultsPage() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.success(`Exporting ${filtered.length} results as CSV…`)}>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => {
+              exportToCSV(
+                `results-${new Date().toISOString().slice(0,10)}.csv`,
+                filtered as any[],
+                [
+                  { key: "id",                                    header: "ID" },
+                  { key: "exam_registrations.exams.title",        header: "Exam" },
+                  { key: "score",                                  header: "Score" },
+                  { key: "percentage",                             header: "Percentage" },
+                  { key: "grade",                                  header: "Grade" },
+                  { key: "auto_scored",                            header: "Auto Scored" },
+                  { key: "submitted_at",                           header: "Submitted At" },
+                ]
+              );
+              toast.success(`Exported ${filtered.length} results`);
+            }}>
             <Download className="h-4 w-4" /> Export
           </Button>
           <Button size="sm" className="gap-1.5" onClick={handlePublishAll}>
