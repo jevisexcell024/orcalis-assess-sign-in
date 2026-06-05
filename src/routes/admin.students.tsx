@@ -4,7 +4,7 @@ import {
   Search, Plus, Download, UserCheck, BookOpen,
   GraduationCap, FileText, ChevronDown,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { exportToCSV } from "@/lib/csv";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -14,7 +14,8 @@ import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { listStudents, type Student } from "@/lib/students";
+import { listStudents, createStudent, type Student } from "@/lib/students";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/students")({
   component: StudentsPage,
@@ -38,6 +39,51 @@ function StudentsPage() {
   const [enrolOpen, setEnrolOpen] = useState(false);
   const [enrolName, setEnrolName] = useState("");
   const [enrolEmail, setEnrolEmail] = useState("");
+  const [enrolStudentNum, setEnrolStudentNum] = useState("");
+  const [enrolDept, setEnrolDept] = useState("");
+  const [enrolling, setEnrolling] = useState(false);
+  const qc = useQueryClient();
+
+  async function handleEnrol() {
+    if (!enrolName.trim() || !enrolEmail.trim()) return;
+    setEnrolling(true);
+    try {
+      // Resolve email → user profile
+      const { data: profile, error: profileErr } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", enrolEmail.trim().toLowerCase())
+        .single();
+      if (profileErr || !profile) {
+        toast.error("No account found for that email. The student must sign up first.");
+        return;
+      }
+      // Generate student number if not provided
+      const studentNumber = enrolStudentNum.trim() ||
+        `STU-${Date.now().toString(36).toUpperCase()}`;
+      await createStudent({
+        full_name: enrolName.trim(),
+        student_number: studentNumber,
+        department: enrolDept.trim() || undefined,
+      });
+      // Assign candidate role
+      const { error: roleErr } = await supabase
+        .from("user_roles")
+        .insert({ user_id: profile.id, role: "candidate" })
+        .select()
+        .maybeSingle();
+      // Ignore duplicate role error
+      if (roleErr && !roleErr.message.includes("duplicate")) throw roleErr;
+      toast.success(`${enrolName.trim()} enrolled successfully.`);
+      setEnrolOpen(false);
+      setEnrolName(""); setEnrolEmail(""); setEnrolStudentNum(""); setEnrolDept("");
+      qc.invalidateQueries({ queryKey: ["admin", "students"] });
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Enrolment failed.");
+    } finally {
+      setEnrolling(false);
+    }
+  }
 
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["admin", "students"],
@@ -210,18 +256,22 @@ function StudentsPage() {
               <Label>Email Address</Label>
               <Input type="email" placeholder="student@university.edu" value={enrolEmail} onChange={(e) => setEnrolEmail(e.target.value)} />
             </div>
+            <div className="space-y-1.5">
+              <Label>Student Number <span className="text-muted-foreground text-xs">(optional — auto-generated if blank)</span></Label>
+              <Input placeholder="e.g. STU-2024-001" value={enrolStudentNum} onChange={(e) => setEnrolStudentNum(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Department <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input placeholder="e.g. Computer Science" value={enrolDept} onChange={(e) => setEnrolDept(e.target.value)} />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setEnrolOpen(false)}>Cancel</Button>
             <Button
-              disabled={!enrolName.trim() || !enrolEmail.trim()}
-              onClick={() => {
-                toast.success(`${enrolName} enrolled and invited via ${enrolEmail}.`);
-                setEnrolOpen(false);
-                setEnrolName(""); setEnrolEmail("");
-              }}
+              onClick={handleEnrol}
+              disabled={!enrolName.trim() || !enrolEmail.trim() || enrolling}
             >
-              Enrol Student
+              {enrolling ? "Enrolling…" : "Enrol Student"}
             </Button>
           </DialogFooter>
         </DialogContent>
