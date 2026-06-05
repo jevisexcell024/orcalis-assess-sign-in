@@ -7,14 +7,34 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { loadEnv } from "vite";
 
-// Load all env vars (no prefix) into process.env for server-side code (email routes need SUPABASE_SERVICE_ROLE_KEY).
 const serverEnv = loadEnv(process.env.NODE_ENV || "development", process.cwd(), "");
 Object.assign(process.env, serverEnv);
 
-// Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-// @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
 export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
+  },
+  vite: {
+    // Pre-warm route files so the TanStack router plugin has the module graph
+    // ready before the first browser request arrives (fixes "Crawling result
+    // not available" on Windows where the FS scan is slower).
+    server: {
+      warmup: {
+        clientFiles: [
+          "./src/routeTree.gen.ts",
+          "./src/router.tsx",
+          "./src/routes/**/*.tsx",
+          "./src/routes/**/*.ts",
+        ],
+      },
+    },
+    optimizeDeps: {
+      entries: [
+        "src/routeTree.gen.ts",
+        "src/router.tsx",
+        "src/routes/**/*.tsx",
+        "src/routes/**/*.ts",
+      ],
+    },
   },
 });
