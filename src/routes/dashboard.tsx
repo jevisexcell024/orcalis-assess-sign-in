@@ -52,6 +52,7 @@ export const Route = createFileRoute("/dashboard")({
       },
     ],
   }),
+  // @ts-expect-error TanStack Router v1 beforeLoad type variance
   beforeLoad: async () => {
     const session = await getSession();
     if (!session) {
@@ -59,7 +60,7 @@ export const Route = createFileRoute("/dashboard")({
     }
     const home = await resolveHomeRoute(session.user);
     if (home !== "/dashboard") {
-      return redirect({ to: home });
+      return redirect({ to: home as any });
     }
   },
 });

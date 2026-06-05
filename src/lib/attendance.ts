@@ -41,7 +41,7 @@ export type AttendanceRecord = {
 };
 
 export async function listAttendanceSessions(orgId?: string | null): Promise<AttendanceSession[]> {
-  let q = supabase
+  let q = (supabase as any)
     .from("attendance_sessions")
     .select("*")
     .order("session_date", { ascending: false });
@@ -74,7 +74,7 @@ export async function createAttendanceSession(input: {
     ? new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 min
     : null;
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("attendance_sessions")
     .insert({ ...input, created_by: user.id, qr_code, qr_expires_at })
     .select()
@@ -84,7 +84,7 @@ export async function createAttendanceSession(input: {
 }
 
 export async function listAttendanceRecords(sessionId: string): Promise<AttendanceRecord[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("attendance_records")
     .select("*, students(full_name, student_number)")
     .eq("session_id", sessionId);
@@ -101,7 +101,7 @@ export async function markAttendance(input: {
   organization_id?: string;
 }): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("attendance_records")
     .upsert({
       ...input,
@@ -127,7 +127,7 @@ export async function getAttendanceSummary(sessionId: string): Promise<{
 export async function generateQRCode(sessionId: string): Promise<string> {
   const code = `OA-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
   const expires = new Date(Date.now() + 30 * 60 * 1000).toISOString();
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("attendance_sessions")
     .update({ qr_code: code, qr_expires_at: expires, updated_at: new Date().toISOString() })
     .eq("id", sessionId);

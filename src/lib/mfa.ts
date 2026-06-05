@@ -65,7 +65,7 @@ export async function unenrollTOTP(factorId: string): Promise<void> {
 export async function getAssuranceLevel(): Promise<"aal1" | "aal2"> {
   const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   if (error) return "aal1";
-  return data?.currentLevel ?? "aal1";
+  return (data?.currentLevel ?? "aal1") as "aal1" | "aal2";
 }
 
 /** Challenge and verify for login MFA step */

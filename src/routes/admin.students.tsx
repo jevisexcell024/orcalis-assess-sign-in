@@ -147,8 +147,8 @@ function StudentsPage() {
                       <td className="px-4 py-3 text-sm">{s.program}</td>
                       <td className="px-4 py-3 text-sm">Year {s.year_of_study}</td>
                       <td className="px-4 py-3">
-                        <span className={cn("font-semibold tabular-nums text-sm", s.gpa >= 3.5 ? "text-emerald-700" : s.gpa >= 2.5 ? "text-amber-700" : "text-rose-700")}>
-                          {s.gpa.toFixed(2)}
+                        <span className={cn("font-semibold tabular-nums text-sm", (s as any).gpa >= 3.5 ? "text-emerald-700" : (s as any).gpa >= 2.5 ? "text-amber-700" : "text-rose-700")}>
+                          {((s as any).gpa ?? 0).toFixed(2)}
                         </span>
                       </td>
                       <td className="px-4 py-3">

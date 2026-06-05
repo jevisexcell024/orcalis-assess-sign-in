@@ -253,6 +253,8 @@ export async function createBankQuestion(input: {
   subject?: string | null;
   tags?: string[];
   points?: number;
+  options?: unknown[];
+  shuffle_options?: boolean;
 }) {
   const { data: userRes } = await supabase.auth.getUser();
   const userId = userRes.user?.id;
@@ -268,13 +270,15 @@ export async function createBankQuestion(input: {
       subject: input.subject ?? null,
       tags: input.tags ?? [],
       points: input.points ?? 1,
-      options:
-        input.type === "mcq"
-          ? [
-              { text: "", is_correct: true },
-              { text: "", is_correct: false },
-            ]
-          : [],
+      options: (
+        input.options !== undefined
+          ? input.options
+          : input.type === "mcq"
+            ? [{ text: "", is_correct: true }, { text: "", is_correct: false }]
+            : []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ) as any,
+      shuffle_options: input.shuffle_options ?? (input.type === "mcq"),
       created_by: userId,
     })
     .select()

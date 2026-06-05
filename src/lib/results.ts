@@ -42,7 +42,7 @@ export function getGrade(percentage: number, bands: GradeBand[] = DEFAULT_BANDS)
 }
 
 export async function listResults(orgId?: string | null): Promise<Result[]> {
-  let q = supabase
+  let q = (supabase as any)
     .from("results")
     .select("*, exam_attempts(id, submitted_at), exam_registrations(id, exams(title))")
     .order("created_at", { ascending: false });
@@ -56,7 +56,7 @@ export async function getMyResults(): Promise<Result[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
   // Join through exam_registrations → candidate_id
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("results")
     .select(`
       *,
@@ -71,7 +71,7 @@ export async function getMyResults(): Promise<Result[]> {
 
 export async function approveResult(resultId: string): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("results")
     .update({
       status: "approved",
@@ -84,7 +84,7 @@ export async function approveResult(resultId: string): Promise<void> {
 }
 
 export async function publishResults(orgId: string): Promise<{ count: number }> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("results")
     .update({
       status: "published",
@@ -104,7 +104,7 @@ export async function submitDispute(input: {
   reason: string;
   evidence_urls?: string[];
 }): Promise<void> {
-  const { error } = await supabase.from("result_disputes").insert(input);
+  const { error } = await (supabase as any).from("result_disputes").insert(input);
   if (error) throw error;
 }
 
@@ -116,7 +116,7 @@ export async function getResultStats(orgId?: string | null): Promise<{
   avgPercentage: number;
   passRate: number;
 }> {
-  let q = supabase.from("results").select("status, percentage");
+  let q = (supabase as any).from("results").select("status, percentage");
   if (orgId) q = q.eq("organization_id", orgId);
   const { data, error } = await q;
   if (error) throw error;

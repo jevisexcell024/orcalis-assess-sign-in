@@ -391,12 +391,6 @@ const AdminExamsExamIdBuilderRoute = AdminExamsExamIdBuilderRouteImport.update({
   getParentRoute: () => AdminExamsRoute,
 } as any)
 
-const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
-  id: '/admin/system-health',
-  path: '/system-health',
-  getParentRoute: () => AdminRoute,
-} as any)
-
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
@@ -431,7 +425,7 @@ export interface FileRoutesByFullPath {
   '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/settings': typeof AdminSettingsRoute
-    '/admin/system-health': typeof AdminSystemHealthRoute
+  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
@@ -495,7 +489,7 @@ export interface FileRoutesByTo {
   '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/settings': typeof AdminSettingsRoute
-    '/admin/system-health': typeof AdminSystemHealthRoute
+  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
@@ -562,7 +556,7 @@ export interface FileRoutesById {
   '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/settings': typeof AdminSettingsRoute
-    '/admin/system-health': typeof AdminSystemHealthRoute
+  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/students': typeof AdminStudentsRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
@@ -630,6 +624,7 @@ export interface FileRouteTypes {
     | '/admin/results'
     | '/admin/scheduler'
     | '/admin/settings'
+    | '/admin/system-health'
     | '/admin/students'
     | '/admin/team'
     | '/admin/violations'
@@ -693,6 +688,7 @@ export interface FileRouteTypes {
     | '/admin/results'
     | '/admin/scheduler'
     | '/admin/settings'
+    | '/admin/system-health'
     | '/admin/students'
     | '/admin/team'
     | '/admin/violations'
@@ -758,6 +754,7 @@ export interface FileRouteTypes {
     | '/admin/results'
     | '/admin/scheduler'
     | '/admin/settings'
+    | '/admin/system-health'
     | '/admin/students'
     | '/admin/team'
     | '/admin/violations'
@@ -1059,6 +1056,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/system-health': {
+      id: '/admin/system-health'
+      path: '/system-health'
+      fullPath: '/admin/system-health'
+      preLoaderRoute: typeof AdminSystemHealthRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/scheduler': {
       id: '/admin/scheduler'
       path: '/scheduler'
@@ -1301,6 +1305,7 @@ interface AdminRouteChildren {
   AdminResultsRoute: typeof AdminResultsRoute
   AdminSchedulerRoute: typeof AdminSchedulerRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSystemHealthRoute: typeof AdminSystemHealthRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
   AdminTeamRoute: typeof AdminTeamRoute
   AdminViolationsRoute: typeof AdminViolationsRoute
@@ -1324,7 +1329,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminResultsRoute: AdminResultsRoute,
   AdminSchedulerRoute: AdminSchedulerRoute,
   AdminSettingsRoute: AdminSettingsRoute,
-    AdminSystemHealthRoute,
+  AdminSystemHealthRoute: AdminSystemHealthRoute,
   AdminStudentsRoute: AdminStudentsRoute,
   AdminTeamRoute: AdminTeamRoute,
   AdminViolationsRoute: AdminViolationsRoute,

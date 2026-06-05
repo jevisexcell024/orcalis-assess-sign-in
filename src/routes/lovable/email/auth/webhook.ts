@@ -116,7 +116,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
         // The email action type is in payload.data.action_type (e.g., "signup", "recovery")
         // payload.type is the hook event type ("auth")
         const emailType = payload.data.action_type
-        // [audit] received auth event //, {
+        console.info('[audit] received auth event', {
           emailType,
           email_redacted: redactEmail(payload.data.email),
           run_id,
@@ -203,7 +203,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           )
         }
 
-        // [audit] auth email enqueued //, {
+        console.info('[audit] auth email enqueued', {
           emailType,
           email_redacted: redactEmail(payload.data.email),
           run_id,

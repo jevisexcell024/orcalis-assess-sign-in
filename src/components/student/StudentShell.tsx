@@ -16,7 +16,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth";
 
-const nav = [
+const nav: { label: string; to: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { label: "Dashboard",     to: "/student",                icon: Home        },
   { label: "My Exams",      to: "/student/exams",          icon: NotebookPen },
   { label: "My Results",    to: "/student/results",        icon: BarChart2   },
@@ -26,7 +26,7 @@ const nav = [
   { label: "Payments",      to: "/student/payments",       icon: CreditCard  },
   { label: "Profile",       to: "/student/profile",        icon: User        },
   { label: "Practice Tests",to: "/student/practice",       icon: Sparkles    },
-] as const;
+];
 
 export function StudentShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();

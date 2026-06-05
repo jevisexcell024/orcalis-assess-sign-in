@@ -14,6 +14,7 @@ export const Route = createFileRoute("/admin-login")({
       },
     ],
   }),
+  // @ts-expect-error TanStack Router v1 beforeLoad type variance
   beforeLoad: async () => {
     const session = await getSession();
     if (!session) return;

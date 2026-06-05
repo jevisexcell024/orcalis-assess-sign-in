@@ -13,7 +13,27 @@ export const Route = createFileRoute("/admin/audit-logs")({
   head: () => ({ meta: [{ title: "Audit Logs · Orcalis Assess" }] }),
 });
 
+type AuditLog = {
+  id: string;
+  created_at: string;
+  actor_id: string | null;
+  actor_email: string | null;
+  action: string;
+  resource_type: string;
+  resource_id: string | null;
+  ip_address: string | null;
+  metadata: Record<string, unknown> | null;
+};
 
+async function fetchAuditLogs(): Promise<AuditLog[]> {
+  const { data, error } = await (supabase as any)
+    .from("audit_logs")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  if (error) throw error;
+  return (data ?? []) as AuditLog[];
+}
 
 const ACTION_CLS: Record<string, string> = {
   CREATE:  "bg-emerald-50 text-emerald-700 ring-emerald-200",

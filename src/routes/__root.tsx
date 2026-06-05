@@ -135,6 +135,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
+  // @ts-expect-error TanStack Router v1 beforeLoad type variance
   beforeLoad: async ({ location }) => {
     if (location.pathname.startsWith("/lovable/")) return;
     if (isPublicPath(location.pathname)) {
