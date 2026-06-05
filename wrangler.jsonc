@@ -4,8 +4,36 @@
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
   "main": "src/server.ts",
+
+  // ── Public build-time variables (safe to expose) ───────────────
+  // These are inlined at build time by Vite; do NOT put secrets here.
   "vars": {
     "VITE_APP_NAME": "Orcalis Assess",
-    "VITE_APP_VERSION": "1.0.0"
+    "VITE_APP_VERSION": "1.0.0",
+    "VITE_APP_URL": "https://orcalis-assess.pages.dev"
+  },
+
+  // ── Secrets (NOT in this file) ─────────────────────────────────
+  // Set the following via:  wrangler secret put SECRET_NAME
+  //
+  //   VITE_SUPABASE_URL            — Supabase project URL
+  //   VITE_SUPABASE_ANON_KEY       — Supabase anon/public key
+  //   SUPABASE_SERVICE_ROLE_KEY    — Supabase service-role key (server only)
+  //   OPENAI_API_KEY               — OpenAI API key
+  //   STRIPE_SECRET_KEY            — Stripe secret key
+  //   STRIPE_WEBHOOK_SECRET        — Stripe webhook signing secret
+  //   RESEND_API_KEY               — Resend transactional email API key
+  //   INTERNAL_API_KEY             — Internal webhook auth token (generate with openssl rand -hex 32)
+  //   VITE_SENTRY_DSN              — Sentry project DSN
+  //   SENTRY_AUTH_TOKEN            — Sentry CI auth token (CI only, not worker)
+  //
+  // For CI/CD (GitHub Actions) set the above as repository secrets,
+  // then inject them as:  wrangler secret put KEY --env production
+  //
+  // See docs/DEPLOYMENT.md for full setup instructions.
+
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
   }
 }
