@@ -326,6 +326,11 @@ const AdminAcademicIntegrityRoute = AdminAcademicIntegrityRouteImport.update({
   path: '/academic-integrity',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
+  id: "/system-health",
+  path: "/system-health",
+  getParentRoute: () => AdminRoute,
+} as any)
 const ApiTranscriptsGenerateRoute = ApiTranscriptsGenerateRouteImport.update({
   id: '/api/transcripts/generate',
   path: '/api/transcripts/generate',
@@ -1419,7 +1424,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SolutionsRoute: SolutionsRoute,
   StudentRoute: StudentRouteWithChildren,
-  ApiHealthRoute: ApiCertificatesGenerateRoute,
+  ApiCertificatesGenerateRoute: ApiCertificatesGenerateRoute,
   ApiEmailTestRoute,
   ApiHealthRoute,
   ApiVersionRoute: ApiVersionRoute,
