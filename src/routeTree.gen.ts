@@ -38,6 +38,7 @@ import { Route as StudentAnnouncementsRouteImport } from './routes/student.annou
 import { Route as EmployerVerifyRouteImport } from './routes/employer.verify'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiEmailTestRouteImport } from './routes/api/email.test'
 import { Route as AdminViolationsRouteImport } from './routes/admin.violations'
 import { Route as AdminTeamRouteImport } from './routes/admin.team'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
@@ -217,6 +218,11 @@ const ApiVersionRoute = ApiVersionRouteImport.update({
 const ApiHealthRoute = ApiHealthRouteImport.update({
   id: '/api/health',
   path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiEmailTestRoute = ApiEmailTestRouteImport.update({
+  id: '/api/email/test',
+  path: '/api/email/test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminViolationsRoute = AdminViolationsRouteImport.update({
@@ -430,6 +436,7 @@ export interface FileRoutesByFullPath {
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/email/test': typeof ApiEmailTestRoute
   '/api/version': typeof ApiVersionRoute
   '/employer/verify': typeof EmployerVerifyRoute
   '/student/announcements': typeof StudentAnnouncementsRoute
@@ -494,6 +501,7 @@ export interface FileRoutesByTo {
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
+  '/api/email/test': typeof ApiEmailTestRoute
   '/api/version': typeof ApiVersionRoute
   '/employer/verify': typeof EmployerVerifyRoute
   '/student/announcements': typeof StudentAnnouncementsRoute
@@ -629,6 +637,7 @@ export interface FileRouteTypes {
     | '/admin/team'
     | '/admin/violations'
     | '/api/health'
+  | '/api/email/test'
     | '/api/version'
     | '/employer/verify'
     | '/student/announcements'
@@ -693,6 +702,7 @@ export interface FileRouteTypes {
     | '/admin/team'
     | '/admin/violations'
     | '/api/health'
+  | '/api/email/test'
     | '/api/version'
     | '/employer/verify'
     | '/student/announcements'
@@ -759,6 +769,7 @@ export interface FileRouteTypes {
     | '/admin/team'
     | '/admin/violations'
     | '/api/health'
+  | '/api/email/test'
     | '/api/version'
     | '/employer/verify'
     | '/student/announcements'
@@ -1019,6 +1030,13 @@ declare module '@tanstack/react-router' {
       path: '/api/version'
       fullPath: '/api/version'
       preLoaderRoute: typeof ApiVersionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/email/test': {
+      id: '/api/email/test'
+      path: '/api/email/test'
+      fullPath: '/api/email/test'
+      preLoaderRoute: typeof ApiEmailTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/health': {
@@ -1383,7 +1401,8 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SolutionsRoute: SolutionsRoute,
   StudentRoute: StudentRouteWithChildren,
-  ApiHealthRoute: ApiHealthRoute,
+  ApiHealthRoute: ApiEmailTestRoute,
+  ApiHealthRoute,
   ApiVersionRoute: ApiVersionRoute,
   EmployerVerifyRoute: EmployerVerifyRoute,
   VerifyCertNumberRoute: VerifyCertNumberRoute,

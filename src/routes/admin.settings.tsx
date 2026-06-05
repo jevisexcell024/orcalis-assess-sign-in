@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { MFASetup } from "@/components/auth/MFASetup";
 
 export const Route = createFileRoute("/admin/settings")({
@@ -67,11 +68,43 @@ function SettingsPage() {
   };
 
   const handleSendTestEmail = async () => {
-    if (!smtpHost.trim()) { toast.error("Enter SMTP host before sending a test email."); return; }
+    if (!smtpHost.trim()) {
+      toast.error("Enter SMTP host before sending a test email.");
+      return;
+    }
     setTestEmailSending(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setTestEmailSending(false);
-    toast.success("Test email sent. Check your inbox.");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) { toast.error("Not authenticated."); return; }
+
+      const res = await fetch("/api/email/test", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          host: smtpHost.trim(),
+          port: parseInt(smtpPort, 10) || 587,
+          user: smtpUser.trim(),
+          pass: smtpPass,
+          to: session?.user.email,
+        }),
+      });
+      const json = await res.json() as { success?: boolean; note?: string; error?: string; provider?: string };
+      if (!res.ok || json.error) {
+        toast.error(json.error ?? "Test email failed.");
+      } else if (json.provider === "smtp_pending") {
+        toast.info(json.note ?? "SMTP config saved. Set RESEND_API_KEY to enable live sends.");
+      } else {
+        toast.success("Test email sent successfully. Check your inbox.");
+      }
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to send test email.");
+    } finally {
+      setTestEmailSending(false);
+    }
   };
 
   const handleSave = async () => {
