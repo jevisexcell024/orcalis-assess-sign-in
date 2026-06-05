@@ -1,4 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { countUnreadMessages } from "@/lib/communications";
 import {
   Bell,
   BarChart3,
@@ -81,6 +84,25 @@ export function AdminShell({
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
+  // Live unread notification count — polls every 60s + realtime
+  const { data: unreadCount = 0, refetch: refetchUnread } = useQuery({
+    queryKey: ["admin", "unread-notifications"],
+    queryFn: countUnreadMessages,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+
+  // Realtime: increment badge when a new message arrives
+  React.useEffect(() => {
+    const channel = supabase
+      .channel("admin-notification-bell")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, () => {
+        refetchUnread();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refetchUnread]);
+
   return (
     <div className="flex min-h-screen bg-[oklch(0.985_0.005_260)]">
       <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-background lg:flex">
@@ -141,9 +163,17 @@ export function AdminShell({
                 className="h-9 w-64 rounded-lg border-input bg-muted/40 pl-9 text-sm"
               />
             </div>
-            <button aria-label="Notifications" className="relative rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground">
+            <button
+              aria-label={"Notifications" + (unreadCount > 0 ? " (" + unreadCount + " unread)" : "")}
+              onClick={() => navigate({ to: "/admin/communication" })}
+              className="relative rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            >
               <Bell className="h-5 w-5" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
+              {unreadCount > 0 && (
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-background">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
             </button>
             <button
               onClick={async () => {
