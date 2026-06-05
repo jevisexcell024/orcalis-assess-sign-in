@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/certificates")({
   component: CertificatesPage,
@@ -323,7 +324,43 @@ function CertificatesPage() {
             </div>
           </section>
 
-          <Button className="w-full gap-2" size="lg" style={{ background: "var(--gradient-primary)" }} disabled={generating} onClick={async () => { setGenerating(true); await new Promise(r => setTimeout(r, 1500)); setGenerating(false); toast.success("142 certificates queued for generation. Processing in background."); }}>
+          <Button className="w-full gap-2" size="lg" style={{ background: "var(--gradient-primary)" }} disabled={generating} onClick={async () => {
+            setGenerating(true);
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (!session) { toast.error("Not authenticated."); return; }
+              // Fetch pending certificates that don't have a PDF yet
+              const { data: pending, error } = await (supabase as any)
+                .from("certificates")
+                .select("id, certificate_number")
+                .is("pdf_url", null)
+                .eq("revoked", false)
+                .limit(50);
+              if (error) throw error;
+              const items: { id: string; certificate_number: string }[] = pending ?? [];
+              if (items.length === 0) {
+                toast.info("No certificates pending PDF generation.");
+                return;
+              }
+              let success = 0, failed = 0;
+              for (const c of items) {
+                const res = await fetch(`/api/certificates/generate?cert_id=${c.id}`, {
+                  headers: { Authorization: `Bearer ${session.access_token}` },
+                });
+                if (res.ok) {
+                  // Save the generated PDF as a data URL or trigger download
+                  success++;
+                } else {
+                  failed++;
+                }
+              }
+              toast.success(`Generated ${success} certificate${success !== 1 ? "s" : ""}${failed > 0 ? ` (${failed} failed)` : ""}.`);
+            } catch (err: unknown) {
+              toast.error(err instanceof Error ? err.message : "Generation failed.");
+            } finally {
+              setGenerating(false);
+            }
+          }}>
             <Award className="h-4 w-4" /> {generating ? "Generating…" : "Generate Batch (142)"}
           </Button>
           <p className="-mt-3 text-center text-[11px] text-muted-foreground">Will process in background</p>

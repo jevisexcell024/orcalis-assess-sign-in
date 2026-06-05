@@ -4,6 +4,8 @@ import { Award, Download, ExternalLink, ShieldCheck, QrCode, Calendar } from "lu
 import { StudentShell } from "@/components/student/StudentShell";
 import { Button } from "@/components/ui/button";
 import { getMyCertificates } from "@/lib/certificates";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/student/certificates")({
@@ -16,6 +18,32 @@ function StudentCertificatesPage() {
     queryKey: ["student", "certificates"],
     queryFn: getMyCertificates,
   });
+
+  async function downloadCert(certId: string, certNumber: string) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { toast.error("Not authenticated."); return; }
+    try {
+      toast.info("Generating certificate PDF…");
+      const res = await fetch(`/api/certificates/generate?cert_id=${certId}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };
+        toast.error(err.error ?? "Failed to generate certificate.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `certificate-${certNumber}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Certificate downloaded.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Download failed.");
+    }
+  }
 
   return (
     <StudentShell>
@@ -100,7 +128,7 @@ function StudentCertificatesPage() {
                     )}
 
                     <div className="flex gap-2 pt-1">
-                      <Button size="sm" className="flex-1 gap-1.5 h-8 text-xs">
+                      <Button size="sm" className="flex-1 gap-1.5 h-8 text-xs" onClick={() => downloadCert(cert.id, cert.certificate_number)}>
                         <Download className="h-3.5 w-3.5" /> Download PDF
                       </Button>
                       <a
