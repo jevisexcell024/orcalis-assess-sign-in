@@ -107,10 +107,10 @@ export default {
         ct.startsWith("text/event-stream") ||
         ct.startsWith("application/octet-stream") ||
         ct.startsWith("image/");
-      return skipHeaders ? normalized : applySecurityHeaders(normalized);
+      return skipHeaders ? normalized : applySecurityHeaders(normalized, request);
     } catch (error) {
       console.error(error);
-      return applySecurityHeaders(brandedErrorResponse(error));
+      return applySecurityHeaders(brandedErrorResponse(error), request);
     }
   },
 };

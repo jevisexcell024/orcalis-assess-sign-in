@@ -1,35 +1,57 @@
 import { describe, it, expect } from 'vitest'
-import { SECURITY_HEADERS, applySecurityHeaders } from './security-headers'
+import { applySecurityHeaders } from './security-headers'
 
-describe('SECURITY_HEADERS', () => {
-  it('includes X-Content-Type-Options', () => {
-    expect(SECURITY_HEADERS['X-Content-Type-Options']).toBe('nosniff')
+describe('applySecurityHeaders (HTTP)', () => {
+  const httpRequest = new Request('http://localhost:8080/')
+
+  it('adds X-Content-Type-Options', () => {
+    const r = applySecurityHeaders(new Response('OK'), httpRequest)
+    expect(r.headers.get('X-Content-Type-Options')).toBe('nosniff')
   })
 
-  it('includes X-Frame-Options DENY', () => {
-    expect(SECURITY_HEADERS['X-Frame-Options']).toBe('DENY')
+  it('adds X-Frame-Options DENY', () => {
+    const r = applySecurityHeaders(new Response('OK'), httpRequest)
+    expect(r.headers.get('X-Frame-Options')).toBe('DENY')
   })
 
-  it('includes HSTS header', () => {
-    expect(SECURITY_HEADERS['Strict-Transport-Security']).toContain('max-age=31536000')
+  it('includes CSP with default-src', () => {
+    const r = applySecurityHeaders(new Response('OK'), httpRequest)
+    expect(r.headers.get('Content-Security-Policy')).toContain("default-src 'self'")
   })
 
-  it('includes Content-Security-Policy', () => {
-    expect(SECURITY_HEADERS['Content-Security-Policy']).toContain("default-src 'self'")
+  it('does NOT include upgrade-insecure-requests on HTTP', () => {
+    const r = applySecurityHeaders(new Response('OK'), httpRequest)
+    expect(r.headers.get('Content-Security-Policy')).not.toContain('upgrade-insecure-requests')
+  })
+
+  it('does NOT include HSTS on HTTP', () => {
+    const r = applySecurityHeaders(new Response('OK'), httpRequest)
+    expect(r.headers.get('Strict-Transport-Security')).toBeNull()
   })
 })
 
-describe('applySecurityHeaders', () => {
-  it('adds all security headers to a response', () => {
-    const original = new Response('OK', { status: 200 })
-    const secured  = applySecurityHeaders(original)
-    expect(secured.headers.get('X-Frame-Options')).toBe('DENY')
-    expect(secured.headers.get('X-Content-Type-Options')).toBe('nosniff')
+describe('applySecurityHeaders (HTTPS)', () => {
+  const httpsRequest = new Request('https://app.orcalis.io/')
+
+  it('includes upgrade-insecure-requests on HTTPS', () => {
+    const r = applySecurityHeaders(new Response('OK'), httpsRequest)
+    expect(r.headers.get('Content-Security-Policy')).toContain('upgrade-insecure-requests')
   })
 
+  it('includes HSTS on HTTPS', () => {
+    const r = applySecurityHeaders(new Response('OK'), httpsRequest)
+    expect(r.headers.get('Strict-Transport-Security')).toContain('max-age=31536000')
+  })
+})
+
+describe('applySecurityHeaders (no request)', () => {
   it('preserves response status and body', () => {
-    const original = new Response('hello', { status: 201 })
-    const secured  = applySecurityHeaders(original)
-    expect(secured.status).toBe(201)
+    const r = applySecurityHeaders(new Response('hello', { status: 201 }))
+    expect(r.status).toBe(201)
+  })
+
+  it('adds X-Frame-Options', () => {
+    const r = applySecurityHeaders(new Response('OK'))
+    expect(r.headers.get('X-Frame-Options')).toBe('DENY')
   })
 })

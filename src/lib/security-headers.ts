@@ -1,33 +1,27 @@
 /**
  * Security Headers Middleware
- * Applied to all server responses for production hardening.
+ * HTTPS-only headers are skipped when the request arrives over plain HTTP
+ * (dev server, local network) to avoid breaking asset loading.
  */
 
-export const SECURITY_HEADERS: Record<string, string> = {
-  // Prevent XSS
+const ALWAYS_HEADERS: Record<string, string> = {
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
   "X-XSS-Protection": "1; mode=block",
-
-  // HTTPS only
-  "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
-
-  // Referrer policy
   "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(self), microphone=(self), geolocation=(self), payment=(self)",
+};
 
-  // Cross-Origin isolation (required for SharedArrayBuffer / high-res timers)
+const HTTPS_ONLY_HEADERS: Record<string, string> = {
+  // Only safe over HTTPS — breaks HTTP dev servers if included
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
   "Cross-Origin-Opener-Policy": "same-origin",
   "Cross-Origin-Embedder-Policy": "credentialless",
   "Cross-Origin-Resource-Policy": "same-origin",
+};
 
-  // Permissions policy — restrict sensitive APIs
-  "Permissions-Policy": "camera=(self), microphone=(self), geolocation=(self), payment=(self)",
-
-  // Content Security Policy
-  // Content Security Policy — 'unsafe-eval' removed for production hardening.
-  // 'unsafe-inline' for scripts is required by TanStack Start's SSR hydration inline scripts.
-  // Tighten further with per-response nonces once TanStack supports CSP nonce injection.
-  "Content-Security-Policy": [
+function buildCsp(httpsMode: boolean): string {
+  const directives = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
@@ -40,18 +34,31 @@ export const SECURITY_HEADERS: Record<string, string> = {
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
-    "upgrade-insecure-requests",
-  ].join("; "),
-};
+    // upgrade-insecure-requests only in HTTPS mode — on HTTP it breaks all asset loads
+    ...(httpsMode ? ["upgrade-insecure-requests"] : []),
+  ];
+  return directives.join("; ");
+}
 
-/**
- * Apply security headers to a Response object.
- */
-export function applySecurityHeaders(response: Response): Response {
+export function applySecurityHeaders(response: Response, request?: Request): Response {
+  const isHttps = request
+    ? new URL(request.url).protocol === "https:"
+    : false;
+
   const headers = new Headers(response.headers);
-  for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
-    headers.set(key, value);
+
+  for (const [k, v] of Object.entries(ALWAYS_HEADERS)) {
+    headers.set(k, v);
   }
+
+  if (isHttps) {
+    for (const [k, v] of Object.entries(HTTPS_ONLY_HEADERS)) {
+      headers.set(k, v);
+    }
+  }
+
+  headers.set("Content-Security-Policy", buildCsp(isHttps));
+
   return new Response(response.body, {
     status: response.status,
     statusText: response.statusText,
