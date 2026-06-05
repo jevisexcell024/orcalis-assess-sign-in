@@ -1,6 +1,5 @@
 import "./lib/error-capture";
 import { applySecurityHeaders } from "./lib/security-headers";
-
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
@@ -19,11 +18,42 @@ async function getServerEntry(): Promise<ServerEntry> {
   return serverEntryPromise;
 }
 
-function brandedErrorResponse(): Response {
-  return new Response(renderErrorPage(), {
-    status: 500,
-    headers: { "content-type": "text/html; charset=utf-8" },
-  });
+const MISSING_SUPABASE_HINT = `# Fix: create a .env file in the project root
+
+cp .env.example .env
+
+Then fill in at minimum:
+
+  VITE_SUPABASE_URL=https://<your-project-ref>.supabase.co
+  VITE_SUPABASE_ANON_KEY=<your-anon-key>
+
+Get these from: https://supabase.com/dashboard → your project → Settings → API
+
+After saving .env, restart the dev server:
+
+  npm run dev`;
+
+function brandedErrorResponse(error?: unknown): Response {
+  const message = errorMessage(error);
+  const isMissingSupabase = message.includes("Missing Supabase environment variable");
+
+  return new Response(
+    renderErrorPage({
+      reason: message || undefined,
+      hint: isMissingSupabase ? MISSING_SUPABASE_HINT : undefined,
+    }),
+    {
+      status: 500,
+      headers: { "content-type": "text/html; charset=utf-8" },
+    },
+  );
+}
+
+function errorMessage(error: unknown): string {
+  if (!error) return "";
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  try { return JSON.stringify(error); } catch { return String(error); }
 }
 
 function isCatastrophicSsrErrorBody(body: string, responseStatus: number): boolean {
@@ -51,8 +81,6 @@ function isCatastrophicSsrErrorBody(body: string, responseStatus: number): boole
   );
 }
 
-// h3 swallows in-handler throws into a normal 500 Response with body
-// {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
   if (response.status < 500) return response;
   const contentType = response.headers.get("content-type") ?? "";
@@ -63,8 +91,9 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
     return response;
   }
 
-  console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
-  return brandedErrorResponse();
+  const captured = consumeLastCapturedError();
+  console.error(captured ?? new Error(`h3 swallowed SSR error: ${body}`));
+  return brandedErrorResponse(captured);
 }
 
 export default {
@@ -73,16 +102,15 @@ export default {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       const normalized = await normalizeCatastrophicSsrResponse(response);
-      // Apply security headers to all HTML responses.
-      // Skip binary/stream responses (e.g. certificate PDFs, event-streams).
       const ct = normalized.headers.get("content-type") ?? "";
-      const skipHeaders = ct.startsWith("text/event-stream") ||
-                          ct.startsWith("application/octet-stream") ||
-                          ct.startsWith("image/");
+      const skipHeaders =
+        ct.startsWith("text/event-stream") ||
+        ct.startsWith("application/octet-stream") ||
+        ct.startsWith("image/");
       return skipHeaders ? normalized : applySecurityHeaders(normalized);
     } catch (error) {
       console.error(error);
-      return applySecurityHeaders(brandedErrorResponse());
+      return applySecurityHeaders(brandedErrorResponse(error));
     }
   },
 };
