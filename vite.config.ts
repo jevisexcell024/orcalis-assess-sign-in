@@ -11,6 +11,7 @@ export default defineConfig({
   vite: {
     server: {
       preTransformRequests: false,
+      hmr: { overlay: false },
     },
     optimizeDeps: {
       entries: [
