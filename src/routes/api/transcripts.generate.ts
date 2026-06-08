@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { getAuthenticatedUser } from "./_auth";
+import { getAuthenticatedUser } from "./-_auth";
 
 /** Builds a plain-text transcript for now.
  *  Swap the body generation for a real PDF library (e.g. pdf-lib, pdfmake)

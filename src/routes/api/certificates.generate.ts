@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PDFDocument, rgb, StandardFonts, degrees } from "pdf-lib";
-import { getAuthenticatedUser } from "./_auth";
+import { getAuthenticatedUser } from "./-_auth";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 

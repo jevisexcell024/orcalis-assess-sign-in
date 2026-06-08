@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { getAuthenticatedUser } from "./_auth";
+import { getAuthenticatedUser } from "./-_auth";
 
 export const Route = createFileRoute("/api/results/export")({
   server: {
