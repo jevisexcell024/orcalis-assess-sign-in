@@ -922,12 +922,3 @@ function AIGeneratorDialog({
     </Dialog>
   );
 }
-eck className="h-4 w-4" />}
-              {importing ? "Importing…" : `Import ${selected.size} question${selected.size !== 1 ? "s" : ""}`}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
