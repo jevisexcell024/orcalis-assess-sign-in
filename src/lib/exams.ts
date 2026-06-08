@@ -262,6 +262,32 @@ export async function deleteQuestion(id: string) {
   if (error) throw error;
 }
 
+/** Copy bank questions into an exam section (preserves all content fields). */
+export async function importBankQuestionsToSection(
+  sectionId: string,
+  bankQuestions: Question[],
+  startPosition: number,
+) {
+  const { data: userRes } = await supabase.auth.getUser();
+  const userId = userRes.user?.id;
+  if (!userId) throw new Error("Not authenticated");
+
+  const rows = bankQuestions.map((q, i) => ({
+    section_id: sectionId,
+    position: startPosition + i,
+    prompt: q.prompt,
+    type: q.type,
+    difficulty: q.difficulty,
+    points: q.points,
+    options: q.options,
+    shuffle_options: q.shuffle_options,
+    created_by: userId,
+  }));
+
+  const { error } = await supabase.from("questions").insert(rows);
+  if (error) throw error;
+}
+
 // ---------- Question Bank ----------
 
 export async function listBankQuestions() {

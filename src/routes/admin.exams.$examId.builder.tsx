@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Check,
   GripVertical,
+  Library,
   Plus,
   Save,
+  Search,
   Trash2,
   Sparkles,
 } from "lucide-react";
@@ -29,12 +31,22 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import {
   createQuestion,
   createSection,
   deleteQuestion,
   getExamWithContent,
+  importBankQuestionsToSection,
+  listBankQuestions,
   updateExam,
   updateQuestion,
   updateSection,
@@ -62,6 +74,7 @@ function BuilderPage() {
   const [publishing, setPublishing] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [draftTitle, setDraftTitle] = useState("");
+  const [bankSectionId, setBankSectionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selectedQuestionId && data?.questions[0]) {
@@ -271,14 +284,24 @@ function BuilderPage() {
                       </li>
                     ))}
                   </ul>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mt-1 w-full justify-start text-xs text-muted-foreground"
-                    onClick={() => handleAddQuestion(s.id)}
-                  >
-                    <Plus className="mr-1 h-3.5 w-3.5" /> Add question
-                  </Button>
+                  <div className="mt-1 flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1 justify-start text-xs text-muted-foreground"
+                      onClick={() => handleAddQuestion(s.id)}
+                    >
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Add question
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="flex-1 justify-start text-xs text-violet-600 hover:text-violet-700"
+                      onClick={() => setBankSectionId(s.id)}
+                    >
+                      <Library className="mr-1 h-3.5 w-3.5" /> From bank
+                    </Button>
+                  </div>
                 </div>
               );
             })
@@ -310,6 +333,19 @@ function BuilderPage() {
         </div>
       </div>
 
+      {/* Bank picker dialog */}
+      {bankSectionId && (
+        <BankPickerDialog
+          sectionId={bankSectionId}
+          existingCount={questions.filter((q) => q.section_id === bankSectionId).length}
+          onClose={() => setBankSectionId(null)}
+          onImported={() => {
+            setBankSectionId(null);
+            void invalidate();
+          }}
+        />
+      )}
+
       {/* Floating status indicator */}
       <div className="pointer-events-none fixed bottom-6 right-6 z-30">
         <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-background p-1 shadow-lg">
@@ -332,6 +368,157 @@ function BuilderPage() {
     </AdminShell>
   );
 }
+
+// ---------- Bank Picker ----------
+
+const TYPE_LABELS: Record<Question["type"], string> = {
+  mcq: "MCQ",
+  true_false: "T/F",
+  descriptive: "Essay",
+  coding: "Code",
+};
+
+const DIFF_TONE: Record<Question["difficulty"], string> = {
+  easy: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  medium: "bg-amber-50 text-amber-700 ring-amber-200",
+  hard: "bg-rose-50 text-rose-700 ring-rose-200",
+};
+
+function BankPickerDialog({
+  sectionId,
+  existingCount,
+  onClose,
+  onImported,
+}: {
+  sectionId: string;
+  existingCount: number;
+  onClose: () => void;
+  onImported: () => void;
+}) {
+  const { data: bank = [], isLoading } = useQuery({
+    queryKey: ["admin", "question-bank"],
+    queryFn: listBankQuestions,
+  });
+
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [importing, setImporting] = useState(false);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return bank;
+    const q = search.toLowerCase();
+    return bank.filter((b) => b.prompt.toLowerCase().includes(q));
+  }, [bank, search]);
+
+  const toggle = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+
+  const handleImport = async () => {
+    if (selected.size === 0) return;
+    setImporting(true);
+    try {
+      const qs = bank.filter((b) => selected.has(b.id));
+      await importBankQuestionsToSection(sectionId, qs, existingCount);
+      toast.success(`${qs.length} question${qs.length !== 1 ? "s" : ""} added to section`);
+      onImported();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Import failed");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="flex max-h-[80vh] flex-col gap-0 p-0 sm:max-w-2xl">
+        <DialogHeader className="border-b border-border px-6 py-4">
+          <DialogTitle>Add from Question Bank</DialogTitle>
+        </DialogHeader>
+
+        <div className="relative border-b border-border px-4 py-3">
+          <Search className="pointer-events-none absolute left-7 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search questions\u2026"
+            className="pl-9"
+            autoFocus
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <p className="p-8 text-center text-sm text-muted-foreground">Loading\u2026</p>
+          ) : filtered.length === 0 ? (
+            <p className="p-8 text-center text-sm text-muted-foreground">
+              {bank.length === 0 ? "No questions in the bank yet." : "No matches."}
+            </p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {filtered.map((q) => (
+                <li
+                  key={q.id}
+                  className={cn(
+                    "flex cursor-pointer items-start gap-3 px-6 py-3 transition hover:bg-muted/50",
+                    selected.has(q.id) && "bg-muted/40",
+                  )}
+                  onClick={() => toggle(q.id)}
+                >
+                  <Checkbox
+                    checked={selected.has(q.id)}
+                    onCheckedChange={() => toggle(q.id)}
+                    className="mt-0.5 shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="line-clamp-2 text-sm leading-snug">
+                      {q.prompt || <span className="italic text-muted-foreground">Untitled question</span>}
+                    </p>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      <span className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 ring-1 ring-sky-200">
+                        {TYPE_LABELS[q.type]}
+                      </span>
+                      <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1", DIFF_TONE[q.difficulty])}>
+                        {q.difficulty}
+                      </span>
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                        {q.points} pt{q.points !== 1 ? "s" : ""}
+                      </span>
+                      {q.subject && (
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+                          {q.subject}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <DialogFooter className="border-t border-border px-6 py-4">
+          <span className="mr-auto text-sm text-muted-foreground">
+            {selected.size > 0 ? `${selected.size} selected` : "Select questions to add"}
+          </span>
+          <Button variant="ghost" onClick={onClose} disabled={importing}>Cancel</Button>
+          <Button
+            onClick={handleImport}
+            disabled={importing || selected.size === 0}
+          >
+            {importing ? "Adding\u2026" : `Add ${selected.size > 0 ? selected.size : ""} question${selected.size !== 1 ? "s" : ""}`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------- Question Editor ----------
 
 function QuestionEditor({
   question,
