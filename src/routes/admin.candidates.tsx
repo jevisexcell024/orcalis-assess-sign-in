@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { listExams } from "@/lib/exams";
 import { toast } from "sonner";
 import { exportToCSV } from "@/lib/csv";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -53,6 +54,11 @@ function CandidatesPage() {
   const [newEmail, setNewEmail] = useState("");
   const [selectedExamId, setSelectedExamId] = useState("");
   const [registering, setRegistering] = useState(false);
+
+  const { data: examList = [] } = useQuery({
+    queryKey: ["admin", "exams"],
+    queryFn: listExams,
+  });
   const qc = useQueryClient();
 
   async function handleRegister() {
@@ -308,8 +314,19 @@ function CandidatesPage() {
               <Input placeholder="candidate@example.com" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Exam ID</Label>
-              <Input placeholder="Paste exam UUID" value={selectedExamId} onChange={(e) => setSelectedExamId(e.target.value)} />
+              <Label>Exam</Label>
+              <select
+                value={selectedExamId}
+                onChange={(e) => setSelectedExamId(e.target.value)}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Select an exam…</option>
+                {examList.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.title}{e.term ? ` (${e.term})` : ""}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <DialogFooter>
