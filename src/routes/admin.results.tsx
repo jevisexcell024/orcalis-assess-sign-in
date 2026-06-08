@@ -17,10 +17,11 @@ import {
   getAttemptForReview,
   gradeAnswer,
   finalizeManualGrade,
+  publishAttemptResult,
   type Question,
   type QuestionOption,
+  type ExamAnswer,
 } from "@/lib/exams";
-import type { ExamAnswer } from "@/lib/exams";
 
 export const Route = createFileRoute("/admin/results")({
   component: ResultsPage,
@@ -65,7 +66,6 @@ function AttemptReviewDialog({
     queryFn: () => getAttemptForReview(attemptId),
   });
 
-  // local scores for descriptive/coding: answerId → points string
   const [scores, setScores] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -80,7 +80,6 @@ function AttemptReviewDialog({
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Save each manually entered score
       const tasks: Promise<void>[] = [];
       for (const [answerId, rawPts] of Object.entries(scores)) {
         const pts = parseFloat(rawPts);
@@ -105,7 +104,6 @@ function AttemptReviewDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="flex w-full max-w-2xl flex-col rounded-2xl border border-border bg-background shadow-2xl max-h-[90vh]">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
             <h2 className="font-semibold">Answer Sheet Review</h2>
@@ -113,15 +111,11 @@ function AttemptReviewDialog({
               {examTitle} · <span className="font-mono">{attemptId.slice(0, 12)}…</span>
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-md p-1 text-muted-foreground transition hover:bg-muted"
-          >
+          <button onClick={onClose} className="rounded-md p-1 text-muted-foreground transition hover:bg-muted">
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {isLoading ? (
             <p className="py-16 text-center text-sm text-muted-foreground">Loading…</p>
@@ -132,17 +126,10 @@ function AttemptReviewDialog({
               {answers.map((ans, idx) => {
                 const q = qMap[ans.question_id];
                 if (!q) return null;
-
                 const isManual = q.type === "descriptive" || q.type === "coding";
                 const opts = (q.options as unknown as QuestionOption[]) ?? [];
-
-                // For MCQ/T-F: figure out selected + correctness
                 const selectedIdx = (ans.response as { selected?: number } | null)?.selected;
-                const selectedOpt = selectedIdx !== undefined ? opts[selectedIdx] : undefined;
-
-                // For descriptive/coding
                 const textResponse = (ans.response as { text?: string } | null)?.text ?? "";
-
                 const currentScore = scores[ans.id] ?? (ans.points_awarded !== null ? String(ans.points_awarded) : "");
 
                 return (
@@ -164,28 +151,22 @@ function AttemptReviewDialog({
                       </div>
                       <span className="text-xs text-muted-foreground">{q.points} pt{q.points !== 1 ? "s" : ""}</span>
                     </div>
-
                     <p className="mb-3 text-sm font-medium leading-snug">
                       {q.prompt || <span className="italic text-muted-foreground">Untitled question</span>}
                     </p>
-
                     {!isManual ? (
-                      /* MCQ / T-F — show selected option + correctness */
                       <div className="space-y-1.5">
                         {opts.map((opt, i) => {
                           const isSelected = selectedIdx === i;
                           const isCorrect = opt.is_correct;
                           return (
-                            <div
-                              key={i}
-                              className={cn(
-                                "flex items-center gap-2 rounded-md border px-3 py-2 text-sm",
-                                isSelected && isCorrect && "border-emerald-300 bg-emerald-50 text-emerald-800",
-                                isSelected && !isCorrect && "border-rose-300 bg-rose-50 text-rose-800",
-                                !isSelected && isCorrect && "border-emerald-200 bg-emerald-50/50 text-emerald-700",
-                                !isSelected && !isCorrect && "border-border bg-background text-muted-foreground",
-                              )}
-                            >
+                            <div key={i} className={cn(
+                              "flex items-center gap-2 rounded-md border px-3 py-2 text-sm",
+                              isSelected && isCorrect && "border-emerald-300 bg-emerald-50 text-emerald-800",
+                              isSelected && !isCorrect && "border-rose-300 bg-rose-50 text-rose-800",
+                              !isSelected && isCorrect && "border-emerald-200 bg-emerald-50/50 text-emerald-700",
+                              !isSelected && !isCorrect && "border-border bg-background text-muted-foreground",
+                            )}>
                               {isSelected ? (
                                 isCorrect
                                   ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
@@ -206,7 +187,6 @@ function AttemptReviewDialog({
                         </p>
                       </div>
                     ) : (
-                      /* Descriptive / Coding — show text + score input */
                       <div className="space-y-3">
                         <Textarea
                           readOnly
@@ -241,7 +221,6 @@ function AttemptReviewDialog({
           )}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-2 border-t border-border px-6 py-4">
           <Button variant="ghost" onClick={onClose} disabled={saving}>Close</Button>
           {needsManualGrading && (
@@ -295,6 +274,20 @@ function ResultsPage() {
   }, [attempts]);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin", "results"] });
+
+  const handleBulkPublish = async () => {
+    const publishable = filtered.filter((a) => a.auto_scored && (a as any).exam_registrations?.id);
+    if (publishable.length === 0) { toast.info("No auto-graded results to publish."); return; }
+    try {
+      await Promise.all(publishable.map((a) =>
+        publishAttemptResult((a as any).exam_registrations.id, a.score ?? 0)
+      ));
+      toast.success(`${publishable.length} result${publishable.length !== 1 ? "s" : ""} published.`);
+      void invalidate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Bulk publish failed");
+    }
+  };
 
   return (
     <AdminShell
@@ -353,7 +346,7 @@ function ResultsPage() {
             }}>
             <Download className="h-4 w-4" /> Export
           </Button>
-          <Button size="sm" className="gap-1.5" onClick={() => toast.success(`${stats.autoScored} results queued for publishing.`)}>
+          <Button size="sm" className="gap-1.5" onClick={handleBulkPublish}>
             <Send className="h-4 w-4" /> Publish Results
           </Button>
         </div>
@@ -380,6 +373,7 @@ function ResultsPage() {
                 ) : (
                   filtered.map((a) => {
                     const title = (a as any).exam_registrations?.exams?.title ?? "–";
+                    const regId  = (a as any).exam_registrations?.id;
                     const pct = a.max_score ? ((a.score ?? 0) / a.max_score * 100).toFixed(1) : "–";
                     return (
                       <tr key={a.id} className="hover:bg-muted/20 transition-colors">
@@ -416,8 +410,18 @@ function ResultsPage() {
                             Review
                           </button>
                           <button
-                            onClick={() => toast.success(`Result for attempt ${a.id.slice(0, 8)} published to candidate.`)}
-                            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted"
+                            disabled={!regId}
+                            onClick={async () => {
+                              if (!regId) return;
+                              try {
+                                await publishAttemptResult(regId, a.score ?? 0);
+                                toast.success("Result published — candidate can now see their score.");
+                                void invalidate();
+                              } catch (err) {
+                                toast.error(err instanceof Error ? err.message : "Publish failed");
+                              }
+                            }}
+                            className="rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition hover:bg-muted disabled:opacity-40"
                           >
                             Publish
                           </button>

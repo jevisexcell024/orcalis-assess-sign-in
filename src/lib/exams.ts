@@ -338,6 +338,24 @@ export async function finalizeManualGrade(attemptId: string) {
   return total;
 }
 
+/** Mark a registration as completed and write the final score to it. */
+export async function publishAttemptResult(
+  registrationId: string,
+  score: number,
+) {
+  const { error } = await supabase
+    .from("exam_registrations")
+    .update({ status: "completed", score })
+    .eq("id", registrationId);
+  if (error) throw error;
+}
+
+/** Permanently delete an exam and all its sections/questions (cascade). */
+export async function deleteExam(id: string) {
+  const { error } = await supabase.from("exams").delete().eq("id", id);
+  if (error) throw error;
+}
+
 // ---------- Question Bank ----------
 
 export async function listBankQuestions() {

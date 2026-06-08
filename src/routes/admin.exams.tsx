@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, FileText, Calendar, MoreHorizontal } from "lucide-react";
+import { Plus, FileText, Calendar, MoreHorizontal, Archive, Trash2, Globe } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { listExams, createExam } from "@/lib/exams";
+import { listExams, createExam, updateExam, deleteExam } from "@/lib/exams";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -32,6 +32,7 @@ function ExamsPage() {
   const [title, setTitle] = useState("");
   const [term, setTerm] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
   const { data: exams, isLoading } = useQuery({
     queryKey: ["admin", "exams"],
@@ -121,7 +122,61 @@ function ExamsPage() {
                       day: "numeric",
                     })}
                   </span>
-                  <MoreHorizontal className="h-4 w-4" />
+                  <div className="relative" onClick={(ev) => ev.preventDefault()}>
+                    <button
+                      onClick={() => setMenuOpen(menuOpen === e.id ? null : e.id)}
+                      className="rounded p-1 text-muted-foreground hover:bg-muted"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                    {menuOpen === e.id && (
+                      <div className="absolute right-0 bottom-7 z-10 w-44 rounded-lg border border-border bg-background py-1 shadow-lg">
+                        <button
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted"
+                          onClick={async () => {
+                            setMenuOpen(null);
+                            const next = e.status === "published" ? "draft" : "published";
+                            try {
+                              await updateExam(e.id, { status: next });
+                              await qc.invalidateQueries({ queryKey: ["admin", "exams"] });
+                              toast.success(next === "published" ? "Exam published." : "Exam moved to draft.");
+                            } catch (err) { toast.error("Update failed"); }
+                          }}
+                        >
+                          <Globe className="h-3.5 w-3.5" />
+                          {e.status === "published" ? "Unpublish" : "Publish"}
+                        </button>
+                        <button
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs hover:bg-muted"
+                          onClick={async () => {
+                            setMenuOpen(null);
+                            try {
+                              await updateExam(e.id, { status: "archived" });
+                              await qc.invalidateQueries({ queryKey: ["admin", "exams"] });
+                              toast.success("Exam archived.");
+                            } catch (err) { toast.error("Archive failed"); }
+                          }}
+                        >
+                          <Archive className="h-3.5 w-3.5" /> Archive
+                        </button>
+                        <div className="my-1 border-t border-border" />
+                        <button
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-rose-600 hover:bg-rose-50"
+                          onClick={async () => {
+                            setMenuOpen(null);
+                            if (!confirm("Delete this exam and all its questions? This cannot be undone.")) return;
+                            try {
+                              await deleteExam(e.id);
+                              await qc.invalidateQueries({ queryKey: ["admin", "exams"] });
+                              toast.success("Exam deleted.");
+                            } catch (err) { toast.error("Delete failed"); }
+                          }}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </Link>
             ))}

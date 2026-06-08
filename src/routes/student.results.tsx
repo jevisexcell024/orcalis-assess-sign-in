@@ -6,6 +6,60 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
+
+function downloadCertificate(examTitle: string, term: string | null, score: number, submittedAt: string) {
+  const date = new Date(submittedAt).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+  const certNo = `ORC-${Date.now().toString(36).toUpperCase()}`;
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Certificate – ${examTitle}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #fff; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .cert { width: 820px; min-height: 580px; border: 12px solid #1e3a8a; padding: 56px 72px; position: relative; text-align: center; }
+  .cert::before { content: ''; position: absolute; inset: 8px; border: 2px solid #93c5fd; pointer-events: none; }
+  .logo { font-size: 13px; letter-spacing: .2em; text-transform: uppercase; color: #1e3a8a; font-weight: 600; }
+  h1 { font-family: 'Playfair Display', serif; font-size: 40px; color: #1e3a8a; margin: 24px 0 8px; }
+  .sub { font-size: 14px; color: #64748b; letter-spacing: .05em; }
+  .name-line { font-family: 'Playfair Display', serif; font-size: 28px; color: #0f172a; margin: 32px 0 8px; border-bottom: 2px solid #1e3a8a; display: inline-block; padding: 0 32px 8px; }
+  .exam { font-size: 18px; color: #1e3a8a; font-weight: 500; margin: 16px 0 4px; }
+  .term { font-size: 13px; color: #64748b; }
+  .score { display: inline-block; margin: 24px 0; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 8px 24px; font-weight: 600; color: #1e40af; }
+  .footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 48px; }
+  .sig { text-align: center; }
+  .sig-line { width: 140px; border-top: 1px solid #94a3b8; margin-bottom: 6px; }
+  .sig-label { font-size: 11px; color: #64748b; }
+  .cert-no { font-size: 10px; color: #94a3b8; letter-spacing: .1em; }
+  @media print { body { min-height: unset; } }
+</style>
+</head>
+<body>
+<div class="cert">
+  <div class="logo">Orcalis Assess · Certificate of Achievement</div>
+  <h1>Certificate of Achievement</h1>
+  <p class="sub">This is to certify that the candidate has successfully completed</p>
+  <div class="exam">${examTitle}</div>
+  ${term ? `<div class="term">${term}</div>` : ""}
+  <div class="score">Score: ${score}% &nbsp;·&nbsp; Pass</div>
+  <div class="footer">
+    <div class="sig"><div class="sig-line"></div><div class="sig-label">Authorised Signatory</div></div>
+    <div style="text-align:center">
+      <div style="font-size:11px;color:#64748b">Issued: ${date}</div>
+      <div class="cert-no">No. ${certNo}</div>
+    </div>
+    <div class="sig"><div class="sig-line"></div><div class="sig-label">Institution Seal</div></div>
+  </div>
+</div>
+<script>window.onload=()=>{window.print();}</script>
+</body>
+</html>`;
+  const w = window.open("", "_blank");
+  if (w) { w.document.write(html); w.document.close(); }
+}
+
 export const Route = createFileRoute("/student/results")({
   component: StudentResultsPage,
   head: () => ({ meta: [{ title: "My Results · Orcalis Assess" }] }),
@@ -111,7 +165,19 @@ function StudentResultsPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         {passed
-                          ? <Button variant="outline" size="sm" className="h-7 gap-1 text-xs"><Download className="h-3 w-3" /> Download</Button>
+                          ? <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 gap-1 text-xs"
+                          onClick={() => downloadCertificate(
+                            (a as any).exam_registrations?.exams?.title ?? "Exam",
+                            (a as any).exam_registrations?.exams?.term ?? null,
+                            pct,
+                            a.submitted_at ?? new Date().toISOString(),
+                          )}
+                        >
+                          <Download className="h-3 w-3" /> Download
+                        </Button>
                           : <span className="text-xs text-muted-foreground">–</span>
                         }
                       </td>
