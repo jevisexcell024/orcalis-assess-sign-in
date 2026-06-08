@@ -288,6 +288,56 @@ export async function importBankQuestionsToSection(
   if (error) throw error;
 }
 
+/** Load all answers + full questions for an attempt (admin view — includes correct answers). */
+export async function getAttemptForReview(attemptId: string) {
+  const { data: answers, error: aErr } = await supabase
+    .from("exam_answers")
+    .select("*")
+    .eq("attempt_id", attemptId);
+  if (aErr) throw aErr;
+
+  const questionIds = (answers ?? []).map((a) => a.question_id);
+  let questions: Question[] = [];
+  if (questionIds.length > 0) {
+    const { data: qs, error: qErr } = await supabase
+      .from("questions")
+      .select("*")
+      .in("id", questionIds);
+    if (qErr) throw qErr;
+    questions = qs ?? [];
+  }
+
+  return { answers: answers ?? [], questions };
+}
+
+/** Persist a manual points_awarded score for a single answer. */
+export async function gradeAnswer(answerId: string, pointsAwarded: number) {
+  const { error } = await supabase
+    .from("exam_answers")
+    .update({ points_awarded: pointsAwarded })
+    .eq("id", answerId);
+  if (error) throw error;
+}
+
+/** Recalculate the attempt total from all points_awarded values and mark as reviewed. */
+export async function finalizeManualGrade(attemptId: string) {
+  const { data: answers, error: aErr } = await supabase
+    .from("exam_answers")
+    .select("points_awarded")
+    .eq("attempt_id", attemptId);
+  if (aErr) throw aErr;
+
+  const total = (answers ?? []).reduce((s, a) => s + (a.points_awarded ?? 0), 0);
+
+  const { error } = await supabase
+    .from("exam_attempts")
+    .update({ score: total, auto_scored: true })
+    .eq("id", attemptId);
+  if (error) throw error;
+
+  return total;
+}
+
 // ---------- Question Bank ----------
 
 export async function listBankQuestions() {
