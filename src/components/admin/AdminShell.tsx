@@ -1,4 +1,5 @@
 import React from "react";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -83,6 +84,7 @@ export function AdminShell({
   children: ReactNode;
 }) {
   const navigate = useNavigate();
+  const { displayName, initials, avatarUrl } = useCurrentUser();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   // Live unread notification count — polls every 60s + realtime
@@ -186,10 +188,10 @@ export function AdminShell({
               className="flex items-center gap-2.5 rounded-lg border border-border bg-background py-1 pl-1 pr-3 transition hover:bg-muted"
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-sky-400 to-indigo-500 text-[11px] font-semibold text-white">
-                AC
+                {initials}
               </div>
               <div className="hidden text-left sm:block">
-                <p className="text-sm font-semibold leading-tight">Alex Carter</p>
+                <p className="text-sm font-semibold leading-tight">{displayName}</p>
                 <p className="text-[11px] text-muted-foreground">Super Admin</p>
               </div>
               <LogOut className="ml-1 hidden h-3.5 w-3.5 text-muted-foreground sm:block" />

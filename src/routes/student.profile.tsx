@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { User, Mail, Phone, MapPin, Shield, Bell, LogOut, Save, Camera } from "lucide-react";
 import { StudentShell } from "@/components/student/StudentShell";
@@ -13,6 +13,7 @@ import { MFASetup } from "@/components/auth/MFASetup";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 export const Route = createFileRoute("/student/profile")({
   component: StudentProfilePage,
@@ -29,6 +30,7 @@ function StudentProfilePage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("profile");
   const [saving, setSaving] = useState(false);
+  const { displayName, initials, email: authEmail, avatarUrl } = useCurrentUser();
 
   const { data: profile } = useQuery({
     queryKey: ["student", "profile"],
@@ -40,17 +42,46 @@ function StudentProfilePage() {
     },
   });
 
-  const [fullName, setFullName] = useState(profile?.contact_name ?? "");
+  const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+
+  // Sync form when profile data arrives
+  useEffect(() => {
+    if (profile) {
+      setFullName(profile.contact_name ?? displayName ?? "");
+      setPhone((profile as any).phone ?? "");
+      setAddress((profile as any).address ?? "");
+    } else if (displayName) {
+      setFullName(displayName);
+    }
+  }, [profile, displayName]);
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [pushNotifs, setPushNotifs] = useState(true);
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setSaving(false);
-    toast.success("Profile updated.");
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // Update auth metadata
+        await supabase.auth.updateUser({ data: { full_name: fullName } });
+        // Upsert profile row
+        await (supabase as any).from("profiles").upsert({
+          user_id: user.id,
+          contact_name: fullName,
+          email: authEmail || user.email,
+          phone,
+          address,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+        toast.success("Profile updated.");
+      }
+    } catch {
+      toast.error("Failed to save profile.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -59,17 +90,21 @@ function StudentProfilePage() {
         {/* Avatar header */}
         <div className="flex items-center gap-5 rounded-2xl border border-border bg-background p-6 shadow-sm">
           <div className="relative">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 text-3xl font-bold text-white">
-              {(profile?.contact_name ?? profile?.email ?? "U")[0]?.toUpperCase()}
-            </div>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={displayName} className="h-20 w-20 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 text-3xl font-bold text-white">
+                {initials}
+              </div>
+            )}
             <button className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full border-2 border-background bg-muted text-muted-foreground hover:bg-foreground hover:text-background transition">
               <Camera className="h-3 w-3" />
             </button>
           </div>
           <div>
-            <h1 className="text-xl font-bold">{profile?.contact_name ?? "Student"}</h1>
-            <p className="text-sm text-muted-foreground">{profile?.email}</p>
-            <p className="mt-1 text-xs text-muted-foreground">{profile?.institution_name ?? "Orcalis University"}</p>
+            <h1 className="text-xl font-bold">{fullName || displayName || "Student"}</h1>
+            <p className="text-sm text-muted-foreground">{authEmail}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{(profile as any)?.institution_name ?? ""}</p>
           </div>
         </div>
 

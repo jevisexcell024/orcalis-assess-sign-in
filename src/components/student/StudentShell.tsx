@@ -1,4 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useCurrentUser } from "@/hooks/useCurrentUser";
 import {
   Award,
   BarChart2,
@@ -30,6 +31,7 @@ const nav: { label: string; to: string; icon: React.ComponentType<{ className?: 
 
 export function StudentShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const { displayName, initials, avatarUrl } = useCurrentUser();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -73,11 +75,11 @@ export function StudentShell({ children }: { children: ReactNode }) {
         <div className="border-t border-border p-3">
           <div className="flex items-center gap-3 rounded-xl px-2 py-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-indigo-500 text-xs font-semibold text-white">
-              AC
+              {initials}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">Alex Carter</p>
-              <p className="truncate text-xs text-muted-foreground">Candidate · Level 3</p>
+              <p className="truncate text-sm font-semibold">{displayName}</p>
+              <p className="truncate text-xs text-muted-foreground">Candidate</p>
             </div>
           </div>
           <button
