@@ -112,7 +112,7 @@ export function AdminShell({
         <div className="flex h-16 items-center gap-2.5 px-5">
           <div
             className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-md"
-            style={{ background: "var(--gradient-primary)" }}
+            style={{ background: "oklch(0.385 0.12 247)" }}
           >
             <ShieldCheck className="h-4.5 w-4.5" strokeWidth={2.5} />
           </div>
@@ -187,7 +187,7 @@ export function AdminShell({
               title="Sign out"
               className="flex items-center gap-2.5 rounded-lg border border-border bg-background py-1 pl-1 pr-3 transition hover:bg-muted"
             >
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-sky-400 to-indigo-500 text-[11px] font-semibold text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md text-[11px] font-semibold text-white" style={{ background: "oklch(0.385 0.12 247)" }}>
                 {initials}
               </div>
               <div className="hidden text-left sm:block">
@@ -243,7 +243,7 @@ function NavSection({
                     ? "font-semibold text-white shadow-sm"
                     : "text-foreground/75 hover:bg-muted hover:text-foreground",
                 )}
-                style={active ? { background: "var(--gradient-primary)" } : undefined}
+                style={active ? { background: "oklch(0.385 0.12 247)" } : undefined}
               >
                 <item.icon className="h-4 w-4" />
                 <span className="flex-1">{item.label}</span>
