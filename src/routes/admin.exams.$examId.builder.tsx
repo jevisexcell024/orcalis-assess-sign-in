@@ -7,8 +7,6 @@ import {
   Plus,
   Save,
   Trash2,
-  Undo2,
-  Redo2,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -37,7 +35,9 @@ import {
   createSection,
   deleteQuestion,
   getExamWithContent,
+  updateExam,
   updateQuestion,
+  updateSection,
   type Question,
   type QuestionOption,
 } from "@/lib/exams";
@@ -59,6 +59,9 @@ function BuilderPage() {
   });
 
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [draftTitle, setDraftTitle] = useState("");
 
   useEffect(() => {
     if (!selectedQuestionId && data?.questions[0]) {
@@ -72,6 +75,43 @@ function BuilderPage() {
   );
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin", "exam", examId] });
+
+  const handlePublish = async () => {
+    if (!data) return;
+    const next = data.exam.status === "published" ? "draft" : "published";
+    setPublishing(true);
+    try {
+      await updateExam(examId, { status: next });
+      await invalidate();
+      toast.success(next === "published" ? "Exam published — candidates can now see it." : "Exam moved back to draft.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update exam status");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleSaveTitle = async () => {
+    if (!draftTitle.trim() || !data) return;
+    try {
+      await updateExam(examId, { title: draftTitle.trim() });
+      await invalidate();
+      setEditingTitle(false);
+      toast.success("Exam title saved");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save title");
+    }
+  };
+
+  const handleSectionTimeLimit = async (sectionId: string, minutes: number | null) => {
+    try {
+      await updateSection(sectionId, { time_limit_minutes: minutes });
+      await invalidate();
+      toast.success("Section time limit updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update time limit");
+    }
+  };
 
   const handleAddSection = async () => {
     if (!data) return;
@@ -135,14 +175,33 @@ function BuilderPage() {
       ]}
       actions={
         <>
-          <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ring-1",
+              exam.status === "published"
+                ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                : exam.status === "archived"
+                  ? "bg-slate-100 text-slate-600 ring-slate-200"
+                  : "bg-amber-50 text-amber-700 ring-amber-200",
+            )}
+          >
             {exam.status}
           </span>
           <div className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" size="sm">
-              Preview
-            </Button>
-            <Button size="sm">Publish</Button>
+            {exam.status !== "archived" && (
+              <Button
+                size="sm"
+                variant={exam.status === "published" ? "outline" : "default"}
+                onClick={handlePublish}
+                disabled={publishing}
+              >
+                {publishing
+                  ? "Saving…"
+                  : exam.status === "published"
+                    ? "Unpublish"
+                    : "Publish"}
+              </Button>
+            )}
           </div>
         </>
       }
@@ -168,6 +227,23 @@ function BuilderPage() {
                     <span className="text-[10px] font-medium text-muted-foreground">
                       {sectionQs.length} q
                     </span>
+                  </div>
+                  <div className="flex items-center gap-2 px-1 pb-1">
+                    <Label className="text-[10px] text-muted-foreground shrink-0">Time limit</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="mins (0 = none)"
+                      defaultValue={s.time_limit_minutes ?? ""}
+                      className="h-6 text-xs px-2 py-0"
+                      onBlur={(e) => {
+                        const val = e.target.value === "" ? null : Number(e.target.value);
+                        if (val !== s.time_limit_minutes) {
+                          void handleSectionTimeLimit(s.id, val === 0 ? null : val);
+                        }
+                      }}
+                    />
+                    <span className="text-[10px] text-muted-foreground shrink-0">min</span>
                   </div>
                   <ul className="mt-2 space-y-1">
                     {sectionQs.map((q, i) => (
@@ -234,18 +310,22 @@ function BuilderPage() {
         </div>
       </div>
 
-      {/* Floating actions */}
+      {/* Floating status indicator */}
       <div className="pointer-events-none fixed bottom-6 right-6 z-30">
         <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-background p-1 shadow-lg">
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Undo2 className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Redo2 className="h-4 w-4" />
-          </Button>
+          <span className="px-3 text-xs text-muted-foreground">
+            Questions auto-save on edit
+          </span>
           <div className="mx-1 h-5 w-px bg-border" />
-          <Button size="sm" className="rounded-full px-4">
-            <Save className="mr-1.5 h-3.5 w-3.5" /> Save
+          <Button
+            size="sm"
+            className="rounded-full px-4"
+            variant={exam.status === "published" ? "destructive" : "default"}
+            onClick={handlePublish}
+            disabled={publishing}
+          >
+            <Save className="mr-1.5 h-3.5 w-3.5" />
+            {publishing ? "Saving…" : exam.status === "published" ? "Unpublish" : "Publish"}
           </Button>
         </div>
       </div>

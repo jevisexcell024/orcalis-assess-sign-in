@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
-import { AlertTriangle, Mic, Users2, Wifi, Activity } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, Mic, Monitor, Users, Users2, Wifi, Activity } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -231,11 +231,24 @@ function LiveMonitorPage() {
                     </div>
                     {flags.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
-                        {flags.map((f, i) => (
-                          <Badge key={`${f}-${i}`} variant="outline" className="gap-1 border-rose-200 bg-rose-50 text-[10px] text-rose-600">
-                            <Mic className="h-3 w-3" /> {f}
-                          </Badge>
-                        ))}
+                        {flags.map((f, i) => {
+                          const isHigh = evs[i]?.severity === "high";
+                          const icon =
+                            f === "face.multiple" ? <Users className="h-3 w-3" /> :
+                            f === "face.not_visible" ? <EyeOff className="h-3 w-3" /> :
+                            f === "devtools.blocked" ? <Monitor className="h-3 w-3" /> :
+                            f === "print.blocked" ? <Monitor className="h-3 w-3" /> :
+                            <Mic className="h-3 w-3" />;
+                          return (
+                            <Badge
+                              key={`${f}-${i}`}
+                              variant="outline"
+                              className={`gap-1 text-[10px] ${isHigh ? "border-rose-200 bg-rose-50 text-rose-600" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+                            >
+                              {icon} {f.replace(/\./g, " ")}
+                            </Badge>
+                          );
+                        })}
                       </div>
                     )}
                     {tone.action && (

@@ -35,16 +35,15 @@ import { Route as StudentPaymentsRouteImport } from './routes/student.payments'
 import { Route as StudentCertificatesRouteImport } from './routes/student.certificates'
 import { Route as StudentAttendanceRouteImport } from './routes/student.attendance'
 import { Route as StudentAnnouncementsRouteImport } from './routes/student.announcements'
+import { Route as OgImageRouteImport } from './routes/og.image'
 import { Route as EmployerVerifyRouteImport } from './routes/employer.verify'
 import { Route as ApiVersionRouteImport } from './routes/api/version'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
-import { Route as ApiEmailTestRouteImport } from './routes/api/email.test'
-import { Route as ApiCertificatesGenerateRouteImport } from './routes/api/certificates.generate'
 import { Route as AdminViolationsRouteImport } from './routes/admin.violations'
 import { Route as AdminTeamRouteImport } from './routes/admin.team'
+import { Route as AdminSystemHealthRouteImport } from './routes/admin.system-health'
 import { Route as AdminStudentsRouteImport } from './routes/admin.students'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
-import { Route as AdminSystemHealthRouteImport } from './routes/admin.system-health'
 import { Route as AdminSchedulerRouteImport } from './routes/admin.scheduler'
 import { Route as AdminResultsRouteImport } from './routes/admin.results'
 import { Route as AdminReportsRouteImport } from './routes/admin.reports'
@@ -65,7 +64,9 @@ import { Route as ApiResultsExportRouteImport } from './routes/api/results.expor
 import { Route as ApiPaymentsWebhookRouteImport } from './routes/api/payments.webhook'
 import { Route as ApiPaymentsInvoicesRouteImport } from './routes/api/payments.invoices'
 import { Route as ApiPaymentsCreateSessionRouteImport } from './routes/api/payments.create-session'
+import { Route as ApiEmailTestRouteImport } from './routes/api/email.test'
 import { Route as ApiCertificatesVerifyRouteImport } from './routes/api/certificates.verify'
+import { Route as ApiCertificatesGenerateRouteImport } from './routes/api/certificates.generate'
 import { Route as ApiAttendanceQrRouteImport } from './routes/api/attendance.qr'
 import { Route as ApiAiGradeAnswerRouteImport } from './routes/api/ai.grade-answer'
 import { Route as ApiAiGenerateQuestionsRouteImport } from './routes/api/ai.generate-questions'
@@ -206,6 +207,11 @@ const StudentAnnouncementsRoute = StudentAnnouncementsRouteImport.update({
   path: '/announcements',
   getParentRoute: () => StudentRoute,
 } as any)
+const OgImageRoute = OgImageRouteImport.update({
+  id: '/og/image',
+  path: '/og/image',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmployerVerifyRoute = EmployerVerifyRouteImport.update({
   id: '/employer/verify',
   path: '/employer/verify',
@@ -221,16 +227,6 @@ const ApiHealthRoute = ApiHealthRouteImport.update({
   path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiEmailTestRoute = ApiEmailTestRouteImport.update({
-  id: '/api/email/test',
-  path: '/api/email/test',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCertificatesGenerateRoute = ApiCertificatesGenerateRouteImport.update({
-  id: '/api/certificates/generate',
-  path: '/api/certificates/generate',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminViolationsRoute = AdminViolationsRouteImport.update({
   id: '/violations',
   path: '/violations',
@@ -239,6 +235,11 @@ const AdminViolationsRoute = AdminViolationsRouteImport.update({
 const AdminTeamRoute = AdminTeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
+  id: '/system-health',
+  path: '/system-health',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminStudentsRoute = AdminStudentsRouteImport.update({
@@ -326,11 +327,6 @@ const AdminAcademicIntegrityRoute = AdminAcademicIntegrityRouteImport.update({
   path: '/academic-integrity',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminSystemHealthRoute = AdminSystemHealthRouteImport.update({
-  id: "/system-health",
-  path: "/system-health",
-  getParentRoute: () => AdminRoute,
-} as any)
 const ApiTranscriptsGenerateRoute = ApiTranscriptsGenerateRouteImport.update({
   id: '/api/transcripts/generate',
   path: '/api/transcripts/generate',
@@ -357,9 +353,19 @@ const ApiPaymentsCreateSessionRoute =
     path: '/api/payments/create-session',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiEmailTestRoute = ApiEmailTestRouteImport.update({
+  id: '/api/email/test',
+  path: '/api/email/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCertificatesVerifyRoute = ApiCertificatesVerifyRouteImport.update({
   id: '/api/certificates/verify',
   path: '/api/certificates/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCertificatesGenerateRoute = ApiCertificatesGenerateRouteImport.update({
+  id: '/api/certificates/generate',
+  path: '/api/certificates/generate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAttendanceQrRoute = ApiAttendanceQrRouteImport.update({
@@ -442,15 +448,14 @@ export interface FileRoutesByFullPath {
   '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/students': typeof AdminStudentsRoute
+  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
-  '/api/email/test': typeof ApiEmailTestRoute
-  '/api/certificates/generate': typeof ApiCertificatesGenerateRoute
   '/api/version': typeof ApiVersionRoute
   '/employer/verify': typeof EmployerVerifyRoute
+  '/og/image': typeof OgImageRoute
   '/student/announcements': typeof StudentAnnouncementsRoute
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/certificates': typeof StudentCertificatesRoute
@@ -464,7 +469,9 @@ export interface FileRoutesByFullPath {
   '/api/ai/generate-questions': typeof ApiAiGenerateQuestionsRoute
   '/api/ai/grade-answer': typeof ApiAiGradeAnswerRoute
   '/api/attendance/qr': typeof ApiAttendanceQrRoute
+  '/api/certificates/generate': typeof ApiCertificatesGenerateRoute
   '/api/certificates/verify': typeof ApiCertificatesVerifyRoute
+  '/api/email/test': typeof ApiEmailTestRoute
   '/api/payments/create-session': typeof ApiPaymentsCreateSessionRoute
   '/api/payments/invoices': typeof ApiPaymentsInvoicesRoute
   '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
@@ -508,15 +515,14 @@ export interface FileRoutesByTo {
   '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/students': typeof AdminStudentsRoute
+  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
-  '/api/email/test': typeof ApiEmailTestRoute
-  '/api/certificates/generate': typeof ApiCertificatesGenerateRoute
   '/api/version': typeof ApiVersionRoute
   '/employer/verify': typeof EmployerVerifyRoute
+  '/og/image': typeof OgImageRoute
   '/student/announcements': typeof StudentAnnouncementsRoute
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/certificates': typeof StudentCertificatesRoute
@@ -530,7 +536,9 @@ export interface FileRoutesByTo {
   '/api/ai/generate-questions': typeof ApiAiGenerateQuestionsRoute
   '/api/ai/grade-answer': typeof ApiAiGradeAnswerRoute
   '/api/attendance/qr': typeof ApiAttendanceQrRoute
+  '/api/certificates/generate': typeof ApiCertificatesGenerateRoute
   '/api/certificates/verify': typeof ApiCertificatesVerifyRoute
+  '/api/email/test': typeof ApiEmailTestRoute
   '/api/payments/create-session': typeof ApiPaymentsCreateSessionRoute
   '/api/payments/invoices': typeof ApiPaymentsInvoicesRoute
   '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
@@ -577,13 +585,14 @@ export interface FileRoutesById {
   '/admin/results': typeof AdminResultsRoute
   '/admin/scheduler': typeof AdminSchedulerRoute
   '/admin/settings': typeof AdminSettingsRoute
-  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/students': typeof AdminStudentsRoute
+  '/admin/system-health': typeof AdminSystemHealthRoute
   '/admin/team': typeof AdminTeamRoute
   '/admin/violations': typeof AdminViolationsRoute
   '/api/health': typeof ApiHealthRoute
   '/api/version': typeof ApiVersionRoute
   '/employer/verify': typeof EmployerVerifyRoute
+  '/og/image': typeof OgImageRoute
   '/student/announcements': typeof StudentAnnouncementsRoute
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/certificates': typeof StudentCertificatesRoute
@@ -597,7 +606,9 @@ export interface FileRoutesById {
   '/api/ai/generate-questions': typeof ApiAiGenerateQuestionsRoute
   '/api/ai/grade-answer': typeof ApiAiGradeAnswerRoute
   '/api/attendance/qr': typeof ApiAttendanceQrRoute
+  '/api/certificates/generate': typeof ApiCertificatesGenerateRoute
   '/api/certificates/verify': typeof ApiCertificatesVerifyRoute
+  '/api/email/test': typeof ApiEmailTestRoute
   '/api/payments/create-session': typeof ApiPaymentsCreateSessionRoute
   '/api/payments/invoices': typeof ApiPaymentsInvoicesRoute
   '/api/payments/webhook': typeof ApiPaymentsWebhookRoute
@@ -645,15 +656,14 @@ export interface FileRouteTypes {
     | '/admin/results'
     | '/admin/scheduler'
     | '/admin/settings'
-    | '/admin/system-health'
     | '/admin/students'
+    | '/admin/system-health'
     | '/admin/team'
     | '/admin/violations'
     | '/api/health'
-  | '/api/email/test'
-  | '/api/certificates/generate'
     | '/api/version'
     | '/employer/verify'
+    | '/og/image'
     | '/student/announcements'
     | '/student/attendance'
     | '/student/certificates'
@@ -667,7 +677,9 @@ export interface FileRouteTypes {
     | '/api/ai/generate-questions'
     | '/api/ai/grade-answer'
     | '/api/attendance/qr'
+    | '/api/certificates/generate'
     | '/api/certificates/verify'
+    | '/api/email/test'
     | '/api/payments/create-session'
     | '/api/payments/invoices'
     | '/api/payments/webhook'
@@ -711,15 +723,14 @@ export interface FileRouteTypes {
     | '/admin/results'
     | '/admin/scheduler'
     | '/admin/settings'
-    | '/admin/system-health'
     | '/admin/students'
+    | '/admin/system-health'
     | '/admin/team'
     | '/admin/violations'
     | '/api/health'
-  | '/api/email/test'
-  | '/api/certificates/generate'
     | '/api/version'
     | '/employer/verify'
+    | '/og/image'
     | '/student/announcements'
     | '/student/attendance'
     | '/student/certificates'
@@ -733,7 +744,9 @@ export interface FileRouteTypes {
     | '/api/ai/generate-questions'
     | '/api/ai/grade-answer'
     | '/api/attendance/qr'
+    | '/api/certificates/generate'
     | '/api/certificates/verify'
+    | '/api/email/test'
     | '/api/payments/create-session'
     | '/api/payments/invoices'
     | '/api/payments/webhook'
@@ -779,15 +792,14 @@ export interface FileRouteTypes {
     | '/admin/results'
     | '/admin/scheduler'
     | '/admin/settings'
-    | '/admin/system-health'
     | '/admin/students'
+    | '/admin/system-health'
     | '/admin/team'
     | '/admin/violations'
     | '/api/health'
-  | '/api/email/test'
-  | '/api/certificates/generate'
     | '/api/version'
     | '/employer/verify'
+    | '/og/image'
     | '/student/announcements'
     | '/student/attendance'
     | '/student/certificates'
@@ -801,7 +813,9 @@ export interface FileRouteTypes {
     | '/api/ai/generate-questions'
     | '/api/ai/grade-answer'
     | '/api/attendance/qr'
+    | '/api/certificates/generate'
     | '/api/certificates/verify'
+    | '/api/email/test'
     | '/api/payments/create-session'
     | '/api/payments/invoices'
     | '/api/payments/webhook'
@@ -835,12 +849,15 @@ export interface RootRouteChildren {
   ApiHealthRoute: typeof ApiHealthRoute
   ApiVersionRoute: typeof ApiVersionRoute
   EmployerVerifyRoute: typeof EmployerVerifyRoute
+  OgImageRoute: typeof OgImageRoute
   VerifyCertNumberRoute: typeof VerifyCertNumberRoute
   ApiAiAnalyzeRiskRoute: typeof ApiAiAnalyzeRiskRoute
   ApiAiGenerateQuestionsRoute: typeof ApiAiGenerateQuestionsRoute
   ApiAiGradeAnswerRoute: typeof ApiAiGradeAnswerRoute
   ApiAttendanceQrRoute: typeof ApiAttendanceQrRoute
+  ApiCertificatesGenerateRoute: typeof ApiCertificatesGenerateRoute
   ApiCertificatesVerifyRoute: typeof ApiCertificatesVerifyRoute
+  ApiEmailTestRoute: typeof ApiEmailTestRoute
   ApiPaymentsCreateSessionRoute: typeof ApiPaymentsCreateSessionRoute
   ApiPaymentsInvoicesRoute: typeof ApiPaymentsInvoicesRoute
   ApiPaymentsWebhookRoute: typeof ApiPaymentsWebhookRoute
@@ -1034,6 +1051,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentAnnouncementsRouteImport
       parentRoute: typeof StudentRoute
     }
+    '/og/image': {
+      id: '/og/image'
+      path: '/og/image'
+      fullPath: '/og/image'
+      preLoaderRoute: typeof OgImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/employer/verify': {
       id: '/employer/verify'
       path: '/employer/verify'
@@ -1046,20 +1070,6 @@ declare module '@tanstack/react-router' {
       path: '/api/version'
       fullPath: '/api/version'
       preLoaderRoute: typeof ApiVersionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/certificates/generate': {
-      id: '/api/certificates/generate'
-      path: '/api/certificates/generate'
-      fullPath: '/api/certificates/generate'
-      preLoaderRoute: typeof ApiCertificatesGenerateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/email/test': {
-      id: '/api/email/test'
-      path: '/api/email/test'
-      fullPath: '/api/email/test'
-      preLoaderRoute: typeof ApiEmailTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/health': {
@@ -1083,6 +1093,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTeamRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/system-health': {
+      id: '/admin/system-health'
+      path: '/system-health'
+      fullPath: '/admin/system-health'
+      preLoaderRoute: typeof AdminSystemHealthRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/students': {
       id: '/admin/students'
       path: '/students'
@@ -1095,13 +1112,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/system-health': {
-      id: '/admin/system-health'
-      path: '/system-health'
-      fullPath: '/admin/system-health'
-      preLoaderRoute: typeof AdminSystemHealthRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/scheduler': {
@@ -1244,11 +1254,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPaymentsCreateSessionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/email/test': {
+      id: '/api/email/test'
+      path: '/api/email/test'
+      fullPath: '/api/email/test'
+      preLoaderRoute: typeof ApiEmailTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/certificates/verify': {
       id: '/api/certificates/verify'
       path: '/api/certificates/verify'
       fullPath: '/api/certificates/verify'
       preLoaderRoute: typeof ApiCertificatesVerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/certificates/generate': {
+      id: '/api/certificates/generate'
+      path: '/api/certificates/generate'
+      fullPath: '/api/certificates/generate'
+      preLoaderRoute: typeof ApiCertificatesGenerateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/attendance/qr': {
@@ -1346,8 +1370,8 @@ interface AdminRouteChildren {
   AdminResultsRoute: typeof AdminResultsRoute
   AdminSchedulerRoute: typeof AdminSchedulerRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
-  AdminSystemHealthRoute: typeof AdminSystemHealthRoute
   AdminStudentsRoute: typeof AdminStudentsRoute
+  AdminSystemHealthRoute: typeof AdminSystemHealthRoute
   AdminTeamRoute: typeof AdminTeamRoute
   AdminViolationsRoute: typeof AdminViolationsRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -1370,8 +1394,8 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminResultsRoute: AdminResultsRoute,
   AdminSchedulerRoute: AdminSchedulerRoute,
   AdminSettingsRoute: AdminSettingsRoute,
-  AdminSystemHealthRoute: AdminSystemHealthRoute,
   AdminStudentsRoute: AdminStudentsRoute,
+  AdminSystemHealthRoute: AdminSystemHealthRoute,
   AdminTeamRoute: AdminTeamRoute,
   AdminViolationsRoute: AdminViolationsRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -1424,17 +1448,18 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SolutionsRoute: SolutionsRoute,
   StudentRoute: StudentRouteWithChildren,
-  ApiCertificatesGenerateRoute: ApiCertificatesGenerateRoute,
-  ApiEmailTestRoute,
-  ApiHealthRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiVersionRoute: ApiVersionRoute,
   EmployerVerifyRoute: EmployerVerifyRoute,
+  OgImageRoute: OgImageRoute,
   VerifyCertNumberRoute: VerifyCertNumberRoute,
   ApiAiAnalyzeRiskRoute: ApiAiAnalyzeRiskRoute,
   ApiAiGenerateQuestionsRoute: ApiAiGenerateQuestionsRoute,
   ApiAiGradeAnswerRoute: ApiAiGradeAnswerRoute,
   ApiAttendanceQrRoute: ApiAttendanceQrRoute,
+  ApiCertificatesGenerateRoute: ApiCertificatesGenerateRoute,
   ApiCertificatesVerifyRoute: ApiCertificatesVerifyRoute,
+  ApiEmailTestRoute: ApiEmailTestRoute,
   ApiPaymentsCreateSessionRoute: ApiPaymentsCreateSessionRoute,
   ApiPaymentsInvoicesRoute: ApiPaymentsInvoicesRoute,
   ApiPaymentsWebhookRoute: ApiPaymentsWebhookRoute,

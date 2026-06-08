@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type ProctorSeverity = "info" | "warning" | "high";
@@ -25,10 +25,35 @@ export type ProctorState = {
   copyAttempts: number;
   pasteAttempts: number;
   contextMenuBlocks: number;
+  devToolsBlocks: number;
+  printBlocks: number;
+  faceStatus: "unknown" | "present" | "absent" | "multiple";
   webcamActive: boolean;
   micActive: boolean;
   webcamError: string | null;
 };
+
+// ── Face detection ─────────────────────────────────────────────────────────────
+// Uses the browser's FaceDetector API (Chrome/Edge 83+) when available.
+// Falls back gracefully — no external API key required.
+declare global {
+  interface Window {
+    FaceDetector?: new (options?: { fastMode?: boolean; maxDetectedFaces?: number }) => {
+      detect(source: ImageBitmapSource): Promise<Array<{ boundingBox: DOMRectReadOnly }>>;
+    };
+  }
+}
+
+async function detectFaces(video: HTMLVideoElement): Promise<number | null> {
+  if (!window.FaceDetector) return null;
+  try {
+    const detector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 4 });
+    const faces = await detector.detect(video);
+    return faces.length;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Proctoring hook: requests camera+mic, watches tab visibility, fullscreen,
@@ -45,6 +70,9 @@ export function useProctoring(registrationId: string | null, opts?: { enabled?: 
     copyAttempts: 0,
     pasteAttempts: 0,
     contextMenuBlocks: 0,
+    devToolsBlocks: 0,
+    printBlocks: 0,
+    faceStatus: "unknown",
     webcamActive: false,
     micActive: false,
     webcamError: null,
@@ -160,6 +188,89 @@ export function useProctoring(registrationId: string | null, opts?: { enabled?: 
     };
   }, [enabled, registrationId]);
 
+  // Keyboard shortcut blocking (dev tools, view source, print, save)
+  useEffect(() => {
+    if (!enabled || !registrationId) return;
+    const BLOCKED: Array<{ key?: string; ctrlKey?: boolean; shiftKey?: boolean; code?: string }> = [
+      { code: "F12" },                            // Dev tools
+      { key: "I", ctrlKey: true, shiftKey: true }, // Ctrl+Shift+I
+      { key: "J", ctrlKey: true, shiftKey: true }, // Ctrl+Shift+J (console)
+      { key: "C", ctrlKey: true, shiftKey: true }, // Ctrl+Shift+C (inspector)
+      { key: "U", ctrlKey: true },                 // View source
+      { key: "S", ctrlKey: true },                 // Save page
+      { key: "P", ctrlKey: true },                 // Print
+    ];
+    const onKey = (e: KeyboardEvent) => {
+      const match = BLOCKED.some(
+        (b) =>
+          (b.code ? e.code === b.code : e.key === b.key) &&
+          (b.ctrlKey === undefined || e.ctrlKey === b.ctrlKey) &&
+          (b.shiftKey === undefined || e.shiftKey === b.shiftKey),
+      );
+      if (match) {
+        e.preventDefault();
+        e.stopPropagation();
+        setState((s) => ({ ...s, devToolsBlocks: s.devToolsBlocks + 1 }));
+        void logProctoringEvent(registrationId, {
+          event_type: "devtools.blocked",
+          message: `Blocked: ${e.ctrlKey ? "Ctrl+" : ""}${e.shiftKey ? "Shift+" : ""}${e.key || e.code}`,
+          severity: "warning",
+        });
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, [enabled, registrationId]);
+
+  // Print blocking
+  useEffect(() => {
+    if (!enabled || !registrationId) return;
+    const onBeforePrint = () => {
+      setState((s) => ({ ...s, printBlocks: s.printBlocks + 1 }));
+      void logProctoringEvent(registrationId, { event_type: "print.blocked", message: "Print dialog blocked", severity: "warning" });
+    };
+    window.addEventListener("beforeprint", onBeforePrint);
+    // CSS-level: hide content when printing
+    const style = document.createElement("style");
+    style.id = "orcalis-no-print";
+    style.textContent = "@media print { body { display: none !important; } }";
+    document.head.appendChild(style);
+    return () => {
+      window.removeEventListener("beforeprint", onBeforePrint);
+      document.getElementById("orcalis-no-print")?.remove();
+    };
+  }, [enabled, registrationId]);
+
+  // Periodic face detection (every 10 s, requires FaceDetector API in browser)
+  const runFaceCheck = useCallback(async () => {
+    if (!enabled || !registrationId || !videoRef.current) return;
+    const video = videoRef.current;
+    if (video.readyState < 2) return; // video not ready
+    const count = await detectFaces(video);
+    if (count === null) return; // API not available — skip silently
+    if (count === 0) {
+      setState((s) => ({ ...s, faceStatus: "absent" }));
+      void logProctoringEvent(registrationId, { event_type: "face.not_visible", message: "No face detected in webcam feed", severity: "warning" });
+    } else if (count > 1) {
+      setState((s) => ({ ...s, faceStatus: "multiple" }));
+      void logProctoringEvent(registrationId, { event_type: "face.multiple", message: `${count} faces detected`, severity: "high" });
+    } else {
+      setState((s) => ({ ...s, faceStatus: "present" }));
+      void logProctoringEvent(registrationId, { event_type: "face.present", message: "Face confirmed", severity: "info" });
+    }
+  }, [enabled, registrationId]);
+
+  useEffect(() => {
+    if (!enabled || !registrationId) return;
+    // Initial check after 3 s, then every 10 s
+    const initial = setTimeout(() => void runFaceCheck(), 3000);
+    const interval = setInterval(() => void runFaceCheck(), 10_000);
+    return () => {
+      clearTimeout(initial);
+      clearInterval(interval);
+    };
+  }, [enabled, registrationId, runFaceCheck]);
+
   const requestFullscreen = async () => {
     try {
       await document.documentElement.requestFullscreen();
@@ -177,5 +288,5 @@ export function useProctoring(registrationId: string | null, opts?: { enabled?: 
     if (document.fullscreenElement) await document.exitFullscreen().catch(() => {});
   };
 
-  return { videoRef, state, requestFullscreen, endSession };
+  return { videoRef, state, requestFullscreen, endSession, runFaceCheck };
 }

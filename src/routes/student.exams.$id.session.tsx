@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Camera, Maximize2, Mic, ShieldCheck, X } from "lucide-react";
+import { AlertTriangle, Camera, Eye, EyeOff, Maximize2, Mic, ShieldCheck, Users, X } from "lucide-react";
 import { StudentShell } from "@/components/student/StudentShell";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -41,7 +41,8 @@ function ExamSessionPage() {
   const { id: registrationId } = Route.useParams();
   const navigate = useNavigate();
   const [started, setStarted] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(60 * 60); // 60-min default
+  const [durationSeconds, setDurationSeconds] = useState(60 * 60); // 60-min default, overridden on start
+  const [secondsLeft, setSecondsLeft] = useState(60 * 60);
   const [examTitle, setExamTitle] = useState("Live Exam");
   const [attemptId, setAttemptId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -57,22 +58,44 @@ function ExamSessionPage() {
     (async () => {
       const { data } = await supabase
         .from("exam_registrations")
-        .select("exam_id, exams:exam_id(title)")
+        .select("exam_id, exams:exam_id(title, exam_sections(time_limit_minutes))")
         .eq("id", registrationId)
         .maybeSingle();
-      const title = (data as unknown as { exams?: { title?: string } } | null)?.exams?.title;
+      type Reg = { exams?: { title?: string; exam_sections?: Array<{ time_limit_minutes: number | null }> } | null };
+      const reg = data as unknown as Reg | null;
+      const title = reg?.exams?.title;
       if (title) setExamTitle(title);
+      // Use the first section's time limit if set, else default 60 min
+      const firstLimit = reg?.exams?.exam_sections?.[0]?.time_limit_minutes;
+      if (firstLimit && firstLimit > 0) {
+        const secs = firstLimit * 60;
+        setDurationSeconds(secs);
+        setSecondsLeft(secs);
+      }
     })();
   }, [registrationId]);
 
-  // Countdown timer
+  // Countdown timer — auto-submit when it hits zero
   useEffect(() => {
     if (!started) return;
-    const t = setInterval(() => setSecondsLeft((s) => Math.max(0, s - 1)), 1000);
+    const t = setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          clearInterval(t);
+          if (attemptId) {
+            toast.info("Time's up — submitting your exam…");
+            void handleEnd();
+          }
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
     return () => clearInterval(t);
-  }, [started]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [started, attemptId]);
 
-  const incidents = state.tabSwitches + state.fullscreenExits + state.copyAttempts + state.pasteAttempts;
+  const incidents = state.tabSwitches + state.fullscreenExits + state.copyAttempts + state.pasteAttempts + state.devToolsBlocks;
   const trustScore = useMemo(() => Math.max(0, 100 - incidents * 10), [incidents]);
 
   const mm = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
@@ -137,7 +160,11 @@ function ExamSessionPage() {
             <Badge variant="outline" className="gap-1.5">
               <ShieldCheck className="h-3.5 w-3.5" /> Trust score {trustScore}
             </Badge>
-            <Badge className="bg-foreground text-background font-mono tabular-nums">{mm}:{ss}</Badge>
+            <Badge
+            className={`font-mono tabular-nums ${secondsLeft < 300 ? "bg-rose-600 text-white" : "bg-foreground text-background"}`}
+          >
+            {mm}:{ss}
+          </Badge>
           </div>
         </div>
 
@@ -221,6 +248,20 @@ function ExamSessionPage() {
                 <div className="grid grid-cols-2 gap-2 p-3 text-xs">
                   <Stat icon={<Camera className="h-3 w-3" />} label="Camera" ok={state.webcamActive} />
                   <Stat icon={<Mic className="h-3 w-3" />} label="Mic" ok={state.micActive} />
+                  <Stat
+                    icon={
+                      state.faceStatus === "multiple" ? <Users className="h-3 w-3" /> :
+                      state.faceStatus === "absent" ? <EyeOff className="h-3 w-3" /> :
+                      <Eye className="h-3 w-3" />
+                    }
+                    label={
+                      state.faceStatus === "multiple" ? "Multiple faces" :
+                      state.faceStatus === "absent" ? "Face absent" :
+                      state.faceStatus === "present" ? "Face OK" : "Face"
+                    }
+                    ok={state.faceStatus === "present"}
+                    warn={state.faceStatus === "multiple" || state.faceStatus === "absent"}
+                  />
                 </div>
               </Card>
 
@@ -231,6 +272,8 @@ function ExamSessionPage() {
                 <Row label="Copy attempts" value={state.copyAttempts} flag={state.copyAttempts > 0} />
                 <Row label="Paste attempts" value={state.pasteAttempts} flag={state.pasteAttempts > 0} />
                 <Row label="Right-clicks blocked" value={state.contextMenuBlocks} />
+                <Row label="Dev tool attempts" value={state.devToolsBlocks} flag={state.devToolsBlocks > 0} />
+                <Row label="Print attempts" value={state.printBlocks} flag={state.printBlocks > 0} />
               </Card>
             </aside>
           </div>
@@ -240,11 +283,13 @@ function ExamSessionPage() {
   );
 }
 
-function Stat({ icon, label, ok }: { icon: React.ReactNode; label: string; ok: boolean }) {
+function Stat({ icon, label, ok, warn }: { icon: React.ReactNode; label: string; ok: boolean; warn?: boolean }) {
   return (
     <div className="flex items-center justify-between rounded-md border border-border px-2 py-1">
       <span className="flex items-center gap-1 text-muted-foreground">{icon}{label}</span>
-      <span className={ok ? "text-emerald-600" : "text-muted-foreground"}>{ok ? "Live" : "Off"}</span>
+      <span className={ok ? "text-emerald-600" : warn ? "text-amber-600" : "text-muted-foreground"}>
+        {ok ? "OK" : warn ? "!" : "Off"}
+      </span>
     </div>
   );
 }

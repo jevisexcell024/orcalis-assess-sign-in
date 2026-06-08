@@ -177,6 +177,34 @@ export async function getExamWithContent(examId: string) {
   return { exam: examRes.data, sections: sectionsRes.data, questions };
 }
 
+export async function updateExam(
+  id: string,
+  patch: Partial<Database["public"]["Tables"]["exams"]["Update"]>,
+) {
+  const { data, error } = await supabase
+    .from("exams")
+    .update(patch)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateSection(
+  id: string,
+  patch: Partial<Database["public"]["Tables"]["exam_sections"]["Update"]>,
+) {
+  const { data, error } = await supabase
+    .from("exam_sections")
+    .update(patch)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function createSection(input: { exam_id: string; title: string; position: number }) {
   const { data, error } = await supabase
     .from("exam_sections")
