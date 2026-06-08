@@ -9,6 +9,10 @@ import {
   Code2,
   FileText,
   ToggleLeft,
+  Pencil,
+  Trash2,
+  Search,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminShell } from "@/components/admin/AdminShell";
@@ -32,7 +36,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { createBankQuestion, listBankQuestions, type Question } from "@/lib/exams";
+import {
+  createBankQuestion,
+  listBankQuestions,
+  updateQuestion,
+  deleteQuestion,
+  type Question,
+  type QuestionOption,
+} from "@/lib/exams";
 import { generateQuestions, type GeneratedQuestion, type Difficulty, type QuestionType } from "@/lib/ai";
 import { Loader2, CheckCheck, AlertCircle, Brain } from "lucide-react";
 
@@ -63,11 +74,24 @@ function QuestionBankPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [editingQ, setEditingQ] = useState<Question | null>(null);
+  const [search, setSearch] = useState("");
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Delete this question? This cannot be undone.")) return;
+    try {
+      await deleteQuestion(id);
+      await qc.invalidateQueries({ queryKey: ["admin", "question-bank"] });
+      toast.success("Question deleted");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Delete failed");
+    }
+  };
 
   const { data: items, isLoading } = useQuery({
     queryKey: ["admin", "question-bank"],
@@ -81,13 +105,16 @@ function QuestionBankPage() {
   }, [items]);
 
   const filtered = useMemo(() => {
+    setPage(0);
     return (items ?? []).filter((q) => {
+      if (search && !q.prompt.toLowerCase().includes(search.toLowerCase())) return false;
       if (subjectFilter !== "all" && q.subject !== subjectFilter) return false;
       if (difficultyFilter !== "all" && q.difficulty !== difficultyFilter) return false;
       if (typeFilter !== "all" && q.type !== typeFilter) return false;
       return true;
     });
-  }, [items, subjectFilter, difficultyFilter, typeFilter]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, search, subjectFilter, difficultyFilter, typeFilter]);
 
   const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -119,6 +146,16 @@ function QuestionBankPage() {
               <Plus className="mr-1.5 h-4 w-4" /> New Question
             </Button>
           </div>
+        </div>
+
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search questions…"
+            className="pl-9"
+          />
         </div>
 
         <div className="rounded-2xl border border-border bg-background p-3">
@@ -232,10 +269,21 @@ function QuestionBankPage() {
                       </span>
                       <p className="text-[11px] text-muted-foreground">{tm.label}</p>
                     </div>
-                    <div className="flex justify-end">
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
-                        Unused
-                      </span>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => setEditingQ(q)}
+                        className="rounded-md p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                        title="Edit"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(q.id)}
+                        className="rounded-md p-1.5 text-muted-foreground transition hover:bg-rose-50 hover:text-rose-600"
+                        title="Delete"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   </li>
                 );
@@ -255,6 +303,14 @@ function QuestionBankPage() {
           </div>
         </div>
       </div>
+
+      {editingQ && (
+        <EditQuestionDialog
+          question={editingQ}
+          onClose={() => setEditingQ(null)}
+          onUpdated={() => qc.invalidateQueries({ queryKey: ["admin", "question-bank"] })}
+        />
+      )}
 
       <AIGeneratorDialog
         open={aiOpen}
@@ -299,11 +355,18 @@ function NewQuestionDialog({
   const [subject, setSubject] = useState("");
   const [tags, setTags] = useState("");
   const [points, setPoints] = useState(1);
+  const [options, setOptions] = useState<QuestionOption[]>(defaultOptions("mcq"));
   const [submitting, setSubmitting] = useState(false);
+
+  const handleTypeChange = (t: Question["type"]) => {
+    setType(t);
+    setOptions(defaultOptions(t));
+  };
 
   const reset = () => {
     setPrompt(""); setType("mcq"); setDifficulty("medium");
     setSubject(""); setTags(""); setPoints(1);
+    setOptions(defaultOptions("mcq"));
   };
 
   const handleSubmit = async () => {
@@ -317,6 +380,8 @@ function NewQuestionDialog({
         subject: subject.trim() || null,
         tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
         points,
+        options: options as unknown[],
+        shuffle_options: type === "mcq",
       });
       toast.success("Question added to bank");
       onCreated();
@@ -349,7 +414,7 @@ function NewQuestionDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Type</Label>
-              <Select value={type} onValueChange={(v) => setType(v as Question["type"])}>
+              <Select value={type} onValueChange={(v) => handleTypeChange(v as Question["type"])}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="mcq">Multiple choice</SelectItem>
@@ -402,6 +467,7 @@ function NewQuestionDialog({
               placeholder="e.g. CS-301, Algorithms"
             />
           </div>
+          <OptionsEditor type={type} options={options} onChange={setOptions} />
         </div>
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={submitting}>
@@ -409,6 +475,223 @@ function NewQuestionDialog({
           </Button>
           <Button onClick={handleSubmit} disabled={submitting || !prompt.trim()}>
             {submitting ? "Saving…" : "Add to bank"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
+
+function defaultOptions(type: Question["type"]): QuestionOption[] {
+  if (type === "mcq") return [{ text: "", is_correct: true }, { text: "", is_correct: false }];
+  if (type === "true_false") return [{ text: "True", is_correct: true }, { text: "False", is_correct: false }];
+  return [];
+}
+
+// ── Options Editor ─────────────────────────────────────────────────────────────
+
+function OptionsEditor({
+  type,
+  options,
+  onChange,
+}: {
+  type: Question["type"];
+  options: QuestionOption[];
+  onChange: (opts: QuestionOption[]) => void;
+}) {
+  if (type !== "mcq" && type !== "true_false") return null;
+
+  const setCorrect = (idx: number) =>
+    onChange(options.map((o, i) => ({ ...o, is_correct: i === idx })));
+
+  const updateText = (idx: number, text: string) =>
+    onChange(options.map((o, i) => (i === idx ? { ...o, text } : o)));
+
+  const addOption = () =>
+    onChange([...options, { text: "", is_correct: false }]);
+
+  const removeOption = (idx: number) =>
+    onChange(options.filter((_, i) => i !== idx));
+
+  return (
+    <div className="space-y-2">
+      <Label>
+        Answer options{" "}
+        <span className="font-normal text-muted-foreground">(select the correct one)</span>
+      </Label>
+      {options.map((opt, idx) => (
+        <div key={idx} className="flex items-center gap-2">
+          <input
+            type="radio"
+            name="correct-option"
+            checked={opt.is_correct}
+            onChange={() => setCorrect(idx)}
+            className="h-4 w-4 shrink-0 accent-violet-600"
+          />
+          <Input
+            value={opt.text}
+            onChange={(e) => updateText(idx, e.target.value)}
+            placeholder={type === "true_false" ? opt.text : `Option ${idx + 1}`}
+            className="flex-1"
+            disabled={type === "true_false"}
+          />
+          {type === "mcq" && options.length > 2 && (
+            <button
+              type="button"
+              onClick={() => removeOption(idx)}
+              className="rounded p-1 text-muted-foreground transition hover:text-rose-600"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      ))}
+      {type === "mcq" && options.length < 6 && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={addOption}
+          className="h-7 text-xs"
+        >
+          <Plus className="mr-1 h-3 w-3" /> Add option
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// ── Edit Question Dialog ───────────────────────────────────────────────────────
+
+function EditQuestionDialog({
+  question,
+  onClose,
+  onUpdated,
+}: {
+  question: Question;
+  onClose: () => void;
+  onUpdated: () => Promise<void>;
+}) {
+  const [prompt, setPrompt] = useState(question.prompt);
+  const [type, setType] = useState<Question["type"]>(question.type);
+  const [difficulty, setDifficulty] = useState<Question["difficulty"]>(question.difficulty);
+  const [subject, setSubject] = useState(question.subject ?? "");
+  const [tags, setTags] = useState((question.tags ?? []).join(", "));
+  const [points, setPoints] = useState(question.points);
+  const [options, setOptions] = useState<QuestionOption[]>(
+    (question.options as unknown as QuestionOption[] | null) ?? defaultOptions(question.type),
+  );
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleTypeChange = (t: Question["type"]) => {
+    setType(t);
+    setOptions(defaultOptions(t));
+  };
+
+  const handleSubmit = async () => {
+    if (!prompt.trim()) return;
+    setSubmitting(true);
+    try {
+      await updateQuestion(question.id, {
+        prompt: prompt.trim(),
+        type,
+        difficulty,
+        subject: subject.trim() || null,
+        tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
+        points,
+        options: options as unknown as never,
+        shuffle_options: type === "mcq",
+      });
+      toast.success("Question updated");
+      await onUpdated();
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Edit question</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Question</Label>
+            <Textarea
+              rows={3}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Type the question prompt…"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <Select value={type} onValueChange={(v) => handleTypeChange(v as Question["type"])}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mcq">Multiple choice</SelectItem>
+                  <SelectItem value="true_false">True / False</SelectItem>
+                  <SelectItem value="descriptive">Descriptive</SelectItem>
+                  <SelectItem value="coding">Coding</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Difficulty</Label>
+              <Select
+                value={difficulty}
+                onValueChange={(v) => setDifficulty(v as Question["difficulty"])}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="easy">Easy</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="hard">Hard</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Subject</Label>
+              <Input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="e.g. Algorithms"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Points</Label>
+              <Input
+                type="number"
+                min={0}
+                value={points}
+                onChange={(e) => setPoints(Number(e.target.value) || 0)}
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Tags (comma separated)</Label>
+            <Input
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="e.g. CS-301, Algorithms"
+            />
+          </div>
+          <OptionsEditor type={type} options={options} onChange={setOptions} />
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={submitting || !prompt.trim()}>
+            {submitting ? "Saving…" : "Save changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -466,8 +749,8 @@ function AIGeneratorDialog({
       });
       setGenerated(qs);
       setSelected(new Set(qs.map((_, i) => i)));
-    } catch (e: any) {
-      setError(e.message ?? "Generation failed. Check your OpenAI API key.");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Generation failed. Check your OpenAI API key.");
     } finally {
       setLoading(false);
     }
@@ -482,8 +765,8 @@ function AIGeneratorDialog({
       toast.success(`${toImport.length} question${toImport.length !== 1 ? "s" : ""} added to question bank.`);
       onClose();
       setGenerated([]); setSelected(new Set()); setTopic("");
-    } catch (e: any) {
-      toast.error(e.message ?? "Import failed");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Import failed");
     } finally {
       setImporting(false);
     }
@@ -500,7 +783,6 @@ function AIGeneratorDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Config */}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2 space-y-1.5">
               <Label>Topic <span className="text-rose-500">*</span></Label>
@@ -554,7 +836,9 @@ function AIGeneratorDialog({
           </div>
 
           <Button onClick={handleGenerate} disabled={loading || !topic.trim()} className="w-full gap-2">
-            {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</> : <><Sparkles className="h-4 w-4" /> Generate Questions</>}
+            {loading
+              ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</>
+              : <><Sparkles className="h-4 w-4" /> Generate Questions</>}
           </Button>
 
           {error && (
@@ -564,13 +848,16 @@ function AIGeneratorDialog({
             </div>
           )}
 
-          {/* Generated questions */}
           {generated.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold">{generated.length} questions generated — select to import:</p>
                 <button className="text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => setSelected(selected.size === generated.length ? new Set() : new Set(generated.map((_, i) => i)))}>
+                  onClick={() => setSelected(
+                    selected.size === generated.length
+                      ? new Set()
+                      : new Set(generated.map((_, i) => i))
+                  )}>
                   {selected.size === generated.length ? "Deselect all" : "Select all"}
                 </button>
               </div>
@@ -627,6 +914,15 @@ function AIGeneratorDialog({
           {generated.length > 0 && (
             <Button onClick={handleImport} disabled={importing || selected.size === 0} className="gap-1.5">
               {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCheck className="h-4 w-4" />}
+              {importing ? "Importing…" : `Import ${selected.size} question${selected.size !== 1 ? "s" : ""}`}
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+eck className="h-4 w-4" />}
               {importing ? "Importing…" : `Import ${selected.size} question${selected.size !== 1 ? "s" : ""}`}
             </Button>
           )}
