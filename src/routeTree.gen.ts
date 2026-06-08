@@ -71,6 +71,7 @@ import { Route as ApiAttendanceQrRouteImport } from './routes/api/attendance.qr'
 import { Route as ApiAiGradeAnswerRouteImport } from './routes/api/ai.grade-answer'
 import { Route as ApiAiGenerateQuestionsRouteImport } from './routes/api/ai.generate-questions'
 import { Route as ApiAiAnalyzeRiskRouteImport } from './routes/api/ai.analyze-risk'
+import { Route as AdminExamsNewRouteImport } from './routes/admin.exams.new'
 import { Route as StudentExamsIdSessionRouteImport } from './routes/student.exams.$id.session'
 import { Route as StudentExamsIdCheckinRouteImport } from './routes/student.exams.$id.checkin'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -388,6 +389,11 @@ const ApiAiAnalyzeRiskRoute = ApiAiAnalyzeRiskRouteImport.update({
   path: '/api/ai/analyze-risk',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminExamsNewRoute = AdminExamsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminExamsRoute,
+} as any)
 const StudentExamsIdSessionRoute = StudentExamsIdSessionRouteImport.update({
   id: '/exams/$id/session',
   path: '/exams/$id/session',
@@ -465,6 +471,7 @@ export interface FileRoutesByFullPath {
   '/verify/$certNumber': typeof VerifyCertNumberRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
+  '/admin/exams/new': typeof AdminExamsNewRoute
   '/api/ai/analyze-risk': typeof ApiAiAnalyzeRiskRoute
   '/api/ai/generate-questions': typeof ApiAiGenerateQuestionsRoute
   '/api/ai/grade-answer': typeof ApiAiGradeAnswerRoute
@@ -532,6 +539,7 @@ export interface FileRoutesByTo {
   '/verify/$certNumber': typeof VerifyCertNumberRoute
   '/admin': typeof AdminIndexRoute
   '/student': typeof StudentIndexRoute
+  '/admin/exams/new': typeof AdminExamsNewRoute
   '/api/ai/analyze-risk': typeof ApiAiAnalyzeRiskRoute
   '/api/ai/generate-questions': typeof ApiAiGenerateQuestionsRoute
   '/api/ai/grade-answer': typeof ApiAiGradeAnswerRoute
@@ -602,6 +610,7 @@ export interface FileRoutesById {
   '/verify/$certNumber': typeof VerifyCertNumberRoute
   '/admin/': typeof AdminIndexRoute
   '/student/': typeof StudentIndexRoute
+  '/admin/exams/new': typeof AdminExamsNewRoute
   '/api/ai/analyze-risk': typeof ApiAiAnalyzeRiskRoute
   '/api/ai/generate-questions': typeof ApiAiGenerateQuestionsRoute
   '/api/ai/grade-answer': typeof ApiAiGradeAnswerRoute
@@ -673,6 +682,7 @@ export interface FileRouteTypes {
     | '/verify/$certNumber'
     | '/admin/'
     | '/student/'
+    | '/admin/exams/new'
     | '/api/ai/analyze-risk'
     | '/api/ai/generate-questions'
     | '/api/ai/grade-answer'
@@ -740,6 +750,7 @@ export interface FileRouteTypes {
     | '/verify/$certNumber'
     | '/admin'
     | '/student'
+    | '/admin/exams/new'
     | '/api/ai/analyze-risk'
     | '/api/ai/generate-questions'
     | '/api/ai/grade-answer'
@@ -809,6 +820,7 @@ export interface FileRouteTypes {
     | '/verify/$certNumber'
     | '/admin/'
     | '/student/'
+    | '/admin/exams/new'
     | '/api/ai/analyze-risk'
     | '/api/ai/generate-questions'
     | '/api/ai/grade-answer'
@@ -1303,6 +1315,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiAnalyzeRiskRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/exams/new': {
+      id: '/admin/exams/new'
+      path: '/new'
+      fullPath: '/admin/exams/new'
+      preLoaderRoute: typeof AdminExamsNewRouteImport
+      parentRoute: typeof AdminExamsRoute
+    }
     '/student/exams/$id/session': {
       id: '/student/exams/$id/session'
       path: '/exams/$id/session'
@@ -1342,10 +1361,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminExamsRouteChildren {
+  AdminExamsNewRoute: typeof AdminExamsNewRoute
   AdminExamsExamIdBuilderRoute: typeof AdminExamsExamIdBuilderRoute
 }
 
 const AdminExamsRouteChildren: AdminExamsRouteChildren = {
+  AdminExamsNewRoute: AdminExamsNewRoute,
   AdminExamsExamIdBuilderRoute: AdminExamsExamIdBuilderRoute,
 }
 
