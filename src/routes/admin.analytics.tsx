@@ -10,10 +10,6 @@ import {
   LineChart,
   Pie,
   PieChart,
-  PolarAngleAxis,
-  PolarGrid,
-  Radar,
-  RadarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -35,6 +31,9 @@ import { Button } from "@/components/ui/button";
 import { getAnalyticsSummary } from "@/lib/scheduling";
 import { toast } from "sonner";
 import { exportToCSV } from "@/lib/csv";
+import { supabase } from "@/integrations/supabase/client";
+
+const NAVY = "oklch(0.385 0.12 247)";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsPage,
@@ -50,52 +49,50 @@ export const Route = createFileRoute("/admin/analytics")({
   }),
 });
 
-const questionData = [
-  { q: "Q1", correct: 88, band: "easy" },
-  { q: "Q2", correct: 72, band: "easy" },
-  { q: "Q3", correct: 91, band: "easy" },
-  { q: "Q4", correct: 44, band: "medium" },
-  { q: "Q5", correct: 58, band: "medium" },
-  { q: "Q6", correct: 31, band: "hard" },
-  { q: "Q7", correct: 84, band: "easy" },
-  { q: "Q8", correct: 70, band: "easy" },
-  { q: "Q9", correct: 52, band: "medium" },
-  { q: "Q10", correct: 89, band: "easy" },
+const PIE_COLORS = [
+  "oklch(0.45 0.08 165)",
+  "oklch(0.62 0.08 250)",
+  "oklch(0.78 0.15 85)",
+  "oklch(0.62 0.2 25)",
+  "oklch(0.75 0.04 260)",
 ];
 
-const bandColor: Record<string, string> = {
-  easy: "oklch(0.45 0.08 165)",
-  medium: "oklch(0.78 0.15 85)",
-  hard: "oklch(0.62 0.2 25)",
-};
-
-const subjectRadar = [
-  { subject: "English", score: 82 },
-  { subject: "Bangla", score: 74 },
-  { subject: "Physics", score: 68 },
-  { subject: "Math", score: 88 },
-  { subject: "Biology", score: 71 },
-  { subject: "Sports", score: 60 },
-];
-
-const growthData = [
-  { attempt: "Attempt 1", score: 42 },
-  { attempt: "Attempt 2", score: 64 },
-  { attempt: "Attempt 3", score: 81 },
-];
-
-const interestData = [
-  { name: "Chemistry", value: 45, color: "oklch(0.45 0.08 165)" },
-  { name: "Physics", value: 25, color: "oklch(0.78 0.15 85)" },
-  { name: "Biology", value: 20, color: "oklch(0.88 0.02 260)" },
-  { name: "Mathematics", value: 10, color: "oklch(0.75 0.04 260)" },
-];
+async function getMonthlyTrend() {
+  const { data, error } = await supabase
+    .from("exam_registrations")
+    .select("created_at, status")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  const rows = data ?? [];
+  const buckets: Record<string, { month: string; completed: number; registered: number }> = {};
+  for (const r of rows) {
+    const key = r.created_at.slice(0, 7);
+    if (!buckets[key]) {
+      const [y, m] = key.split("-");
+      buckets[key] = {
+        month: new Date(+y, +m - 1).toLocaleString("default", { month: "short", year: "2-digit" }),
+        completed: 0,
+        registered: 0,
+      };
+    }
+    buckets[key].registered++;
+    if (r.status === "completed") buckets[key].completed++;
+  }
+  return Object.values(buckets).slice(-8);
+}
 
 function AnalyticsPage() {
   const [semester, setSemester] = useState("this");
+
   const { data: summary } = useQuery({
     queryKey: ["analytics-summary"],
     queryFn: getAnalyticsSummary,
+  });
+
+  const { data: trendData = [] } = useQuery({
+    queryKey: ["analytics-monthly-trend"],
+    queryFn: getMonthlyTrend,
+    staleTime: 60_000,
   });
 
   const fmtPct = (v: number | null | undefined, digits = 1) =>
@@ -126,7 +123,7 @@ function AnalyticsPage() {
     {
       label: "Passing Rate",
       value: fmtPct(summary?.passingRate),
-      unit: `≥ ${summary?.passingThreshold ?? 60}%`,
+      unit: `>= ${summary?.passingThreshold ?? 60}%`,
       icon: CheckCircle2,
       tint: "text-rose-600 bg-rose-50",
     },
@@ -150,23 +147,35 @@ function AnalyticsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={() => { const next = semester === "this" ? "last" : "this"; setSemester(next); toast.info(`Showing ${next === "this" ? "current" : "previous"} semester data.`); }}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              const next = semester === "this" ? "last" : "this";
+              setSemester(next);
+              toast.info(`Showing ${next === "this" ? "current" : "previous"} semester data.`);
+            }}
+          >
             <Calendar className="h-4 w-4" /> {semester === "this" ? "This Semester" : "Last Semester"}
           </Button>
-          <Button size="sm" className="gap-2" style={{ background: "var(--gradient-primary)" }} onClick={() => {
-              // Export the performance trend data as CSV
+          <Button
+            size="sm"
+            className="gap-2 text-white"
+            style={{ background: NAVY }}
+            onClick={() => {
               exportToCSV(
-                `analytics-report-${semester}-semester-${new Date().toISOString().slice(0,10)}.csv`,
+                `analytics-report-${semester}-semester-${new Date().toISOString().slice(0, 10)}.csv`,
                 perExam as any[],
                 [
-                  { key: "exam",     header: "Exam" },
-                  { key: "attempts", header: "Attempts" },
-                  { key: "passRate", header: "Pass Rate" },
-                  { key: "avgScore", header: "Avg Score" },
+                  { key: "exam",      header: "Exam" },
+                  { key: "completed", header: "Completed" },
+                  { key: "average",   header: "Avg Score" },
                 ]
               );
               toast.success("Analytics report exported as CSV.");
-            }}>
+            }}
+          >
             <Download className="h-4 w-4" /> Export Report
           </Button>
         </div>
@@ -222,8 +231,7 @@ function AnalyticsPage() {
           </div>
           {perExam.length === 0 ? (
             <p className="mt-6 text-sm text-muted-foreground">
-              No completed attempts yet. Once candidates finish exams, per-exam
-              averages will appear here.
+              No completed attempts yet. Per-exam averages will appear here.
             </p>
           ) : (
             <ul className="mt-4 space-y-3">
@@ -238,10 +246,7 @@ function AnalyticsPage() {
                   <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
                     <div
                       className="h-full rounded-full"
-                      style={{
-                        width: `${Math.min(100, e.average)}%`,
-                        background: "oklch(0.45 0.08 165)",
-                      }}
+                      style={{ width: `${Math.min(100, e.average)}%`, background: "oklch(0.45 0.08 165)" }}
                     />
                   </div>
                 </li>
@@ -253,65 +258,71 @@ function AnalyticsPage() {
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="rounded-2xl border border-border bg-background p-5 lg:col-span-2">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-base font-semibold">Performance Trend (sample)</h3>
-              <p className="text-xs text-muted-foreground">
-                Multi-attempt trend will populate once retake data is recorded.
-              </p>
-            </div>
-          </div>
+          <h3 className="text-base font-semibold">Monthly Registrations & Completions</h3>
+          <p className="text-xs text-muted-foreground mt-1">Last 8 months of activity.</p>
           <div className="mt-4 h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={growthData}>
+              <LineChart data={trendData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.93 0.005 260)" />
-                <XAxis dataKey="attempt" tickLine={false} axisLine={false} fontSize={11} />
-                <YAxis tickLine={false} axisLine={false} fontSize={11} domain={[0, 100]} />
+                <XAxis dataKey="month" tickLine={false} axisLine={false} fontSize={11} />
+                <YAxis tickLine={false} axisLine={false} fontSize={11} allowDecimals={false} />
                 <Tooltip />
-                <Line type="monotone" dataKey="score" stroke="oklch(0.45 0.08 165)" strokeWidth={2.5} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="registered" stroke="oklch(0.62 0.08 250)" strokeWidth={2} dot={{ r: 3 }} name="Registered" />
+                <Line type="monotone" dataKey="completed" stroke="oklch(0.45 0.08 165)" strokeWidth={2.5} dot={{ r: 4 }} name="Completed" />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         <div className="rounded-2xl border border-border bg-background p-5">
-          <h3 className="text-base font-semibold">Most Interested Subjects</h3>
-          <div className="relative mt-4 h-[200px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={interestData} dataKey="value" innerRadius={55} outerRadius={80} paddingAngle={2}>
-                  {interestData.map((d) => (
-                    <Cell key={d.name} fill={d.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <p className="text-[11px] text-muted-foreground">Total Enroll</p>
-              <p className="text-xl font-bold">
-                {summary?.totalRegistrations ?? 0}
-              </p>
-            </div>
-          </div>
-          <ul className="mt-3 grid grid-cols-2 gap-1.5 text-xs">
-            {interestData.map((d) => (
-              <li key={d.name} className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full" style={{ background: d.color }} />
-                <span className="text-muted-foreground">{d.name}</span>
-                <span className="ml-auto font-semibold">{d.value}%</span>
-              </li>
-            ))}
-          </ul>
+          <h3 className="text-base font-semibold">Top Exams by Completions</h3>
+          {perExam.length === 0 ? (
+            <p className="mt-6 text-sm text-muted-foreground">No completed exams yet.</p>
+          ) : (
+            <>
+              <div className="relative mt-4 h-[180px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={perExam.slice(0, 5).map((e) => ({ name: e.exam, value: e.completed }))}
+                      dataKey="value"
+                      innerRadius={48}
+                      outerRadius={72}
+                      paddingAngle={2}
+                    >
+                      {perExam.slice(0, 5).map((_e, i) => (
+                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                  <p className="text-[11px] text-muted-foreground">Completed</p>
+                  <p className="text-xl font-bold">{summary?.totalCompleted ?? 0}</p>
+                </div>
+              </div>
+              <ul className="mt-3 space-y-1.5 text-xs">
+                {perExam.slice(0, 5).map((e, i) => (
+                  <li key={e.exam} className="flex items-center gap-1.5">
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ background: PIE_COLORS[i % PIE_COLORS.length] }}
+                    />
+                    <span className="truncate text-muted-foreground">{e.exam}</span>
+                    <span className="ml-auto font-semibold tabular-nums">{e.completed}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       </div>
     </AdminShell>
   );
 }
 
-// Keep Legend imported so tree-shaker doesn't drop, even if unused inline.
+// Keep unused recharts imports alive for tree-shaker
 void Legend;
 void ArrowUpRight;
 void ArrowDownRight;
-void bandColor;
-void subjectRadar;
