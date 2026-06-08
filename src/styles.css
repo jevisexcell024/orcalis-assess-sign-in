@@ -63,18 +63,20 @@
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --radius: 0.5rem;
+  /* TrueHorizon-aligned: near-white background, steel-navy primary */
+  --background: oklch(0.979 0.003 250);
+  --foreground: oklch(0.043 0.012 264);
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --brand-blue: oklch(0.546 0.215 262.88);
+  /* Steel navy — matches TrueHorizon primary CTA */
+  --brand-blue: oklch(0.385 0.12 247);
   --brand-blue-foreground: oklch(0.985 0 0);
-  --brand-navy: oklch(0.165 0.05 268);
-  --brand-indigo: oklch(0.296 0.124 281);
-  --brand-purple: oklch(0.5 0.224 290);
-  --gradient-brand: linear-gradient(135deg, oklch(0.165 0.05 268) 0%, oklch(0.236 0.105 278) 45%, oklch(0.32 0.165 290) 100%);
-  --gradient-primary: linear-gradient(135deg, oklch(0.58 0.22 262) 0%, oklch(0.5 0.224 290) 100%);
-  --shadow-glow: 0 30px 80px -20px color-mix(in oklab, oklch(0.5 0.224 290) 35%, transparent);
+  --brand-navy: oklch(0.24 0.07 252);
+  --brand-indigo: oklch(0.32 0.10 250);
+  --brand-purple: oklch(0.42 0.11 247);
+  --gradient-brand: linear-gradient(135deg, oklch(0.24 0.07 252) 0%, oklch(0.36 0.11 248) 100%);
+  --gradient-primary: linear-gradient(135deg, oklch(0.30 0.09 252) 0%, oklch(0.42 0.13 246) 100%);
+  --shadow-glow: 0 20px 60px -15px color-mix(in oklab, oklch(0.38 0.12 247) 30%, transparent);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);

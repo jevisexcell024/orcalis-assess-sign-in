@@ -49,6 +49,9 @@ function ExamSessionPage() {
   const [answers, setAnswers] = useState<Record<string, ExamAnswer["response"]>>({});
   const [currentIdx, setCurrentIdx] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [tabWarning, setTabWarning] = useState(false);
+  const warnedRef = { fiveMin: false, fifteenMin: false, thirtyMin: false };
+  const warnedMins = { fiveMin: false, fifteenMin: false, thirtyMin: false };
 
   const { videoRef, state, requestFullscreen, endSession } = useProctoring(
     started ? registrationId : null,
@@ -75,9 +78,10 @@ function ExamSessionPage() {
     })();
   }, [registrationId]);
 
-  // Countdown timer — auto-submit when it hits zero
+  // Countdown timer — auto-submit when it hits zero + milestone warnings
   useEffect(() => {
     if (!started) return;
+    const warned = { thirtyMin: false, fifteenMin: false, fiveMin: false };
     const t = setInterval(() => {
       setSecondsLeft((s) => {
         if (s <= 1) {
@@ -88,12 +92,38 @@ function ExamSessionPage() {
           }
           return 0;
         }
-        return s - 1;
+        const next = s - 1;
+        if (next === 30 * 60 && !warned.thirtyMin) {
+          warned.thirtyMin = true;
+          toast.warning("⏰ 30 minutes remaining — pace yourself.");
+        }
+        if (next === 15 * 60 && !warned.fifteenMin) {
+          warned.fifteenMin = true;
+          toast.warning("⏰ 15 minutes remaining — review your answers.");
+        }
+        if (next === 5 * 60 && !warned.fiveMin) {
+          warned.fiveMin = true;
+          toast.error("⚠️ 5 minutes remaining — submit soon.");
+        }
+        return next;
       });
     }, 1000);
     return () => clearInterval(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started, attemptId]);
+
+  // Tab switch / visibility warning
+  useEffect(() => {
+    if (!started) return;
+    const onVisibility = () => {
+      if (document.hidden) {
+        setTabWarning(true);
+        toast.error("⚠️ Violation detected — tab switch or window minimised. This has been recorded.");
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [started]);
 
   const incidents = state.tabSwitches + state.fullscreenExits + state.copyAttempts + state.pasteAttempts + state.devToolsBlocks;
   const trustScore = useMemo(() => Math.max(0, 100 - incidents * 10), [incidents]);
@@ -150,6 +180,16 @@ function ExamSessionPage() {
 
   return (
     <StudentShell>
+      {/* Tab-switch violation banner */}
+      {tabWarning && (
+        <div className="fixed inset-x-0 top-0 z-50 flex items-center justify-between gap-3 bg-rose-600 px-5 py-3 text-sm font-medium text-white shadow-lg">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            Violation recorded: you left the exam window. Return immediately — further violations may terminate your exam.
+          </div>
+          <button onClick={() => setTabWarning(false)} className="shrink-0 rounded px-2 py-0.5 hover:bg-rose-700">Dismiss</button>
+        </div>
+      )}
       <div className="mx-auto max-w-[1200px]">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -161,10 +201,14 @@ function ExamSessionPage() {
               <ShieldCheck className="h-3.5 w-3.5" /> Trust score {trustScore}
             </Badge>
             <Badge
-            className={`font-mono tabular-nums ${secondsLeft < 300 ? "bg-rose-600 text-white" : "bg-foreground text-background"}`}
-          >
-            {mm}:{ss}
-          </Badge>
+              className={`font-mono tabular-nums ${
+                secondsLeft < 300 ? "bg-rose-600 text-white animate-pulse" :
+                secondsLeft < 900 ? "bg-amber-500 text-white" :
+                "bg-foreground text-background"
+              }`}
+            >
+              {mm}:{ss}
+            </Badge>
           </div>
         </div>
 
