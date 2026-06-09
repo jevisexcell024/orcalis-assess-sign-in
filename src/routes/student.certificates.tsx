@@ -93,7 +93,7 @@ function StudentCertificatesPage() {
                   {/* Gradient header */}
                   <div
                     className="flex h-28 items-center justify-center"
-                    style={{ background: "var(--gradient-primary)" }}
+                    style={{ background: "oklch(0.385 0.12 247)" }}
                   >
                     <Award className="h-14 w-14 text-white/80" />
                     <div className="absolute right-3 top-3">

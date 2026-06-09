@@ -134,7 +134,7 @@ function SettingsPage() {
                       ? "text-white shadow-sm"
                       : "text-foreground/75 hover:bg-muted hover:text-foreground",
                   )}
-                  style={active === s.id ? { background: "var(--gradient-primary)" } : undefined}
+                  style={active === s.id ? { background: "oklch(0.385 0.12 247)" } : undefined}
                 >
                   <s.icon className="h-4 w-4" />
                   {s.label}

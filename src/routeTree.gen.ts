@@ -31,6 +31,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as VerifyCertNumberRouteImport } from './routes/verify.$certNumber'
 import { Route as StudentResultsRouteImport } from './routes/student.results'
 import { Route as StudentProfileRouteImport } from './routes/student.profile'
+import { Route as StudentPracticeRouteImport } from './routes/student.practice'
 import { Route as StudentPaymentsRouteImport } from './routes/student.payments'
 import { Route as StudentCertificatesRouteImport } from './routes/student.certificates'
 import { Route as StudentAttendanceRouteImport } from './routes/student.attendance'
@@ -186,6 +187,11 @@ const StudentResultsRoute = StudentResultsRouteImport.update({
 const StudentProfileRoute = StudentProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentPracticeRoute = StudentPracticeRouteImport.update({
+  id: '/practice',
+  path: '/practice',
   getParentRoute: () => StudentRoute,
 } as any)
 const StudentPaymentsRoute = StudentPaymentsRouteImport.update({
@@ -466,6 +472,7 @@ export interface FileRoutesByFullPath {
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/certificates': typeof StudentCertificatesRoute
   '/student/payments': typeof StudentPaymentsRoute
+  '/student/practice': typeof StudentPracticeRoute
   '/student/profile': typeof StudentProfileRoute
   '/student/results': typeof StudentResultsRoute
   '/verify/$certNumber': typeof VerifyCertNumberRoute
@@ -534,6 +541,7 @@ export interface FileRoutesByTo {
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/certificates': typeof StudentCertificatesRoute
   '/student/payments': typeof StudentPaymentsRoute
+  '/student/practice': typeof StudentPracticeRoute
   '/student/profile': typeof StudentProfileRoute
   '/student/results': typeof StudentResultsRoute
   '/verify/$certNumber': typeof VerifyCertNumberRoute
@@ -605,6 +613,7 @@ export interface FileRoutesById {
   '/student/attendance': typeof StudentAttendanceRoute
   '/student/certificates': typeof StudentCertificatesRoute
   '/student/payments': typeof StudentPaymentsRoute
+  '/student/practice': typeof StudentPracticeRoute
   '/student/profile': typeof StudentProfileRoute
   '/student/results': typeof StudentResultsRoute
   '/verify/$certNumber': typeof VerifyCertNumberRoute
@@ -677,6 +686,7 @@ export interface FileRouteTypes {
     | '/student/attendance'
     | '/student/certificates'
     | '/student/payments'
+    | '/student/practice'
     | '/student/profile'
     | '/student/results'
     | '/verify/$certNumber'
@@ -745,6 +755,7 @@ export interface FileRouteTypes {
     | '/student/attendance'
     | '/student/certificates'
     | '/student/payments'
+    | '/student/practice'
     | '/student/profile'
     | '/student/results'
     | '/verify/$certNumber'
@@ -815,6 +826,7 @@ export interface FileRouteTypes {
     | '/student/attendance'
     | '/student/certificates'
     | '/student/payments'
+    | '/student/practice'
     | '/student/profile'
     | '/student/results'
     | '/verify/$certNumber'
@@ -1033,6 +1045,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/student/profile'
       preLoaderRoute: typeof StudentProfileRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/practice': {
+      id: '/student/practice'
+      path: '/practice'
+      fullPath: '/student/practice'
+      preLoaderRoute: typeof StudentPracticeRouteImport
       parentRoute: typeof StudentRoute
     }
     '/student/payments': {
@@ -1429,6 +1448,7 @@ interface StudentRouteChildren {
   StudentAttendanceRoute: typeof StudentAttendanceRoute
   StudentCertificatesRoute: typeof StudentCertificatesRoute
   StudentPaymentsRoute: typeof StudentPaymentsRoute
+  StudentPracticeRoute: typeof StudentPracticeRoute
   StudentProfileRoute: typeof StudentProfileRoute
   StudentResultsRoute: typeof StudentResultsRoute
   StudentIndexRoute: typeof StudentIndexRoute
@@ -1441,6 +1461,7 @@ const StudentRouteChildren: StudentRouteChildren = {
   StudentAttendanceRoute: StudentAttendanceRoute,
   StudentCertificatesRoute: StudentCertificatesRoute,
   StudentPaymentsRoute: StudentPaymentsRoute,
+  StudentPracticeRoute: StudentPracticeRoute,
   StudentProfileRoute: StudentProfileRoute,
   StudentResultsRoute: StudentResultsRoute,
   StudentIndexRoute: StudentIndexRoute,

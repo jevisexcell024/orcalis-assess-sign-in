@@ -79,7 +79,7 @@ function CertificatesPage() {
           <Button variant="outline" size="sm" className="gap-1.5" onClick={() => toast.info("Redo — change re-applied.")}>
             <Redo2 className="h-3.5 w-3.5" /> Redo
           </Button>
-          <Button size="sm" style={{ background: "var(--gradient-primary)" }} disabled={saving} onClick={async () => { setSaving(true); await new Promise(r => setTimeout(r, 800)); setSaving(false); toast.success("Template saved successfully."); }}>
+          <Button size="sm" style={{ background: "oklch(0.385 0.12 247)" }} disabled={saving} onClick={async () => { setSaving(true); await new Promise(r => setTimeout(r, 800)); setSaving(false); toast.success("Template saved successfully."); }}>
             {saving ? "Saving…" : "Save Template"}
           </Button>
         </div>
@@ -324,7 +324,7 @@ function CertificatesPage() {
             </div>
           </section>
 
-          <Button className="w-full gap-2" size="lg" style={{ background: "var(--gradient-primary)" }} disabled={generating} onClick={async () => {
+          <Button className="w-full gap-2" size="lg" style={{ background: "oklch(0.385 0.12 247)" }} disabled={generating} onClick={async () => {
             setGenerating(true);
             try {
               const { data: { session } } = await supabase.auth.getSession();

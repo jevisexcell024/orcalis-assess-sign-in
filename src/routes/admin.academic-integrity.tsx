@@ -110,7 +110,7 @@ function AcademicIntegrityPage() {
                   "rounded-xl border p-4 text-left transition hover:shadow-md",
                   typeFilter === key ? "border-transparent text-white shadow-md" : "border-border bg-background",
                 )}
-                style={typeFilter === key ? { background: "var(--gradient-primary)" } : undefined}
+                style={typeFilter === key ? { background: "oklch(0.385 0.12 247)" } : undefined}
               >
                 <meta.icon className={cn("h-5 w-5 mb-2", typeFilter === key ? "text-white" : "text-muted-foreground")} />
                 <p className={cn("text-xs font-medium", typeFilter === key ? "text-white" : "text-foreground")}>{meta.label}</p>

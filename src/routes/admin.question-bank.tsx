@@ -820,7 +820,7 @@ function AIGeneratorDialog({
                         ? "border-transparent text-white"
                         : "border-border bg-background text-muted-foreground hover:bg-muted",
                     )}
-                    style={types.includes(t.value) ? { background: "var(--gradient-primary)" } : undefined}
+                    style={types.includes(t.value) ? { background: "oklch(0.385 0.12 247)" } : undefined}
                   >
                     {t.label}
                   </button>

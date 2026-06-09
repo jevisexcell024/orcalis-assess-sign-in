@@ -166,7 +166,7 @@ function StudentHub() {
               </button>
             </div>
 
-            <div className="rounded-2xl p-5 text-white shadow-md" style={{ background: "var(--gradient-primary)" }}>
+            <div className="rounded-2xl p-5 text-white shadow-md" style={{ background: "oklch(0.385 0.12 247)" }}>
               <div className="flex items-start gap-2">
                 <ShieldCheck className="mt-0.5 h-4 w-4" />
                 <h4 className="text-sm font-semibold">System Compatibility</h4>

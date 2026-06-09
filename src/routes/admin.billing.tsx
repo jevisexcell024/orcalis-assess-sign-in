@@ -322,7 +322,7 @@ function AdminShellDark({
                 "rounded-full px-3.5 py-1 text-xs font-semibold transition",
                 t === tab ? "text-white shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
-              style={t === tab ? { background: "var(--gradient-primary)" } : undefined}
+              style={t === tab ? { background: "oklch(0.385 0.12 247)" } : undefined}
             >
               {t}
             </button>

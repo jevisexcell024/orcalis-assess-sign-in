@@ -220,7 +220,8 @@ function ExamSessionPage() {
               Clicking start will request access to your camera and microphone, switch the page to fullscreen, and begin
               recording proctoring signals.
             </p>
-            <Button onClick={handleStart} size="lg" className="mt-5" style={{ background: "var(--gradient-primary)" }}>
+            <Button onClick={handleStart} size="lg" className="mt-5 text-white"
+              style={{ background: "oklch(0.385 0.12 247)" }}>
               <Maximize2 className="mr-2 h-4 w-4" /> Start exam
             </Button>
           </Card>
@@ -393,8 +394,7 @@ function QuestionRenderer({
         onChange={(e) => onChange({ text: e.target.value })}
         placeholder="Type your answer…"
         rows={question.type === "coding" ? 12 : 6}
-        className={question.type === "coding" ? "font-mono text-xs" : ""}
-      />
+        className={question.type === "coding" ? "font-mono text-xs" : ""}      />
     </div>
   );
 }

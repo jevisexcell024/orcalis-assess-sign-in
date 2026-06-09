@@ -1,18 +1,75 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
-import { AlertTriangle, Eye, EyeOff, Mic, Monitor, Users, Users2, Wifi, Activity } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, Mic, Monitor, Users, Users2, Wifi, Activity, OctagonX, BellRing, Flag, Loader2 } from "lucide-react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   listSchedules,
   listRegistrationsForSchedule,
   listRecentProctoringEvents,
   pickActiveSchedule,
 } from "@/lib/scheduling";
+
+// ---------- Intervention actions ----------
+
+async function sendWarning(registrationId: string): Promise<void> {
+  const { error } = await supabase
+    .from("proctoring_events")
+    .insert({
+      registration_id: registrationId,
+      event_type: "admin.warning",
+      severity: "warning",
+      message: "Administrator sent a warning — please follow exam rules.",
+    });
+  if (error) throw error;
+}
+
+async function flagForReview(registrationId: string): Promise<void> {
+  const { error } = await supabase
+    .from("proctoring_events")
+    .insert({
+      registration_id: registrationId,
+      event_type: "admin.flag",
+      severity: "high",
+      message: "Flagged for manual review by administrator.",
+    });
+  if (error) throw error;
+}
+
+async function terminateAttempt(registrationId: string): Promise<void> {
+  // Find the in-progress attempt for this registration and submit it
+  const { data: attempts, error: findErr } = await supabase
+    .from("exam_attempts")
+    .select("id")
+    .eq("registration_id", registrationId)
+    .is("submitted_at", null)
+    .limit(1);
+  if (findErr) throw findErr;
+
+  if (attempts && attempts.length > 0) {
+    const { error: termErr } = await supabase
+      .from("exam_attempts")
+      .update({ submitted_at: new Date().toISOString() })
+      .eq("id", attempts[0].id);
+    if (termErr) throw termErr;
+  }
+
+  // Log termination event
+  const { error } = await supabase
+    .from("proctoring_events")
+    .insert({
+      registration_id: registrationId,
+      event_type: "admin.terminate",
+      severity: "high",
+      message: "Exam attempt terminated by administrator.",
+    });
+  if (error) throw error;
+}
 
 export const Route = createFileRoute("/admin/live-monitor")({
   component: LiveMonitorPage,
@@ -39,6 +96,7 @@ function fmtRelative(iso: string) {
 
 function LiveMonitorPage() {
   const qc = useQueryClient();
+  const [intervening, setIntervening] = useState<Record<string, string>>({});
   const schedulesQ = useQuery({ queryKey: ["schedules"], queryFn: listSchedules });
   const active = useMemo(
     () => (schedulesQ.data ? pickActiveSchedule(schedulesQ.data) : null),
@@ -77,6 +135,32 @@ function LiveMonitorPage() {
 
   const regs = regsQ.data ?? [];
   const events = eventsQ.data ?? [];
+
+  const invalidateMonitor = useCallback(() => {
+    qc.invalidateQueries({ queryKey: ["live-monitor", "events", scheduleId] });
+    qc.invalidateQueries({ queryKey: ["live-monitor", "regs", scheduleId] });
+  }, [qc, scheduleId]);
+
+  const handleIntervene = useCallback(async (regId: string, action: "warn" | "flag" | "terminate") => {
+    setIntervening((prev) => ({ ...prev, [regId]: action }));
+    try {
+      if (action === "warn") {
+        await sendWarning(regId);
+        toast.success("Warning sent to candidate.");
+      } else if (action === "flag") {
+        await flagForReview(regId);
+        toast.warning("Candidate flagged for review.");
+      } else {
+        await terminateAttempt(regId);
+        toast.error("Attempt terminated.");
+      }
+      invalidateMonitor();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Intervention failed.");
+    } finally {
+      setIntervening((prev) => { const n = { ...prev }; delete n[regId]; return n; });
+    }
+  }, [invalidateMonitor]);
 
   // Map registration -> highest severity event
   const eventsByReg = useMemo(() => {
@@ -214,13 +298,18 @@ function LiveMonitorPage() {
                 const tone = severityToTone(sev);
                 const flags = evs.slice(0, 3).map((e) => e.event_type);
                 const shortId = r.candidate_id.slice(0, 8);
+                const busy = intervening[r.id];
+                const terminated = evs.some((e) => e.event_type === "admin.terminate");
                 return (
                   <div key={r.id} className={`rounded-xl border-2 ${tone.card} bg-background p-3`}>
-                    <div className="relative flex h-36 items-center justify-center rounded-lg bg-gradient-to-br from-slate-200 to-slate-300 text-xs text-muted-foreground">
+                    <div className="relative flex h-36 items-center justify-center rounded-lg bg-muted/60 text-xs text-muted-foreground">
                       <span className={`absolute left-2 top-2 rounded-md px-2 py-0.5 text-[10px] font-semibold ${tone.chip}`}>
-                        {tone.status}
+                        {terminated ? "Terminated" : tone.status}
                       </span>
-                      <span>Awaiting feed</span>
+                      {terminated
+                        ? <OctagonX className="h-8 w-8 text-rose-400" />
+                        : <Eye className="h-6 w-6 text-muted-foreground/40" />
+                      }
                     </div>
                     <div className="mt-3 flex items-start justify-between">
                       <div>
@@ -238,6 +327,9 @@ function LiveMonitorPage() {
                             f === "face.not_visible" ? <EyeOff className="h-3 w-3" /> :
                             f === "devtools.blocked" ? <Monitor className="h-3 w-3" /> :
                             f === "print.blocked" ? <Monitor className="h-3 w-3" /> :
+                            f === "admin.warning" ? <BellRing className="h-3 w-3" /> :
+                            f === "admin.flag" ? <Flag className="h-3 w-3" /> :
+                            f === "admin.terminate" ? <OctagonX className="h-3 w-3" /> :
                             <Mic className="h-3 w-3" />;
                           return (
                             <Badge
@@ -251,10 +343,46 @@ function LiveMonitorPage() {
                         })}
                       </div>
                     )}
-                    {tone.action && (
-                      <Button className="mt-3 h-8 w-full text-xs" variant={tone.action === "Intervene" ? "destructive" : "outline"}>
-                        {tone.action}
-                      </Button>
+                    {!terminated && (
+                      <div className="mt-3 flex gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 flex-1 gap-1 text-[11px]"
+                          disabled={!!busy}
+                          onClick={() => handleIntervene(r.id, "warn")}
+                          title="Send warning message"
+                        >
+                          {busy === "warn" ? <Loader2 className="h-3 w-3 animate-spin" /> : <BellRing className="h-3 w-3" />}
+                          Warn
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 flex-1 gap-1 text-[11px] border-amber-300 text-amber-700 hover:bg-amber-50"
+                          disabled={!!busy}
+                          onClick={() => handleIntervene(r.id, "flag")}
+                          title="Flag for manual review"
+                        >
+                          {busy === "flag" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Flag className="h-3 w-3" />}
+                          Flag
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="h-7 flex-1 gap-1 text-[11px]"
+                          disabled={!!busy}
+                          onClick={() => {
+                            if (confirm(`Terminate candidate ${shortId}? This cannot be undone.`)) {
+                              void handleIntervene(r.id, "terminate");
+                            }
+                          }}
+                          title="Terminate this exam attempt"
+                        >
+                          {busy === "terminate" ? <Loader2 className="h-3 w-3 animate-spin" /> : <OctagonX className="h-3 w-3" />}
+                          End
+                        </Button>
+                      </div>
                     )}
                   </div>
                 );
@@ -292,7 +420,7 @@ function LiveMonitorPage() {
                       key={e.id}
                       name={`Candidate #${shortId}`}
                       event={e.event_type}
-                      detail={`${e.message ?? "—"} · ${fmtRelative(e.created_at)}`}
+                      detail={`${e.message ?? "\u2014"} \u00b7 ${fmtRelative(e.created_at)}`}
                       tone={tone}
                     />
                   );

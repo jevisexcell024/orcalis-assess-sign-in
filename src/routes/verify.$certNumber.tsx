@@ -34,7 +34,7 @@ function VerifyCertificatePage() {
       <header className="border-b border-border bg-background px-6 py-4">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-md" style={{ background: "var(--gradient-primary)" }}>
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-md" style={{ background: "oklch(0.385 0.12 247)" }}>
               <ShieldCheck className="h-4.5 w-4.5" strokeWidth={2.5} />
             </div>
             <span className="text-[15px] font-semibold tracking-tight">Orcalis Assess</span>
@@ -47,7 +47,7 @@ function VerifyCertificatePage() {
         <div className="mx-auto max-w-2xl space-y-8">
           {/* Hero */}
           <div className="text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg mb-4" style={{ background: "var(--gradient-primary)" }}>
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg mb-4" style={{ background: "oklch(0.385 0.12 247)" }}>
               <Award className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight">Certificate Verification</h1>

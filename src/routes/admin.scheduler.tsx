@@ -277,7 +277,7 @@ function SchedulerPage() {
               </Button>
               <Button
                 className="flex-1"
-                style={{ background: "var(--gradient-primary)" }}
+                style={{ background: "oklch(0.385 0.12 247)" }}
                 onClick={handleSave}
                 disabled={saving}
               >

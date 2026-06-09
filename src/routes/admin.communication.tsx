@@ -363,7 +363,7 @@ function CommunicationPage() {
                         ? "border-transparent text-white"
                         : "border-border bg-background text-muted-foreground hover:bg-muted",
                     )}
-                    style={channels.includes(ch.id) ? { background: "var(--gradient-primary)" } : undefined}
+                    style={channels.includes(ch.id) ? { background: "oklch(0.385 0.12 247)" } : undefined}
                   >
                     <ch.icon className="h-3.5 w-3.5" /> {ch.label}
                   </button>
